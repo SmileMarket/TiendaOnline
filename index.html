@@ -1,0 +1,83 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda Odontología</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .producto { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+    .producto h3 { margin: 0; }
+    .boton { background-color: #28a745; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; }
+    .boton:hover { background-color: #218838; }
+    #carrito { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Insumos de Odontología</h1>
+
+  <div class="producto" data-nombre="Punta de Cavitador" data-precio="1500">
+    <h3>Punta de Cavitador</h3>
+    <p>Precio: $1500</p>
+    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+  </div>
+
+  <div class="producto" data-nombre="Doseta Plástica" data-precio="500">
+    <h3>Doseta Plástica</h3>
+    <p>Precio: $500</p>
+    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+  </div>
+
+  <div class="producto" data-nombre="Kit de Cirugía Manual" data-precio="4500">
+    <h3>Kit de Cirugía Manual</h3>
+    <p>Precio: $4500</p>
+    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+  </div>
+
+  <div id="carrito">
+    <h2>Carrito</h2>
+    <ul id="lista-carrito"></ul>
+    <p id="total">Total: $0</p>
+    <button class="boton" onclick="enviarPedidoWhatsApp()">Confirmar pedido por WhatsApp</button>
+  </div>
+
+  <script>
+    const carrito = [];
+
+    function agregarAlCarrito(boton) {
+      const producto = boton.parentElement;
+      const nombre = producto.getAttribute('data-nombre');
+      const precio = parseFloat(producto.getAttribute('data-precio'));
+      carrito.push({ nombre, precio });
+      actualizarCarrito();
+    }
+
+    function actualizarCarrito() {
+      const lista = document.getElementById('lista-carrito');
+      const total = document.getElementById('total');
+      lista.innerHTML = '';
+      let suma = 0;
+      carrito.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.nombre} - $${item.precio}`;
+        lista.appendChild(li);
+        suma += item.precio;
+      });
+      total.textContent = `Total: $${suma}`;
+    }
+
+    function enviarPedidoWhatsApp() {
+      if (carrito.length === 0) return alert('El carrito está vacío.');
+      let mensaje = 'Hola, quiero hacer el siguiente pedido:%0A';
+      carrito.forEach(item => {
+        mensaje += `- ${item.nombre}: $${item.precio}%0A`;
+      });
+      const total = carrito.reduce((acc, item) => acc + item.precio, 0);
+      mensaje += `%0ATotal: $${total}`;
+      const telefono = '5491130335334';
+      window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
+    }
+  </script>
+</body>
+</html>
