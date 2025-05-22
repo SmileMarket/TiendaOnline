@@ -12,6 +12,8 @@
     .boton { background-color: #28a745; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; }
     .boton:hover { background-color: #218838; }
     #carrito { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
+    .cantidad-input { width: 50px; margin-left: 10px; }
+    .eliminar { margin-left: 10px; color: red; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -20,18 +22,21 @@
   <div class="producto" data-nombre="Punta de Cavitador" data-precio="1500">
     <h3>Punta de Cavitador</h3>
     <p>Precio: $1500</p>
+    Cantidad: <input class="cantidad-input" type="number" value="1" min="1">
     <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
   </div>
 
   <div class="producto" data-nombre="Doseta Plástica" data-precio="500">
     <h3>Doseta Plástica</h3>
     <p>Precio: $500</p>
+    Cantidad: <input class="cantidad-input" type="number" value="1" min="1">
     <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
   </div>
 
   <div class="producto" data-nombre="Kit de Cirugía Manual" data-precio="4500">
     <h3>Kit de Cirugía Manual</h3>
     <p>Precio: $4500</p>
+    Cantidad: <input class="cantidad-input" type="number" value="1" min="1">
     <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
   </div>
 
@@ -49,7 +54,21 @@
       const producto = boton.parentElement;
       const nombre = producto.getAttribute('data-nombre');
       const precio = parseFloat(producto.getAttribute('data-precio'));
-      carrito.push({ nombre, precio });
+      const cantidad = parseInt(producto.querySelector('.cantidad-input').value);
+      const existente = carrito.find(item => item.nombre === nombre);
+      if (existente) {
+        existente.cantidad += cantidad;
+      } else {
+        carrito.push({ nombre, precio, cantidad });
+      }
+      actualizarCarrito();
+    }
+
+    function eliminarDelCarrito(nombre) {
+      const index = carrito.findIndex(item => item.nombre === nombre);
+      if (index !== -1) {
+        carrito.splice(index, 1);
+      }
       actualizarCarrito();
     }
 
@@ -60,9 +79,10 @@
       let suma = 0;
       carrito.forEach(item => {
         const li = document.createElement('li');
-        li.textContent = `${item.nombre} - $${item.precio}`;
+        li.innerHTML = `${item.nombre} - $${item.precio} x ${item.cantidad} = $${item.precio * item.cantidad}
+          <span class="eliminar" onclick="eliminarDelCarrito('${item.nombre}')">[Eliminar]</span>`;
         lista.appendChild(li);
-        suma += item.precio;
+        suma += item.precio * item.cantidad;
       });
       total.textContent = `Total: $${suma}`;
     }
@@ -71,9 +91,9 @@
       if (carrito.length === 0) return alert('El carrito está vacío.');
       let mensaje = 'Hola, quiero hacer el siguiente pedido:%0A';
       carrito.forEach(item => {
-        mensaje += `- ${item.nombre}: $${item.precio}%0A`;
+        mensaje += `- ${item.nombre}: $${item.precio} x ${item.cantidad} = $${item.precio * item.cantidad}%0A`;
       });
-      const total = carrito.reduce((acc, item) => acc + item.precio, 0);
+      const total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
       mensaje += `%0ATotal: $${total}`;
       const telefono = '5491130335334';
       window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
