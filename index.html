@@ -1,103 +1,347 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tienda Odontológica</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    .producto { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
-    .producto h3 { margin: 0; }
-    .boton { background-color: #28a745; color: white; border: none; padding: 10px; cursor: pointer; border-radius: 5px; }
-    .boton:hover { background-color: #218838; }
-    #carrito { margin-top: 20px; border-top: 2px solid #000; padding-top: 10px; }
-    .cantidad-input { width: 50px; margin-left: 10px; }
-    .eliminar { margin-left: 10px; color: red; cursor: pointer; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tienda Odontológica</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 0; background: #f9f9f9; color: #333;
+  }
+  header {
+    background: #007b7f;
+    color: white;
+    padding: 1rem 2rem;
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  h2 {
+    border-bottom: 2px solid #007b7f;
+    padding-bottom: .3rem;
+    margin-bottom: 1rem;
+    color: #007b7f;
+  }
+  .productos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .categoria {
+    flex: 1 1 100%;
+    margin-bottom: 2rem;
+  }
+  .producto {
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+    padding: 1rem;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .producto h3 {
+    font-size: 1.1rem;
+    margin: 0 0 0.5rem 0;
+  }
+  .precio {
+    color: #007b7f;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+  .cantidad-input {
+    width: 60px;
+    padding: 0.25rem;
+    margin-bottom: 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  .boton {
+    background: #007b7f;
+    border: none;
+    color: white;
+    padding: 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  .boton:hover {
+    background: #005f63;
+  }
+
+  /* Carrito */
+  #carrito {
+    position: fixed;
+    top: 70px;
+    right: 20px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
+    width: 320px;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 1rem;
+    font-size: 0.95rem;
+    z-index: 1000;
+  }
+  #carrito h2 {
+    margin-top: 0;
+  }
+  .carrito-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 0.5rem 0;
+  }
+  .carrito-item div {
+    flex: 1;
+  }
+  .carrito-item button {
+    background: transparent;
+    border: none;
+    color: #d9534f;
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+  }
+  #total {
+    font-weight: 700;
+    margin-top: 1rem;
+    text-align: right;
+  }
+  #confirmar {
+    margin-top: 1rem;
+    width: 100%;
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 0.6rem;
+    font-weight: 700;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  #confirmar:hover {
+    background: #218838;
+  }
+
+  @media(max-width: 800px) {
+    .productos {
+      justify-content: center;
+    }
+    #carrito {
+      position: static;
+      width: 100%;
+      max-height: none;
+      margin-top: 1rem;
+    }
+  }
+</style>
 </head>
 <body>
-  <h1>Insumos de Odontología</h1>
 
-  <div class="producto" data-nombre="Punta de Cavitador" data-precio="1500">
-    <h3>Punta de Cavitador</h3>
-    <p>Precio: $1500</p>
-    Cantidad: <input class="cantidad-input" type="number" value="1" min="1">
-    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+<header>Tienda Odontológica</header>
+
+<div class="container">
+
+  <div class="categoria">
+    <h2>Varios</h2>
+
+    <div class="productos">
+      <div class="producto" data-nombre="Adaptador fresas" data-precio="6000">
+        <h3>Adaptador fresas</h3>
+        <p class="precio">$ 6.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Endo Z - EN PROMO!" data-precio="5500">
+        <h3>Endo Z - EN PROMO!</h3>
+        <p class="precio">$ 5.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Espaciador" data-precio="5000">
+        <h3>Espaciador</h3>
+        <p class="precio">$ 5.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Espejo de Rhodio" data-precio="3400">
+        <h3>Espejo de Rhodio</h3>
+        <p class="precio">$ 3.400,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Fresa de largo 1" data-precio="3500">
+        <h3>Fresa de largo 1</h3>
+        <p class="precio">$ 3.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Fresa de largo 2" data-precio="3500">
+        <h3>Fresa de largo 2</h3>
+        <p class="precio">$ 3.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Fresa de largo 3" data-precio="3500">
+        <h3>Fresa de largo 3</h3>
+        <p class="precio">$ 3.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Gancho localizador" data-precio="5000">
+        <h3>Gancho localizador</h3>
+        <p class="precio">$ 5.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Kit Matrices - EN PROMO!" data-precio="14600">
+        <h3>Kit Matrices - EN PROMO!</h3>
+        <p class="precio">$ 14.600,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima H Acero 15-40" data-precio="3800">
+        <h3>Lima H Acero 15-40</h3>
+        <p class="precio">$ 3.800,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <!-- Agrega más productos aquí con el mismo formato -->
+    </div>
   </div>
 
-  <div class="producto" data-nombre="Doseta Plástica" data-precio="500">
-    <h3>Doseta Plástica</h3>
-    <p>Precio: $500</p>
-    Cantidad: <input class="cantidad-input" type="number" value="1" min="1">
-    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+  <div class="categoria">
+    <h2>Descartables</h2>
+    <div class="productos">
+      <div class="producto" data-nombre="Bolsas rojas 45x60 Pack x10 - EN PROMO!" data-precio="1100">
+        <h3>Bolsas rojas 45x60 Pack x10 - EN PROMO!</h3>
+        <p class="precio">$ 1.100,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Camisolines Descartables 20gr" data-precio="500">
+        <h3>Camisolines Descartables 20gr</h3>
+        <p class="precio">$ 500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <!-- Agrega más productos aquí -->
+    </div>
   </div>
 
-  <div class="producto" data-nombre="Kit de Cirugía Manual" data-precio="4500">
-    <h3>Kit de Cirugía Manual</h3>
-    <p>Precio: $4500</p>
-    Cantidad: <input class="cantidad-input" type="number" value="1" min="1">
-    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+  <div class="categoria">
+    <h2>Turbinas y Lamparas</h2>
+    <div class="productos">
+      <div class="producto" data-nombre="Kit NSK Morado" data-precio="300000">
+        <h3>Kit NSK Morado</h3>
+        <p class="precio">$ 300.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Kit NSK Rosa" data-precio="300000">
+        <h3>Kit NSK Rosa</h3>
+        <p class="precio">$ 300.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lampara" data-precio="100000">
+        <h3>Lampara</h3>
+        <p class="precio">$ 100.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <!-- Más productos si querés -->
+    </div>
   </div>
+</div>
 
-  <div id="carrito">
-    <h2>Carrito</h2>
-    <ul id="lista-carrito"></ul>
-    <p id="total">Total: $0</p>
-    <button class="boton" onclick="enviarPedidoWhatsApp()">Confirmar pedido por WhatsApp</button>
-  </div>
+<!-- Carrito -->
+<div id="carrito">
+  <h2>Carrito</h2>
+  <div id="items-carrito"></div>
+  <div id="total">Total: $0,00</div>
+  <button id="confirmar" onclick="confirmarCompra()">Confirmar compra</button>
+</div>
 
-  <script>
-    const carrito = [];
+<script>
+  let carrito = {};
 
-    function agregarAlCarrito(boton) {
-      const producto = boton.parentElement;
-      const nombre = producto.getAttribute('data-nombre');
-      const precio = parseFloat(producto.getAttribute('data-precio'));
-      const cantidad = parseInt(producto.querySelector('.cantidad-input').value);
-      const existente = carrito.find(item => item.nombre === nombre);
-      if (existente) {
-        existente.cantidad += cantidad;
-      } else {
-        carrito.push({ nombre, precio, cantidad });
-      }
-      actualizarCarrito();
+  function agregarAlCarrito(boton) {
+    const productoDiv = boton.parentElement;
+    const nombre = productoDiv.getAttribute('data-nombre');
+    const precio = Number(productoDiv.getAttribute('data-precio'));
+    const cantidadInput = productoDiv.querySelector('.cantidad-input');
+    let cantidad = parseInt(cantidadInput.value);
+    if (cantidad < 1 || isNaN(cantidad)) cantidad = 1;
+
+    if (carrito[nombre]) {
+      carrito[nombre].cantidad += cantidad;
+    } else {
+      carrito[nombre] = { precio, cantidad };
+    }
+    actualizarCarrito();
+  }
+
+  function eliminarDelCarrito(nombre) {
+    delete carrito[nombre];
+    actualizarCarrito();
+  }
+
+  function actualizarCarrito() {
+    const itemsCarrito = document.getElementById('items-carrito');
+    itemsCarrito.innerHTML = '';
+
+    let total = 0;
+    for (const nombre in carrito) {
+      const item = carrito[nombre];
+      total += item.precio * item.cantidad;
+
+      const div = document.createElement('div');
+      div.classList.add('carrito-item');
+
+      div.innerHTML = `
+        <div><strong>${nombre}</strong> x${item.cantidad}</div>
+        <div>$${item.precio.toLocaleString('es-AR')},00</div>
+        <button onclick="eliminarDelCarrito('${nombre}')">&times;</button>
+      `;
+
+      itemsCarrito.appendChild(div);
+    }
+    document.getElementById('total').innerText = `Total: $${total.toLocaleString('es-AR')},00`;
+  }
+
+  function confirmarCompra() {
+    if (Object.keys(carrito).length === 0) {
+      alert('El carrito está vacío');
+      return;
     }
 
-    function eliminarDelCarrito(nombre) {
-      const index = carrito.findIndex(item => item.nombre === nombre);
-      if (index !== -1) {
-        carrito.splice(index, 1);
-      }
-      actualizarCarrito();
+    // Crear mensaje para WhatsApp
+    let mensaje = 'Hola, quiero hacer el siguiente pedido:\n';
+    for (const nombre in carrito) {
+      const item = carrito[nombre];
+      mensaje += `- ${nombre} x${item.cantidad}: $${(item.precio * item.cantidad).toLocaleString('es-AR')},00\n`;
     }
+    mensaje += `Total: $${Object.values(carrito).reduce((acc, i) => acc + i.precio * i.cantidad, 0).toLocaleString('es-AR')},00`;
 
-    function actualizarCarrito() {
-      const lista = document.getElementById('lista-carrito');
-      const total = document.getElementById('total');
-      lista.innerHTML = '';
-      let suma = 0;
-      carrito.forEach(item => {
-        const li = document.createElement('li');
-        li.innerHTML = `${item.nombre} - $${item.precio} x ${item.cantidad} = $${item.precio * item.cantidad}
-          <span class="eliminar" onclick="eliminarDelCarrito('${item.nombre}')">[Eliminar]</span>`;
-        lista.appendChild(li);
-        suma += item.precio * item.cantidad;
-      });
-      total.textContent = `Total: $${suma}`;
-    }
+    const telefono = '+5491130335334';
+    const urlWhatsapp = `https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
 
-    function enviarPedidoWhatsApp() {
-      if (carrito.length === 0) return alert('El carrito está vacío.');
-      let mensaje = 'Hola, quiero hacer el siguiente pedido:%0A';
-      carrito.forEach(item => {
-        mensaje += `- ${item.nombre}: $${item.precio} x ${item.cantidad} = $${item.precio * item.cantidad}%0A`;
-      });
-      const total = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
-      mensaje += `%0ATotal: $${total}`;
-      const telefono = '5491130335334';
-      window.open(`https://wa.me/${telefono}?text=${mensaje}`, '_blank');
-    }
-  </script>
+    window.open(urlWhatsapp, '_blank');
+  }
+</script>
+
 </body>
 </html>
