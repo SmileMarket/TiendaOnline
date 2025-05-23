@@ -11,20 +11,13 @@
   }
   header {
     background: #f7b0f7;
-    color: #ff00ff;
+    color: fuchsia;
     padding: 1rem 2rem;
     text-align: center;
     font-size: 1.8rem;
     font-weight: bold;
     letter-spacing: 2px;
   }
-    }
-  .producto img {
-    width: 100%;
-    height: auto;
-    border-radius: 6px;
-    margin-bottom: 0.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   .container {
     max-width: 1100px;
     margin: 2rem auto;
@@ -151,6 +144,7 @@
       width: 100%;
       max-height: none;
       margin-top: 1rem;
+    }
   }
 </style>
 </head>
@@ -455,15 +449,15 @@
       const div = document.createElement('div');
       div.classList.add('carrito-item');
 
-      div.innerHTML = `
+      div.innerHTML = 
         <div><strong>${nombre}</strong> x${item.cantidad}</div>
         <div>$${item.precio.toLocaleString('es-AR')},00</div>
         <button onclick="eliminarDelCarrito('${nombre}')">&times;</button>
-      `;
+      ;
 
       itemsCarrito.appendChild(div);
     }
-    document.getElementById('total').innerText = `Total: $${total.toLocaleString('es-AR')},00`;
+    document.getElementById('total').innerText = Total: $${total.toLocaleString('es-AR')},00;
   }
 
   function confirmarCompra() {
@@ -476,12 +470,12 @@
     let mensaje = 'Hola, quiero hacer el siguiente pedido:\n';
     for (const nombre in carrito) {
       const item = carrito[nombre];
-      mensaje += `- ${nombre} x${item.cantidad}: $${(item.precio * item.cantidad).toLocaleString('es-AR')},00\n`;
+      mensaje += - ${nombre} x${item.cantidad}: $${(item.precio * item.cantidad).toLocaleString('es-AR')},00\n;
     }
-    mensaje += `Total: $${Object.values(carrito).reduce((acc, i) => acc + i.precio * i.cantidad, 0).toLocaleString('es-AR')},00`;
+    mensaje += Total: $${Object.values(carrito).reduce((acc, i) => acc + i.precio * i.cantidad, 0).toLocaleString('es-AR')},00;
 
     const telefono = '+5491130335334';
-    const urlWhatsapp = `https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
+    const urlWhatsapp = https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)};
 
     window.open(urlWhatsapp, '_blank');
   }
