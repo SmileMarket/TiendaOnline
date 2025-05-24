@@ -84,7 +84,25 @@ header img {
   .boton:hover {
     background: #f5a2f5;
   }
-
+.popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4CAF50; /* Verde */
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  font-family: sans-serif;
+  display: none;
+  z-index: 9999;
+  transition: opacity 0.3s ease;
+}
+.popup.show {
+  display: block;
+  opacity: 1;
+}
   /* Carrito */
   #carrito {
     position: fixed;
@@ -159,6 +177,8 @@ header img {
   <header>
     <img src="img/Logo.jpg" alt="Logo" />
   </header>
+
+<div id="popup" class="popup">Artículo agregado al carrito</div>
 
 <div class="container">
 
@@ -508,6 +528,25 @@ header img {
       actualizarCarrito();
     }
   </script>
+<script>
+  function mostrarPopup(mensaje = "Artículo agregado al carrito") {
+    const popup = document.getElementById("popup");
+    popup.textContent = mensaje;
+    popup.classList.add("show");
+
+    setTimeout(() => {
+      popup.classList.remove("show");
+    }, 2000); // Se oculta luego de 2 segundos
+  }
+
+  // Ejemplo de uso: podrías llamarlo así al agregar al carrito
+  function agregarAlCarrito(producto) {
+    // Aquí va tu lógica para agregar al carrito
+
+    // Mostrar mensaje
+    mostrarPopup(`${producto} agregado al carrito`);
+  }
+</script>
 
 </body>
 </html>
