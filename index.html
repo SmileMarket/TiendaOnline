@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SmileMarket</title>
   <style>
-body {
+    body {
       font-family: "Comic Sans MS", cursive, sans-serif;
       margin: 0;
       padding: 0;
@@ -42,10 +42,6 @@ body {
       display: flex;
       flex-wrap: wrap;
       gap: 1rem;
-    }
-    .categoria {
-      flex: 1 1 100%;
-      margin-bottom: 2rem;
     }
     .producto {
       background: white;
@@ -101,18 +97,12 @@ body {
       font-size: 0.95rem;
       z-index: 1000;
     }
-    #carrito h2 {
-      margin-top: 0;
-    }
     .carrito-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid #eee;
       padding: 0.5rem 0;
-    }
-    .carrito-item div {
-      flex: 1;
     }
     .carrito-item button {
       background: transparent;
@@ -138,20 +128,6 @@ body {
       border-radius: 4px;
       cursor: pointer;
     }
-    #confirmar:hover {
-      background: #218838;
-    }
-    @media (max-width: 800px) {
-      .productos {
-        justify-content: center;
-      }
-      #carrito {
-        position: static;
-        width: 100%;
-        max-height: none;
-        margin-top: 1rem;
-      }
-    }
     #popup {
       position: fixed;
       bottom: 20px;
@@ -167,32 +143,36 @@ body {
       font-weight: bold;
       font-size: 1rem;
     }
-.whatsapp-float {
-  position: fixed;
-  top: 50%;
-  right: 15px;
-  transform: translateY(-50%);
-  z-index: 999;
-  background-color: #25d366;
-  color: white;
-  padding: 12px;
-  border-radius: 50%;
-  font-size: 24px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  transition: transform 0.3s, background-color 0.3s;
-}
-
-.whatsapp-float:hover {
-  transform: scale(1.1);
-  background-color: #20c25e;
-}
-
-@media (max-width: 800px) {
-  .productos {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-}
+    .whatsapp-float {
+      position: fixed;
+      top: 50%;
+      right: 15px;
+      transform: translateY(-50%);
+      z-index: 999;
+      background-color: #25d366;
+      color: white;
+      padding: 12px;
+      border-radius: 50%;
+      font-size: 24px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      transition: transform 0.3s, background-color 0.3s;
+    }
+    .whatsapp-float:hover {
+      transform: scale(1.1);
+      background-color: #20c25e;
+    }
+    @media (max-width: 800px) {
+      .productos {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      #carrito {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-top: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -200,16 +180,30 @@ body {
     <img src="img/Logo.jpg" alt="Logo SmileMarket" />
   </header>
   <div class="container">
-    <!-- ... Tu catálogo de productos permanece igual ... -->
+    <h2>Productos</h2>
+    <div id="productos" class="productos"></div>
   </div>
+
   <div id="carrito">
     <h2>Carrito</h2>
-    <div id="items"></div>
-    <div id="total">Total: $ 0,00</div>
-    <button id="confirmar">Confirmar pedido por WhatsApp</button>
+    <div id="carrito-items"></div>
+    <div id="total">Total: $0</div>
+    <button id="confirmar">Confirmar compra</button>
   </div>
+
   <div id="popup">Producto agregado al carrito</div>
-  <a href="https://wa.me/5491130335334" target="_blank" class="whatsapp-float">💬</a>
+
+  <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" 
+     class="whatsapp-float" 
+     target="_blank" 
+     title="Escribinos por WhatsApp">
+    💬
+  </a>
+
+  <!-- Script de productos externo -->
+  <script src="productos.js"></script>
+
+  <!-- Script funcional -->
   <script>
     const carrito = [];
 
@@ -217,8 +211,7 @@ body {
       const producto = boton.closest('.producto');
       const nombre = producto.dataset.nombre;
       const precio = parseFloat(producto.dataset.precio);
-      const cantidadInput = producto.querySelector('.cantidad-input');
-      const cantidad = parseInt(cantidadInput.value);
+      const cantidad = parseInt(producto.querySelector('.cantidad-input').value);
 
       const existente = carrito.find(item => item.nombre === nombre);
       if (existente) {
@@ -229,52 +222,75 @@ body {
 
       mostrarPopup();
       actualizarCarrito();
-      cantidadInput.value = 1;
     }
 
-    function actualizarCarrito() {
-      const items = document.getElementById('items');
-      items.innerHTML = '';
-
-      carrito.forEach((item, index) => {
-        const div = document.createElement('div');
-        div.className = 'carrito-item';
-        div.innerHTML = `
-          <div>${item.nombre} x${item.cantidad}</div>
-          <div>$ ${(item.precio * item.cantidad).toLocaleString('es-AR')}</div>
-          <button onclick="eliminarItem(${index})">&times;</button>
-        `;
-        items.appendChild(div);
-      });
-
-      const total = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-      document.getElementById('total').textContent = `Total: $ ${total.toLocaleString('es-AR')}`;
-    }
-
-    function eliminarItem(index) {
+    function eliminarDelCarrito(index) {
       carrito.splice(index, 1);
       actualizarCarrito();
     }
 
-    document.getElementById('confirmar').addEventListener('click', () => {
-      if (carrito.length === 0) {
-        alert('El carrito está vacío.');
-        return;
-      }
-      const mensaje = carrito.map(item => `- ${item.nombre} x${item.cantidad}`).join('%0A');
-      const total = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-      const texto = `Hola! Quiero hacer el siguiente pedido:%0A${mensaje}%0A%0ATotal: $ ${total.toLocaleString('es-AR')}`;
-      window.open(`https://wa.me/5491130335334?text=${texto}`, '_blank');
-    });
+    function actualizarCarrito() {
+      const carritoItems = document.getElementById('carrito-items');
+      carritoItems.innerHTML = '';
+      let total = 0;
+
+      carrito.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'carrito-item';
+        itemDiv.innerHTML = `
+          <div>${item.nombre} x ${item.cantidad}</div>
+          <div>$${(item.precio * item.cantidad).toLocaleString()}</div>
+          <button onclick="eliminarDelCarrito(${index})">&times;</button>
+        `;
+        carritoItems.appendChild(itemDiv);
+        total += item.precio * item.cantidad;
+      });
+
+      document.getElementById('total').textContent = 'Total: $' + total.toLocaleString();
+    }
 
     function mostrarPopup() {
       const popup = document.getElementById('popup');
       popup.style.display = 'block';
       setTimeout(() => {
         popup.style.display = 'none';
-      }, 2000);
+      }, 1000);
     }
-  </script>
 
+    document.getElementById('confirmar').addEventListener('click', () => {
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío.');
+        return;
+      }
+      let mensaje = 'Hola! Quiero realizar una compra:%0A';
+      carrito.forEach(item => {
+        mensaje += `• ${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}%0A`;
+      });
+      const total = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+      mensaje += `%0ATotal: $${total.toLocaleString()}`;
+      const numeroWhatsApp = '5491130335334';
+      const url = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
+      window.open(url, '_blank');
+    });
+
+    // Generar productos dinámicamente desde productos.js
+    const contenedor = document.getElementById('productos');
+    productos.forEach(producto => {
+      const div = document.createElement('div');
+      div.className = 'producto';
+      div.dataset.nombre = producto.nombre;
+      div.dataset.precio = producto.precio;
+
+      div.innerHTML = `
+        ${producto.imagen ? `<img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />` : ''}
+        <h3>${producto.nombre}</h3>
+        <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      `;
+
+      contenedor.appendChild(div);
+    });
+  </script>
 </body>
 </html>
