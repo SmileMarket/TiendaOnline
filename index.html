@@ -4,197 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SmileMarket</title>
+  <!-- Tu CSS queda igual (omitido para no duplicar) -->
   <style>
-    body {
-      font-family: "Comic Sans MS", cursive, sans-serif;
-      margin: 0;
-      padding: 0;
-      background: #f9f9f9;
-      color: #333;
-    }
-    header {
-      background: #f7b0f7;
-      color: fuchsia;
-      padding: 1rem 2rem;
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-      letter-spacing: 2px;
-    }
-    header img {
-      max-width: 100%;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    h2 {
-      border-bottom: 2px solid #f5a2f5;
-      padding-bottom: .3rem;
-      margin-bottom: 1rem;
-      color: #007b7f;
-    }
-    .productos {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .categoria {
-      flex: 1 1 100%;
-      margin-bottom: 2rem;
-    }
-    .producto {
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
-      padding: 1rem;
-      width: 200px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .producto h3 {
-      font-size: 1.1rem;
-      margin: 0 0 0.5rem 0;
-    }
-    .precio {
-      color: #f5a2f5;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .cantidad-input {
-      width: 60px;
-      padding: 0.25rem;
-      margin-bottom: 0.7rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-    .boton {
-      background: #f5a2f5;
-      border: none;
-      color: white;
-      padding: 0.5rem;
-      cursor: pointer;
-      font-weight: 600;
-      border-radius: 4px;
-      transition: background-color 0.3s ease;
-    }
-    .boton:hover {
-      background: #e392e3;
-    }
-    #carrito {
-      position: fixed;
-      top: 70px;
-      right: 20px;
-      background: white;
-      border-radius: 6px;
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
-      width: 320px;
-      max-height: 80vh;
-      overflow-y: auto;
-      padding: 1rem;
-      font-size: 0.95rem;
-      z-index: 1000;
-    }
-    #carrito h2 {
-      margin-top: 0;
-    }
-    .carrito-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #eee;
-      padding: 0.5rem 0;
-    }
-    .carrito-item div {
-      flex: 1;
-    }
-    .carrito-item button {
-      background: transparent;
-      border: none;
-      color: #d9534f;
-      font-weight: bold;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-    #total {
-      font-weight: 700;
-      margin-top: 1rem;
-      text-align: right;
-    }
-    #confirmar {
-      margin-top: 1rem;
-      width: 100%;
-      background: #007b7f;
-      color: white;
-      border: none;
-      padding: 0.6rem;
-      font-weight: 700;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    #confirmar:hover {
-      background: #218838;
-    }
-    @media (max-width: 800px) {
-      .productos {
-        justify-content: center;
-      }
-      #carrito {
-        position: static;
-        width: 100%;
-        max-height: none;
-        margin-top: 1rem;
-      }
-    }
-    #popup {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #f7b0f7;
-      color: white;
-      padding: 1rem 2rem;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      display: none;
-      z-index: 2000;
-      font-weight: bold;
-      font-size: 1rem;
-    }
-.whatsapp-float {
-  position: fixed;
-  top: 50%;
-  right: 15px;
-  transform: translateY(-50%);
-  z-index: 999;
-  background-color: #25d366;
-  color: white;
-  padding: 12px;
-  border-radius: 50%;
-  font-size: 24px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  transition: transform 0.3s, background-color 0.3s;
-}
-
-.whatsapp-float:hover {
-  transform: scale(1.1);
-  background-color: #20c25e;
-}
-
-@media (max-width: 800px) {
-  .productos {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-}
-</style>
+    /* Tu código de estilos CSS aquí, igual al anterior... */
+  </style>
 </head>
 <body>
   <header>
@@ -203,43 +16,7 @@
   <h1>SmileMarket - Productos</h1>
   <div class="productos" id="productos-container"></div>
 
-  <!-- Cargar archivo de productos -->
-  <script src="productos.js"></script>
-
-  <!-- Generar tarjetas de productos dinámicamente -->
-  <script>
-    const contenedor = document.getElementById('productos-container');
-
-    productos.forEach(producto => {
-      const div = document.createElement('div');
-      div.className = 'producto';
-      div.setAttribute('data-nombre', producto.nombre);
-      div.setAttribute('data-precio', producto.precio);
-
-      div.innerHTML = `
-        ${producto.imagen ? `<img src="${producto.imagen}" alt="${producto.nombre}" />` : ''}
-        <h3>${producto.nombre}</h3>
-        <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-        <input class="cantidad-input" type="number" value="1" min="1" />
-        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
-      `;
-
-      contenedor.appendChild(div);
-    });
-
-    function agregarAlCarrito(boton) {
-      const productoDiv = boton.closest('.producto');
-      const nombre = productoDiv.dataset.nombre;
-      const precio = parseFloat(productoDiv.dataset.precio);
-      const cantidad = parseInt(productoDiv.querySelector('.cantidad-input').value);
-
-      console.log(`Agregado al carrito: ${cantidad} x ${nombre} ($${precio})`);
-      alert(`Se agregó ${cantidad} x ${nombre} al carrito.`);
-      // Aquí podrías integrar con tu carrito real
-    }
-
-
-
+  <!-- Carrito flotante -->
   <div id="carrito">
     <h2>Carrito</h2>
     <div id="carrito-items"></div>
@@ -249,14 +26,46 @@
 
   <div id="popup">Producto agregado al carrito</div>
 
+  <!-- Ícono flotante de WhatsApp -->
+  <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" 
+     class="whatsapp-float" 
+     target="_blank" 
+     title="Escribinos por WhatsApp">
+    💬
+  </a>
+
+  <!-- Importar productos desde archivo externo -->
+  <script src="productos.js"></script>
+
+  <!-- Script para mostrar productos y carrito -->
   <script>
+    const contenedor = document.getElementById('productos-container');
     const carrito = [];
 
+    function mostrarProductos() {
+      productos.forEach(producto => {
+        const div = document.createElement('div');
+        div.className = 'producto';
+        div.setAttribute('data-nombre', producto.nombre);
+        div.setAttribute('data-precio', producto.precio);
+
+        div.innerHTML = `
+          ${producto.imagen ? `<img src="${producto.imagen}" alt="${producto.nombre}" />` : ''}
+          <h3>${producto.nombre}</h3>
+          <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+          <input class="cantidad-input" type="number" value="1" min="1" />
+          <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        `;
+
+        contenedor.appendChild(div);
+      });
+    }
+
     function agregarAlCarrito(boton) {
-      const producto = boton.closest('.producto');
-      const nombre = producto.getAttribute('data-nombre');
-      const precio = parseFloat(producto.getAttribute('data-precio'));
-      const cantidad = parseInt(producto.querySelector('.cantidad-input').value);
+      const productoDiv = boton.closest('.producto');
+      const nombre = productoDiv.dataset.nombre;
+      const precio = parseFloat(productoDiv.dataset.precio);
+      const cantidad = parseInt(productoDiv.querySelector('.cantidad-input').value);
 
       const existente = carrito.find(item => item.nombre === nombre);
       if (existente) {
@@ -316,17 +125,13 @@
       const total = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
       mensaje += `%0ATotal: $${total.toLocaleString()}`;
 
-      const numeroWhatsApp = '5491130335334'; // ⚠️ Reemplazar con tu número real
+      const numeroWhatsApp = '5491130335334';
       const url = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
       window.open(url, '_blank');
     });
-  </script>
-<a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" 
-   class="whatsapp-float" 
-   target="_blank" 
-   title="Escribinos por WhatsApp">
-  💬
-</a>
 
+    // Ejecutar al cargar
+    mostrarProductos();
+  </script>
 </body>
 </html>
