@@ -441,22 +441,21 @@
 
   <div id="carrito">
     <h2>Carrito</h2>
-    <div id="items"></div>
+    <div id="carrito-items"></div>
     <div id="total">Total: $0</div>
     <button id="confirmar">Confirmar compra</button>
   </div>
+
   <div id="popup">Producto agregado al carrito</div>
+
   <script>
     const carrito = [];
-    const itemsContainer = document.getElementById("items");
-    const totalElement = document.getElementById("total");
-    const popup = document.getElementById("popup");
 
     function agregarAlCarrito(boton) {
-      const producto = boton.closest(".producto");
-      const nombre = producto.dataset.nombre;
-      const precio = parseFloat(producto.dataset.precio);
-      const cantidad = parseInt(producto.querySelector(".cantidad-input").value);
+      const producto = boton.closest('.producto');
+      const nombre = producto.getAttribute('data-nombre');
+      const precio = parseFloat(producto.getAttribute('data-precio'));
+      const cantidad = parseInt(producto.querySelector('.cantidad-input').value);
 
       const existente = carrito.find(item => item.nombre === nombre);
       if (existente) {
@@ -464,25 +463,9 @@
       } else {
         carrito.push({ nombre, precio, cantidad });
       }
-      actualizarCarrito();
-      mostrarPopup();
-    }
 
-    function actualizarCarrito() {
-      itemsContainer.innerHTML = "";
-      let total = 0;
-      carrito.forEach((item, index) => {
-        total += item.precio * item.cantidad;
-        const div = document.createElement("div");
-        div.className = "carrito-item";
-        div.innerHTML = `
-          <div>${item.nombre} x${item.cantidad}</div>
-          <div>$${(item.precio * item.cantidad).toFixed(2)}</div>
-          <button onclick="eliminarDelCarrito(${index})">&times;</button>
-        `;
-        itemsContainer.appendChild(div);
-      });
-      totalElement.textContent = `Total: $${total.toFixed(2)}`;
+      mostrarPopup();
+      actualizarCarrito();
     }
 
     function eliminarDelCarrito(index) {
@@ -490,46 +473,52 @@
       actualizarCarrito();
     }
 
-    function mostrarPopup() {
-      popup.style.display = "block";
-      setTimeout(() => {
-        popup.style.display = "none";
-      }, 2000);
-    }
-  </script>
-</body>
-</html>
-    }
-
-    actualizarCarrito();
-    mostrarPopup();
-  }
-
-  function eliminarItem(index) {
-    carrito.splice(index, 1);
-    actualizarCarrito();
-  }
-      let mensaje = '¡Hola! Quiero hacer el siguiente pedido:%0A';
+    function actualizarCarrito() {
+      const carritoItems = document.getElementById('carrito-items');
+      carritoItems.innerHTML = '';
       let total = 0;
 
-      for (let nombre in carrito) {
-        const item = carrito[nombre];
-        const subtotal = item.precio * item.cantidad;
-        mensaje += `• ${nombre} x${item.cantidad} - $${subtotal.toLocaleString()}%0A`;
-        total += subtotal;
+      carrito.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'carrito-item';
+        itemDiv.innerHTML = `
+          <div>${item.nombre} x ${item.cantidad}</div>
+          <div>$${(item.precio * item.cantidad).toLocaleString()}</div>
+          <button onclick="eliminarDelCarrito(${index})">&times;</button>
+        `;
+        carritoItems.appendChild(itemDiv);
+        total += item.precio * item.cantidad;
+      });
+
+      document.getElementById('total').textContent = 'Total: $' + total.toLocaleString();
+    }
+
+    function mostrarPopup() {
+      const popup = document.getElementById('popup');
+      popup.style.display = 'block';
+      setTimeout(() => {
+        popup.style.display = 'none';
+      }, 2000);
+    }
+
+    document.getElementById('confirmar').addEventListener('click', () => {
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío.');
+        return;
       }
 
+      let mensaje = 'Hola! Quiero realizar una compra:%0A';
+      carrito.forEach(item => {
+        mensaje += `• ${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}%0A`;
+      });
+
+      const total = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
       mensaje += `%0ATotal: $${total.toLocaleString()}`;
 
-      const numeroWhatsApp = '5491130335334'; // Reemplaza con tu número real
+      const numeroWhatsApp = '5491123456789'; // ⚠️ Reemplazar con tu número real
       const url = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
       window.open(url, '_blank');
-
-      // Limpiar carrito luego de enviar
-      for (let key in carrito) delete carrito[key];
-      actualizarCarrito();
-    }
+    });
   </script>
-
 </body>
 </html>
