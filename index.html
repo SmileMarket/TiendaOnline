@@ -4,19 +4,476 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SmileMarket</title>
-  <!-- Tu CSS queda igual (omitido para no duplicar) -->
   <style>
-    /* Tu código de estilos CSS aquí, igual al anterior... */
-  </style>
+    body {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+      background: #f7b0f7;
+      color: fuchsia;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    header img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h2 {
+      border-bottom: 2px solid #f5a2f5;
+      padding-bottom: .3rem;
+      margin-bottom: 1rem;
+      color: #007b7f;
+    }
+    .productos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .categoria {
+      flex: 1 1 100%;
+      margin-bottom: 2rem;
+    }
+    .producto {
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+      padding: 1rem;
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .producto h3 {
+      font-size: 1.1rem;
+      margin: 0 0 0.5rem 0;
+    }
+    .precio {
+      color: #f5a2f5;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .cantidad-input {
+      width: 60px;
+      padding: 0.25rem;
+      margin-bottom: 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .boton {
+      background: #f5a2f5;
+      border: none;
+      color: white;
+      padding: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    .boton:hover {
+      background: #e392e3;
+    }
+    #carrito {
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+      width: 320px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1rem;
+      font-size: 0.95rem;
+      z-index: 1000;
+    }
+    #carrito h2 {
+      margin-top: 0;
+    }
+    .carrito-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding: 0.5rem 0;
+    }
+    .carrito-item div {
+      flex: 1;
+    }
+    .carrito-item button {
+      background: transparent;
+      border: none;
+      color: #d9534f;
+      font-weight: bold;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    #total {
+      font-weight: 700;
+      margin-top: 1rem;
+      text-align: right;
+    }
+    #confirmar {
+      margin-top: 1rem;
+      width: 100%;
+      background: #007b7f;
+      color: white;
+      border: none;
+      padding: 0.6rem;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #confirmar:hover {
+      background: #218838;
+    }
+    @media (max-width: 800px) {
+      .productos {
+        justify-content: center;
+      }
+      #carrito {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-top: 1rem;
+      }
+    }
+    #popup {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f7b0f7;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 2000;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+.whatsapp-float {
+  position: fixed;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  z-index: 999;
+  background-color: #25d366;
+  color: white;
+  padding: 12px;
+  border-radius: 50%;
+  font-size: 24px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  transition: transform 0.3s, background-color 0.3s;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  background-color: #20c25e;
+}
+
+@media (max-width: 800px) {
+  .productos {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+}
+</style>
 </head>
 <body>
   <header>
     <img src="img/Logo.jpg" alt="Logo SmileMarket" />
   </header>
-  <h1>SmileMarket - Productos</h1>
-  <div class="productos" id="productos-container"></div>
+  <div class="container">
+    <div class="categoria">
+      <h2>Varios</h2>
+      <div class="productos">
+      <div class="producto" data-nombre="Adaptador fresas" data-precio="6000">
+        <img src="img/Adaptador_fresa.jpg" alt="Adaptador fresas" />
+        <h3>Adaptador fresas</h3>
+        <p class="precio">$ 6.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Endo Z - EN PROMO!" data-precio="5500">
+        <img src="img/EndoZ.jpg" alt="EndoZ" />
+        <h3>Endo Z - EN PROMO!</h3>
+        <p class="precio">$ 5.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Espaciador" data-precio="5000">
+        <h3>Espaciador</h3>
+        <p class="precio">$ 5.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Espejo de Rhodio" data-precio="3400">
+        <h3>Espejo de Rhodio</h3>
+        <p class="precio">$ 3.400,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Fresa de largo 1" data-precio="3500">
+        <h3>Fresa de largo 1</h3>
+        <p class="precio">$ 3.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Fresa de largo 2" data-precio="3500">
+        <h3>Fresa de largo 2</h3>
+        <p class="precio">$ 3.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Fresa de largo 3" data-precio="3500">
+        <h3>Fresa de largo 3</h3>
+        <p class="precio">$ 3.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Gancho localizador" data-precio="5000">
+        <img src="img/Gancho_localizador.jpg" alt="Gancho localizador" />
+        <h3>Gancho localizador</h3>
+        <p class="precio">$ 5.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Kit Matrices - EN PROMO!" data-precio="14600">
+        <img src="img/Kit_matrices.jpg" alt="Kit matrices" />
+        <h3>Kit Matrices - EN PROMO!</h3>
+        <p class="precio">$ 14.600,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima H Acero 15-40" data-precio="3800">
+        <h3>Lima H Acero 15-40</h3>
+        <p class="precio">$ 3.800,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima H Acero 45-80" data-precio="3800">
+        <h3>Lima H Acero 45-80</h3>
+        <p class="precio">$ 3.800,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima H Acero 15 C/U" data-precio="640">
+        <h3>Lima H Acero 15 C/U</h3>
+        <p class="precio">$ 640,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima K Acero 15-40" data-precio="3800">
+        <h3>Lima K Acero 15-40</h3>
+        <p class="precio">$ 3.800,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima K Acero 8 C/U" data-precio="640">
+        <h3>Lima K Acero 8 C/U</h3>
+        <p class="precio">$ 640,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima K Acero 10 C/U" data-precio="640">
+        <h3>Lima K Acero 10 C/U</h3>
+        <p class="precio">$ 640,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima K Acero 15 C/U" data-precio="640">
+        <h3>Lima K Acero 15 C/U</h3>
+        <p class="precio">$ 640,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lima K Acero 20 C/U" data-precio="640">
+        <h3>Lima K Acero 20 C/U</h3>
+        <p class="precio">$ 640,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Llave para Ajustes de Puntas" data-precio="12600">
+        <img src="img/Llave_ajuste.jpg" alt="Llave ajuste" />
+        <h3>Llave para Ajustes de Puntas</h3>
+        <p class="precio">$ 12.600,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Microbrush" data-precio="4400">
+        <img src="img/Microbrush.jpg" alt="Microbrush" />
+        <h3>Microbrush</h3>
+        <p class="precio">$ 4.400,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Microbrush Ecopack" data-precio="3100">
+        <h3>Microbrush Ecopack</h3>
+        <p class="precio">$ 3.100,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Mini endo 72 Violeta - EN PROMO!" data-precio="45000">
+        <img src="img/Miniendo_violeta.jpg" alt="Miniendo violeta" />
+        <h3>Mini endo 72 - EN PROMO!</h3>
+        <p class="precio">$ 45.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Mini endo 72 Plateada - EN PROMO!" data-precio="45000">
+        <img src="img/Miniendo_plateada.jpg" alt="Miniendo plateada" />
+        <h3>Mini endo 72 - EN PROMO!</h3>
+        <p class="precio">$ 45.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Organizador" data-precio="3000">
+        <img src="img/Organizador.jpg" alt="Organizador" />
+        <h3>Organizador</h3>
+        <p class="precio">$ 3.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Pinceles silicona" data-precio="6000">
+        <img src="img/Pinceles.jpg" alt="Pinceles" />
+        <h3>Pinceles silicona</h3>
+        <p class="precio">$ 6.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Punta P1 de cavitador" data-precio="9000">
+        <img src="img/Punta_P1.jpg" alt="Punta_P1" />
+        <h3>Punta P1 de cavitador</h3>
+        <p class="precio">$ 9.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Vaso dappen" data-precio="800">
+        <h3>Vaso dappen</h3>
+        <p class="precio">$ 800,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Vaso dappen x 2 - EN PROMO!" data-precio="1500">
+        <h3>Vaso dappen x 2 - EN PROMO!</h3>
+        <p class="precio">$ 1.500,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Carrito flotante -->
+  <div class="categoria">
+    <h2>Descartables</h2>
+    <div class="productos">
+      <div class="producto" data-nombre="Bolsas rojas 45x60 Pack x10 - EN PROMO!" data-precio="1100">
+        <h3>Bolsas rojas 45x60 Pack x10 - EN PROMO!</h3>
+        <p class="precio">$ 1.100,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Camisolines Descartables 20gr Pack x10 - EN PROMO!" data-precio="4900">
+        <h3>Camisolines Descartables 20gr Pack x10 - EN PROMO!</h3>
+        <p class="precio">$ 4.900,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Campo Fenestrado" data-precio="250">
+        <h3>Campo Fenestrado</h3>
+        <p class="precio">$ 250,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Compresa" data-precio="240">
+        <h3>Compresa</h3>
+        <p class="precio">$ 4.900,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Kit de cirugía E" data-precio="2900">
+        <img src="img/Kit_Cirugia.jpg" alt="Kit_Cirugia" />
+        <h3>Kit de cirugía E</h3>
+        <p class="precio">$ 2.900,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Kit de cirugía SE" data-precio="2700">
+        <img src="img/Kit_Cirugia.jpg" alt="Kit_Cirugia" />
+        <h3>Kit de cirugía SE</h3>
+        <p class="precio">$ 2.700,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Tubos Largo - Cubre mangueras" data-precio="260">
+        <h3>Tubos Largo - Cubre mangueras</h3>
+        <p class="precio">$ 260,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Tubuladura plástica x 100" data-precio="1320">
+        <h3>Tubuladura plástica x 100</h3>
+        <p class="precio">$ 1.320,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <!-- Agrega más productos aquí -->
+    </div>
+  </div>
+
+  <div class="categoria">
+    <h2>Turbinas y Lamparas</h2>
+    <div class="productos">
+      <div class="producto" data-nombre="Kit NSK Morado" data-precio="270000">
+        <img src="img/Kit_NSK_Violeta.jpg" alt="Kit_NSK_Violeta" />
+        <h3>Kit NSK Morado</h3>
+        <p class="precio">$ 270.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Kit NSK Rosa" data-precio="270000">
+        <img src="img/Kit_NSK_Rosa.jpg" alt="Kit_NSK_Rosa" />
+        <h3>Kit NSK Rosa</h3>
+        <p class="precio">$ 270.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Turbina calidad luz led A" data-precio="95000">
+        <h3>Turbina calidad luz led A</h3>
+        <p class="precio">$ 95.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <div class="producto" data-nombre="Lampara" data-precio="97000">
+        <img src="img/Lampara.jpg" alt="Lampara" />
+        <h3>Lampara</h3>
+        <p class="precio">$ 97.000,00</p>
+        <input class="cantidad-input" type="number" value="1" min="1" />
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      </div>
+      <!-- Más productos si querés -->
+    </div>
+  </div>
+</div>
+
+
+
   <div id="carrito">
     <h2>Carrito</h2>
     <div id="carrito-items"></div>
@@ -26,46 +483,14 @@
 
   <div id="popup">Producto agregado al carrito</div>
 
-  <!-- Ícono flotante de WhatsApp -->
-  <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" 
-     class="whatsapp-float" 
-     target="_blank" 
-     title="Escribinos por WhatsApp">
-    💬
-  </a>
-
-  <!-- Importar productos desde archivo externo -->
-  <script src="productos.js"></script>
-
-  <!-- Script para mostrar productos y carrito -->
   <script>
-    const contenedor = document.getElementById('productos-container');
     const carrito = [];
 
-    function mostrarProductos() {
-      productos.forEach(producto => {
-        const div = document.createElement('div');
-        div.className = 'producto';
-        div.setAttribute('data-nombre', producto.nombre);
-        div.setAttribute('data-precio', producto.precio);
-
-        div.innerHTML = `
-          ${producto.imagen ? `<img src="${producto.imagen}" alt="${producto.nombre}" />` : ''}
-          <h3>${producto.nombre}</h3>
-          <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-          <input class="cantidad-input" type="number" value="1" min="1" />
-          <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
-        `;
-
-        contenedor.appendChild(div);
-      });
-    }
-
     function agregarAlCarrito(boton) {
-      const productoDiv = boton.closest('.producto');
-      const nombre = productoDiv.dataset.nombre;
-      const precio = parseFloat(productoDiv.dataset.precio);
-      const cantidad = parseInt(productoDiv.querySelector('.cantidad-input').value);
+      const producto = boton.closest('.producto');
+      const nombre = producto.getAttribute('data-nombre');
+      const precio = parseFloat(producto.getAttribute('data-precio'));
+      const cantidad = parseInt(producto.querySelector('.cantidad-input').value);
 
       const existente = carrito.find(item => item.nombre === nombre);
       if (existente) {
@@ -125,13 +550,17 @@
       const total = carrito.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
       mensaje += `%0ATotal: $${total.toLocaleString()}`;
 
-      const numeroWhatsApp = '5491130335334';
+      const numeroWhatsApp = '5491130335334'; // ⚠️ Reemplazar con tu número real
       const url = `https://wa.me/${numeroWhatsApp}?text=${mensaje}`;
       window.open(url, '_blank');
     });
-
-    // Ejecutar al cargar
-    mostrarProductos();
   </script>
+<a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" 
+   class="whatsapp-float" 
+   target="_blank" 
+   title="Escribinos por WhatsApp">
+  💬
+</a>
+
 </body>
 </html>
