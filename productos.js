@@ -1,138 +1,41 @@
-// productos.js
 const productos = [
-  {
-    nombre: "Adaptador fresas",
-    precio: 6000,
-    imagen: "img/Adaptador_fresa.jpg"
-  },
-  {
-    nombre: "Endo Z - EN PROMO!",
-    precio: 5500,
-    imagen: "img/EndoZ.jpg"
-  },
-  {
-    nombre: "Espaciador",
-    precio: 5000,
-    imagen: null
-  },
-  {
-    nombre: "Espejo de Rhodio",
-    precio: 3400,
-    imagen: null
-  },
-  {
-    nombre: "Fresa cónica - Corta",
-    precio: 4400,
-    imagen: null
-  },
-  {
-    nombre: "Fresa cónica - Larga",
-    precio: 4800,
-    imagen: null
-  },
-  {
-    nombre: "Fresa de bola",
-    precio: 4400,
-    imagen: null
-  },
-  {
-    nombre: "Fresa de cavidad (acero)",
-    precio: 3000,
-    imagen: null
-  },
-  {
-    nombre: "Fresa de fisura",
-    precio: 3000,
-    imagen: null
-  },
-  {
-    nombre: "Fresa de carburo de tungsteno (1 UND)",
-    precio: 3000,
-    imagen: null
-  },
-  {
-    nombre: "Fresa de diamante (1 UND)",
-    precio: 3000,
-    imagen: null
-  },
-  {
-    nombre: "Fresa llama",
-    precio: 4400,
-    imagen: null
-  },
-  {
-    nombre: "Fresa óvalo",
-    precio: 4400,
-    imagen: null
-  },
-  {
-    nombre: "Fresa troncocónica - Corta",
-    precio: 4400,
-    imagen: null
-  },
-  {
-    nombre: "Fresa troncocónica - Larga",
-    precio: 4800,
-    imagen: null
-  },
-  {
-    nombre: "Fresa troncocónica invertida",
-    precio: 4400,
-    imagen: null
-  },
-  {
-    nombre: "Gasa estéril",
-    precio: 2500,
-    imagen: null
-  },
-  {
-    nombre: "Jeringa Carpule",
-    precio: 5000,
-    imagen: null
-  },
-  {
-    nombre: "Jeringa triple",
-    precio: 6000,
-    imagen: null
-  },
-  {
-    nombre: "Jeringas para impresión",
-    precio: 2500,
-    imagen: null
-  },
-  {
-    nombre: "Mandril para discos",
-    precio: 1500,
-    imagen: null
-  },
-  {
-    nombre: "Micromotor",
-    precio: 17000,
-    imagen: null
-  },
-  {
-    nombre: "Pack fresas x5 unidades (a elección)",
-    precio: 14500,
-    imagen: null
-  },
-  {
-    nombre: "Posicionador de película",
-    precio: 6500,
-    imagen: null
-  },
-  {
-    nombre: "Sonda de exploración",
-    precio: 3500,
-    imagen: null
-  },
-  {
-    nombre: "Tijera de Metzembaum",
-    precio: 5500,
-    imagen: null
-  },
-  {
-    nombre: "Turbina",
-    precio: 17000,
-    imagen: null
-  }
+  { categoria: "Varios"; nombre: "Adaptador fresas"; precio: 6000; imagen: "img/Adaptador_fresa.jpg" };
+  { categoria: "Varios"; nombre: "Endo Z - EN PROMO!"; precio: 5500; imagen: "img/EndoZ.jpg" };
+  { categoria: "Varios"; nombre: "Espaciador"; precio: 5000; imagen: "" };
+  { categoria: "Varios"; nombre: "Espejo de Rhodio"; precio: 3400; imagen: "" };
+  { categoria: "Varios"; nombre: "Fresa de largo 1"; precio: 3500; imagen: "" };
+  { categoria: "Varios"; nombre: "Fresa de largo 2"; precio: 3500; imagen: "" };
+  { categoria: "Varios"; nombre: "Fresa de largo 3"; precio: 3500; imagen: "" };
+  { categoria: "Varios"; nombre: "Gancho localizador"; precio: 5000; imagen: "img/Gancho_localizador.jpg" };
+  { categoria: "Varios"; nombre: "Kit Matrices - EN PROMO!"; precio: 14600; imagen: "img/Kit_matrices.jpg" };
+  { categoria: "Varios"; nombre: "Lima H Acero 15-40"; precio: 3800; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima H Acero 45-80"; precio: 3800; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima H Acero 15 C/U"; precio: 640; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima K Acero 15-40"; precio: 3800; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima K Acero 8 C/U"; precio: 640; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima K Acero 10 C/U"; precio: 640; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima K Acero 15 C/U"; precio: 640; imagen: "" };
+  { categoria: "Varios"; nombre: "Lima K Acero 20 C/U"; precio: 640; imagen: "" };
+  { categoria: "Varios"; nombre: "Llave para Ajustes de Puntas"; precio: 12600; imagen: "img/Llave_ajuste.jpg" };
+  { categoria: "Varios"; nombre: "Microbrush"; precio: 4400; imagen: "img/Microbrush.jpg" };
+  { categoria: "Varios"; nombre: "Microbrush Ecopack"; precio: 3100; imagen: "" };
+  { categoria: "Varios"; nombre: "Mini endo 72 Violeta - EN PROMO!"; precio: 45000; imagen: "img/Miniendo_violeta.jpg" };
+  { categoria: "Varios"; nombre: "Mini endo 72 Plateada - EN PROMO!"; precio: 45000; imagen: "img/Miniendo_plateada.jpg" };
+  { categoria: "Varios"; nombre: "Organizador"; precio: 3000; imagen: "img/Organizador.jpg" };
+  { categoria: "Varios"; nombre: "Pinceles silicona"; precio: 6000; imagen: "img/Pinceles.jpg" };
+  { categoria: "Varios"; nombre: "Punta P1 de cavitador"; precio: 9000; imagen: "img/Punta_P1.jpg" };
+  { categoria: "Varios"; nombre: "Vaso dappen"; precio: 800; imagen: "" };
+  { categoria: "Varios"; nombre: "Vaso dappen x 2 - EN PROMO!"; precio: 1500; imagen: "" };
+  { categoria: "Descartables"; nombre: "Bolsas rojas 45x60 Pack x10 - EN PROMO!"; precio: 1100; imagen: "" };
+  { categoria: "Descartables"; nombre: "Camisolines Descartables 20gr Pack x10 - EN PROMO!"; precio: 4900; imagen: "" };
+  { categoria: "Descartables"; nombre: "Campo Fenestrado"; precio: 250; imagen: "" };
+  { categoria: "Descartables"; nombre: "Compresa"; precio: 240; imagen: "" };
+  { categoria: "Descartables"; nombre: "Kit de cirugía E"; precio: 2900; imagen: "img/Kit_Cirugia.jpg" };
+  { categoria: "Descartables"; nombre: "Kit de cirugía SE"; precio: 2700; imagen: "img/Kit_Cirugia.jpg" };
+  { categoria: "Descartables"; nombre: "Tubos Largo - Cubre mangueras"; precio: 260; imagen: "" };
+  { categoria: "Descartables"; nombre: "Tubuladura plástica x 100"; precio: 1320; imagen: "" };
+  { categoria: "Turbinas y Lamparas"; nombre: "Kit NSK Violeta"; precio: 270000; imagen: "img/Kit_NSK_Violeta.jpg" };
+  { categoria: "Turbinas y Lamparas"; nombre: "Kit NSK Rosa"; precio: 270000; imagen: "img/Kit_NSK_Rosa.jpg" };
+  { categoria: "Turbinas y Lamparas"; nombre: "Turbina calidad luz led A"; precio: 95000; imagen: "" };
+  { categoria: "Turbinas y Lamparas"; nombre: "Lampara"; precio: 97000; imagen: "img/Lampara.jpg" };
 ];
