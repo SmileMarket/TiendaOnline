@@ -167,6 +167,27 @@
       font-weight: bold;
       font-size: 1rem;
     }
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #25d366;
+  color: white;
+  font-size: 28px;
+  padding: 12px 16px;
+  border-radius: 50%;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.whatsapp-float:hover {
+  transform: scale(1.1);
+  background-color: #20c25e;
+}
+
   </style>
 </head>
 <body>
@@ -520,5 +541,12 @@
       window.open(url, '_blank');
     });
   </script>
+<a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" 
+   class="whatsapp-float" 
+   target="_blank" 
+   title="Escribinos por WhatsApp">
+  💬
+</a>
+
 </body>
 </html>
