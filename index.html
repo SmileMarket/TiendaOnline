@@ -187,21 +187,26 @@
   transform: scale(1.1);
   background-color: #20c25e;
 }
-  @media (max-width: 800px) {
-    .productos {
-      justify-content: bottom;
-    }
-    #carrito {
-      position: fixed;
-      bottom: 70px;
-      right: 15px;
-      width: 30%;
-      max-height: 60vh;
-      margin: 0;
-      padding: 1rem;
-      z-index: 1000;
-    }
+
+@media (max-width: 800px) {
+  .productos {
+    justify-content: center; /* "bottom" no es válido aquí */
+    flex-wrap: wrap; /* Asegura que los productos se acomoden bien */
   }
+
+  #carrito {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%; /* Que ocupe todo el ancho */
+    max-height: 50vh;
+    overflow-y: auto;
+    background-color: #fff; /* Asegura buena visibilidad */
+    padding: 1rem;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.2); /* Sombra para distinguirlo */
+  }
+}
 </style>
 </head>
 <body>
