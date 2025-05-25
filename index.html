@@ -190,21 +190,18 @@
 
 @media (max-width: 800px) {
   .productos {
-    justify-content: center; /* "bottom" no es válido aquí */
-    flex-wrap: wrap; /* Asegura que los productos se acomoden bien */
+    justify-content: center;
+    flex-wrap: wrap;
   }
 
   #carrito {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%; /* Que ocupe todo el ancho */
-    max-height: 50vh;
-    overflow-y: auto;
-    background-color: #fff; /* Asegura buena visibilidad */
+    position: relative; /* Cambiamos de fixed a relative */
+    width: 100%;
+    max-height: none; /* Permitimos altura completa si es necesario */
+    margin: 2rem 0 0 0; /* Espacio con los productos */
     padding: 1rem;
-    z-index: 1000;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.2); /* Sombra para distinguirlo */
+    z-index: 1;
+    box-shadow: none; /* Quitamos sombra si no es necesario */
   }
 }
 </style>
