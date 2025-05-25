@@ -152,6 +152,21 @@ header img {
       margin-top: 1rem;
     }
   }
+  #popup {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #28a745;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    display: none;
+    z-index: 2000;
+    font-weight: bold;
+    font-size: 1rem;
+  }
 </style>
 </head>
 <body>
@@ -427,66 +442,68 @@ header img {
 </div>
 
 
-  <div id="carrito">
-    <h2>Carrito</h2>
-    <div id="items"></div>
-    <div id="total">Total: $ 0</div>
-    <button id="confirmar" onclick="confirmarCompra()">Confirmar compra</button>
-  </div>
+<div id="carrito">
+  <h2>Carrito</h2>
+  <div id="items"></div>
+  <p id="total">Total: $ 0,00</p>
+  <button id="confirmar">Confirmar compra</button>
+</div>
 
-  <script>
-    const carrito = {};
+<!-- Popup -->
+<div id="popup">Producto agregado al carrito</div>
 
-    function agregarAlCarrito(boton) {
-      const producto = boton.closest('.producto');
-      const nombre = producto.getAttribute('data-nombre');
-      const precio = parseFloat(producto.getAttribute('data-precio'));
-      const cantidadInput = producto.querySelector('.cantidad-input');
-      const cantidad = parseInt(cantidadInput.value);
+<script>
+  let carrito = [];
 
-      if (carrito[nombre]) {
-        carrito[nombre].cantidad += cantidad;
-      } else {
-        carrito[nombre] = { precio, cantidad };
-      }
+  function mostrarPopup() {
+    const popup = document.getElementById("popup");
+    popup.style.display = "block";
+    setTimeout(() => {
+      popup.style.display = "none";
+    }, 1500); // Mostrar por 1.5 segundos
+  }
 
-      actualizarCarrito();
+  function actualizarCarrito() {
+    const itemsContainer = document.getElementById("items");
+    itemsContainer.innerHTML = "";
+    let total = 0;
+
+    carrito.forEach((item, index) => {
+      const div = document.createElement("div");
+      div.className = "carrito-item";
+      div.innerHTML = `
+        <div>${item.nombre} x${item.cantidad}</div>
+        <div>$ ${(item.precio * item.cantidad).toLocaleString()}</div>
+        <button onclick="eliminarItem(${index})">&times;</button>
+      `;
+      itemsContainer.appendChild(div);
+      total += item.precio * item.cantidad;
+    });
+
+    document.getElementById("total").textContent = `Total: $ ${total.toLocaleString()}`;
+  }
+
+  function agregarAlCarrito(boton) {
+    const producto = boton.closest(".producto");
+    const nombre = producto.getAttribute("data-nombre");
+    const precio = parseFloat(producto.getAttribute("data-precio"));
+    const cantidad = parseInt(producto.querySelector(".cantidad-input").value);
+
+    const existente = carrito.find(item => item.nombre === nombre);
+    if (existente) {
+      existente.cantidad += cantidad;
+    } else {
+      carrito.push({ nombre, precio, cantidad });
     }
 
-    function actualizarCarrito() {
-      const items = document.getElementById('items');
-      items.innerHTML = '';
-      let total = 0;
+    actualizarCarrito();
+    mostrarPopup();
+  }
 
-      for (let nombre in carrito) {
-        const item = carrito[nombre];
-        const subtotal = item.precio * item.cantidad;
-        total += subtotal;
-
-        const div = document.createElement('div');
-        div.className = 'carrito-item';
-        div.innerHTML = `
-          <div>${nombre} x${item.cantidad}</div>
-          <div>$ ${subtotal.toLocaleString()}</div>
-          <button onclick="eliminarItem('${nombre}')">&times;</button>
-        `;
-        items.appendChild(div);
-      }
-
-      document.getElementById('total').innerText = 'Total: $ ' + total.toLocaleString();
-    }
-
-    function eliminarItem(nombre) {
-      delete carrito[nombre];
-      actualizarCarrito();
-    }
-
-    function confirmarCompra() {
-      if (Object.keys(carrito).length === 0) {
-        alert('El carrito está vacío.');
-        return;
-      }
-
+  function eliminarItem(index) {
+    carrito.splice(index, 1);
+    actualizarCarrito();
+  }
       let mensaje = '¡Hola! Quiero hacer el siguiente pedido:%0A';
       let total = 0;
 
