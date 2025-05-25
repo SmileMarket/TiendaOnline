@@ -508,6 +508,19 @@ header img {
       actualizarCarrito();
     }
   </script>
+<script>
+  function agregarAlCarrito(boton) {
+    const producto = boton.closest(".producto");
+    const nombre = producto.dataset.nombre;
+    const precio = parseFloat(producto.dataset.precio);
+    const cantidad = parseInt(producto.querySelector(".cantidad-input").value);
+
+    // Aquí deberías agregar el producto al carrito real (código existente que lo maneje)
+    // Por ahora solo mostramos el pop-up de confirmación
+
+    alert(`✅ ${cantidad} x "${nombre}" agregado(s) al carrito.`);
+  }
+</script>
 
 </body>
 </html>
