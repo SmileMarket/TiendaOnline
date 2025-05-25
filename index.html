@@ -187,8 +187,22 @@
   transform: scale(1.1);
   background-color: #20c25e;
 }
-
-  </style>
+  @media (max-width: 800px) {
+    .productos {
+      justify-content: center;
+    }
+    #carrito {
+      position: fixed;
+      bottom: 70px;
+      right: 15px;
+      width: 90%;
+      max-height: 60vh;
+      margin: 0;
+      padding: 1rem;
+      z-index: 1000;
+    }
+  }
+</style>
 </head>
 <body>
   <header>
