@@ -1,186 +1,182 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SmileMarket</title>
-<style>
-  body {
-    font-family: comic sans ms;
-    margin: 0; padding: 0; background: #f9f9f9; color: #333;
-  }
-  header {
-    background: #f7b0f7;
-    color: fuchsia;
-    padding: 1rem 2rem;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: bold;
-    letter-spacing: 2px;
-  }
-header img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
-}
-  .container {
-    max-width: 1100px;
-    margin: 2rem auto;
-    padding: 0 1rem;
-  }
-  h2 {
-    border-bottom: 2px solid #f5a2f5;
-    padding-bottom: .3rem;
-    margin-bottom: 1rem;
-    color: #007b7f;
-  }
-  .productos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-  .categoria {
-    flex: 1 1 100%;
-    margin-bottom: 2rem;
-  }
-  .producto {
-    background: white;
-    border-radius: 6px;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
-    padding: 1rem;
-    width: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .producto h3 {
-    font-size: 1.1rem;
-    margin: 0 0 0.5rem 0;
-  }
-  .precio {
-    color: #f5a2f5;
-    font-weight: 700;
-    margin-bottom: 0.5rem;
-  }
-  .cantidad-input {
-    width: 60px;
-    padding: 0.25rem;
-    margin-bottom: 0.7rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-  }
-  .boton {
-    background: #f5a2f5;
-    border: none;
-    color: white;
-    padding: 0.5rem;
-    cursor: pointer;
-    font-weight: 600;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-  }
-  .boton:hover {
-    background: #f5a2f5;
-  }
-
-  /* Carrito */
-  #carrito {
-    position: fixed;
-    top: 70px;
-    right: 20px;
-    background: white;
-    border-radius: 6px;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.15);
-    width: 320px;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 1rem;
-    font-size: 0.95rem;
-    z-index: 1000;
-  }
-  #carrito h2 {
-    margin-top: 0;
-  }
-  .carrito-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
-    padding: 0.5rem 0;
-  }
-  .carrito-item div {
-    flex: 1;
-  }
-  .carrito-item button {
-    background: transparent;
-    border: none;
-    color: #d9534f;
-    font-weight: bold;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  #total {
-    font-weight: 700;
-    margin-top: 1rem;
-    text-align: right;
-  }
-  #confirmar {
-    margin-top: 1rem;
-    width: 100%;
-    background: #007b7f;
-    color: white;
-    border: none;
-    padding: 0.6rem;
-    font-weight: 700;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  #confirmar:hover {
-    background: #218838;
-  }
-
-  @media(max-width: 800px) {
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SmileMarket</title>
+  <style>
+    body {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    header {
+      background: #f7b0f7;
+      color: fuchsia;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+    header img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+    h2 {
+      border-bottom: 2px solid #f5a2f5;
+      padding-bottom: .3rem;
+      margin-bottom: 1rem;
+      color: #007b7f;
+    }
     .productos {
-      justify-content: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .categoria {
+      flex: 1 1 100%;
+      margin-bottom: 2rem;
+    }
+    .producto {
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 4px rgb(0 0 0 / 0.1);
+      padding: 1rem;
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .producto h3 {
+      font-size: 1.1rem;
+      margin: 0 0 0.5rem 0;
+    }
+    .precio {
+      color: #f5a2f5;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .cantidad-input {
+      width: 60px;
+      padding: 0.25rem;
+      margin-bottom: 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .boton {
+      background: #f5a2f5;
+      border: none;
+      color: white;
+      padding: 0.5rem;
+      cursor: pointer;
+      font-weight: 600;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+    .boton:hover {
+      background: #e392e3;
     }
     #carrito {
-      position: static;
-      width: 100%;
-      max-height: none;
-      margin-top: 1rem;
+      position: fixed;
+      top: 70px;
+      right: 20px;
+      background: white;
+      border-radius: 6px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+      width: 320px;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 1rem;
+      font-size: 0.95rem;
+      z-index: 1000;
     }
-  }
-  #popup {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #28a745;
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 6px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    display: none;
-    z-index: 2000;
-    font-weight: bold;
-    font-size: 1rem;
-  }
-</style>
+    #carrito h2 {
+      margin-top: 0;
+    }
+    .carrito-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eee;
+      padding: 0.5rem 0;
+    }
+    .carrito-item div {
+      flex: 1;
+    }
+    .carrito-item button {
+      background: transparent;
+      border: none;
+      color: #d9534f;
+      font-weight: bold;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    #total {
+      font-weight: 700;
+      margin-top: 1rem;
+      text-align: right;
+    }
+    #confirmar {
+      margin-top: 1rem;
+      width: 100%;
+      background: #007b7f;
+      color: white;
+      border: none;
+      padding: 0.6rem;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #confirmar:hover {
+      background: #218838;
+    }
+    @media (max-width: 800px) {
+      .productos {
+        justify-content: center;
+      }
+      #carrito {
+        position: static;
+        width: 100%;
+        max-height: none;
+        margin-top: 1rem;
+      }
+    }
+    #popup {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #28a745;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      display: none;
+      z-index: 2000;
+      font-weight: bold;
+      font-size: 1rem;
+    }
+  </style>
 </head>
 <body>
-
   <header>
-    <img src="img/Logo.jpg" alt="Logo" />
+    <img src="img/Logo.jpg" alt="Logo SmileMarket" />
   </header>
-
-<div class="container">
-
-  <div class="categoria">
-    <h2>Varios</h2>
-
-    <div class="productos">
+  <div class="container">
+    <div class="categoria">
+      <h2>Varios</h2>
+      <div class="productos">
       <div class="producto" data-nombre="Adaptador fresas" data-precio="6000">
         <img src="img/Adaptador_fresa.jpg" alt="Adaptador fresas" />
         <h3>Adaptador fresas</h3>
@@ -442,58 +438,67 @@ header img {
 </div>
 
 
-<div id="carrito">
-  <h2>Carrito</h2>
-  <div id="items"></div>
-  <p id="total">Total: $ 0,00</p>
-  <button id="confirmar">Confirmar compra</button>
-</div>
 
-<!-- Popup -->
-<div id="popup">Producto agregado al carrito</div>
-
-<script>
-  let carrito = [];
-
-  function mostrarPopup() {
-    const popup = document.getElementById("popup");
-    popup.style.display = "block";
-    setTimeout(() => {
-      popup.style.display = "none";
-    }, 1500); // Mostrar por 1.5 segundos
-  }
-
-  function actualizarCarrito() {
+  <div id="carrito">
+    <h2>Carrito</h2>
+    <div id="items"></div>
+    <div id="total">Total: $0</div>
+    <button id="confirmar">Confirmar compra</button>
+  </div>
+  <div id="popup">Producto agregado al carrito</div>
+  <script>
+    const carrito = [];
     const itemsContainer = document.getElementById("items");
-    itemsContainer.innerHTML = "";
-    let total = 0;
+    const totalElement = document.getElementById("total");
+    const popup = document.getElementById("popup");
 
-    carrito.forEach((item, index) => {
-      const div = document.createElement("div");
-      div.className = "carrito-item";
-      div.innerHTML = `
-        <div>${item.nombre} x${item.cantidad}</div>
-        <div>$ ${(item.precio * item.cantidad).toLocaleString()}</div>
-        <button onclick="eliminarItem(${index})">&times;</button>
-      `;
-      itemsContainer.appendChild(div);
-      total += item.precio * item.cantidad;
-    });
+    function agregarAlCarrito(boton) {
+      const producto = boton.closest(".producto");
+      const nombre = producto.dataset.nombre;
+      const precio = parseFloat(producto.dataset.precio);
+      const cantidad = parseInt(producto.querySelector(".cantidad-input").value);
 
-    document.getElementById("total").textContent = `Total: $ ${total.toLocaleString()}`;
-  }
+      const existente = carrito.find(item => item.nombre === nombre);
+      if (existente) {
+        existente.cantidad += cantidad;
+      } else {
+        carrito.push({ nombre, precio, cantidad });
+      }
+      actualizarCarrito();
+      mostrarPopup();
+    }
 
-  function agregarAlCarrito(boton) {
-    const producto = boton.closest(".producto");
-    const nombre = producto.getAttribute("data-nombre");
-    const precio = parseFloat(producto.getAttribute("data-precio"));
-    const cantidad = parseInt(producto.querySelector(".cantidad-input").value);
+    function actualizarCarrito() {
+      itemsContainer.innerHTML = "";
+      let total = 0;
+      carrito.forEach((item, index) => {
+        total += item.precio * item.cantidad;
+        const div = document.createElement("div");
+        div.className = "carrito-item";
+        div.innerHTML = `
+          <div>${item.nombre} x${item.cantidad}</div>
+          <div>$${(item.precio * item.cantidad).toFixed(2)}</div>
+          <button onclick="eliminarDelCarrito(${index})">&times;</button>
+        `;
+        itemsContainer.appendChild(div);
+      });
+      totalElement.textContent = `Total: $${total.toFixed(2)}`;
+    }
 
-    const existente = carrito.find(item => item.nombre === nombre);
-    if (existente) {
-      existente.cantidad += cantidad;
-    } else {
-      carrito.push({ nombre, precio, cantidad });
+    function eliminarDelCarrito(index) {
+      carrito.splice(index, 1);
+      actualizarCarrito();
+    }
+
+    function mostrarPopup() {
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
     }
 
     actualizarCarrito();
