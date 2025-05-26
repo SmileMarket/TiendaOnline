@@ -143,6 +143,16 @@
       font-weight: bold;
       font-size: 1rem;
     }
+<div id="resumen-modal" style="display: none; position: fixed; top: 0; left: 0;
+  width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 3000;
+  display: flex; align-items: center; justify-content: center;">
+  <div style="background: white; padding: 1.5rem; border-radius: 10px; width: 90%; max-width: 400px;">
+    <h3 style="margin-top: 0; color: #007b7f;">Resumen de tu pedido</h3>
+    <div id="resumen-contenido" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
+    <button id="enviar-whatsapp" class="boton" style="width: 100%; margin-bottom: 0.5rem;">Enviar por WhatsApp</button>
+    <button id="cancelar-resumen" style="width: 100%; background: #ccc; border: none; padding: 0.5rem; border-radius: 4px; cursor: pointer;">Cancelar</button>
+  </div>
+</div>
     .whatsapp-float {
       position: fixed;
       top: 50%;
@@ -258,6 +268,30 @@
     }
 
     document.getElementById('confirmar').addEventListener('click', () => {
+  if (carrito.length === 0) {
+    alert('Tu carrito está vacío.');
+    return;
+  }
+
+  const resumen = document.getElementById('resumen-contenido');
+  resumen.innerHTML = '';
+  let mensaje = 'Hola! Quiero realizar una compra:\n';
+  let total = 0;
+
+  carrito.forEach(item => {
+    const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+    resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+    mensaje += `• ${linea}\n`;
+    total += item.precio * item.cantidad;
+  });
+
+  mensaje += `\nTotal: $${total.toLocaleString()}`;
+  resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
+
+  // Guardamos el mensaje para usarlo después
+  document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+  document.getElementById('resumen-modal').style.display = 'flex';
+});
       if (carrito.length === 0) {
         alert('Tu carrito está vacío.');
         return;
@@ -291,6 +325,17 @@
 
       contenedor.appendChild(div);
     });
+document.getElementById('enviar-whatsapp').addEventListener('click', () => {
+  const mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
+  const numeroWhatsApp = '5491130335334';
+  const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+  document.getElementById('resumen-modal').style.display = 'none';
+});
+
+document.getElementById('cancelar-resumen').addEventListener('click', () => {
+  document.getElementById('resumen-modal').style.display = 'none';
+});
   </script>
 </body>
 </html>
