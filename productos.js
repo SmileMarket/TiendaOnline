@@ -28,7 +28,7 @@ const productos = [
   { categoria: "Varios", nombre: "Vaso dappen x 2 - EN PROMO!", precio: 1500, imagen: "img/Vasodappen.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Bolsas rojas 45x60 Pack x10 - EN PROMO!", precio: 1100, imagen: "img/Bolsaroja.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Camisolines Descartables 20gr Pack x10 - EN PROMO!", precio: 4900, imagen: "img/Camisolin.jpg",descripcion: "" },
-  { categoria: "Descartables", nombre: "Campo Fenestrado", precio: 250, imagen: "",descripcion: "" },
+  { categoria: "Descartables", nombre: "Campo Fenestrado", precio: 250, imagen: "img/Campofenestrado.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Compresa", precio: 240, imagen: "img/Compresa.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Kit de cirugía E", precio: 2900, imagen: "img/Kit_Cirugia.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Kit de cirugía SE", precio: 2700, imagen: "img/Kit_Cirugia.jpg",descripcion: "" },
