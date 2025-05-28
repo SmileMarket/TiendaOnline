@@ -32,7 +32,7 @@ const productos = [
   { categoria: "Descartables", nombre: "Compresa", precio: 240, imagen: "img/Compresa.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Kit de cirugía E", precio: 2900, imagen: "img/Kit_Cirugia.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Kit de cirugía SE", precio: 2700, imagen: "img/Kit_Cirugia.jpg",descripcion: "" },
-  { categoria: "Descartables", nombre: "Tubos Largo - Cubre mangueras", precio: 260, imagen: "",descripcion: "" },
+  { categoria: "Descartables", nombre: "Tubos Largo - Cubre mangueras", precio: 260, imagen: "img/Tubolargo.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Tubuladura plástica x 100", precio: 1320, imagen: "img/Tubuladuraplastica.jpg",descripcion: "" },
   { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Violeta", precio: 270000, imagen: "img/Kit_NSK_Violeta.jpg",descripcion: "" },
   { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Rosa", precio: 270000, imagen: "img/Kit_NSK_Rosa.jpg",descripcion: "" },
