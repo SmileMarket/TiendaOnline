@@ -135,4 +135,30 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     contenedor.appendChild(div);
   });
+
+  // Crear dinámicamente los elementos faltantes
+  if (!document.getElementById('resumen-modal')) {
+    const modal = document.createElement('div');
+    modal.id = 'resumen-modal';
+    modal.style.display = 'none';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.style.zIndex = '10000';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.innerHTML = `
+      <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:100%">
+        <h2>Resumen de tu pedido</h2>
+        <div id="resumen-contenido" style="margin-bottom: 1rem;"></div>
+        <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px;">Enviar por WhatsApp</button>
+        <button id="cancelar-resumen" class="boton" style="background:#ccc; color:#333">Cancelar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
 });
