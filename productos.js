@@ -22,13 +22,8 @@ const productos = [
   { categoria: "Varios", nombre: "Microbrush Ecopack", precio: 3100, imagen: "",descripcion: "• Micro Aplicador punta fina Precio x Tubo con 100 aplicadores." },
   { categoria: "Varios", nombre: "Mini endo 72 Violeta - EN PROMO!", precio: 45000, imagen: "img/Miniendovioleta.jpg",descripcion: "• Caja de acero inoxidable Mini Endo para 72 instrumentos Con tapa. Autoclavable. Medidas: 10x5.5x4.5cm Presentación: 1 unidad" },
   { categoria: "Varios", nombre: "Mini endo 72 Plateada - EN PROMO!", precio: 45000, imagen: "img/Miniendoplateada.jpg",descripcion: "• Caja de acero inoxidable Mini Endo para 72 instrumentos Con tapa. Autoclavable. Medidas: 10x5.5x4.5cm Presentación: 1 unidad" },
-  { categoria: "Varios", nombre: "Organizador", precio: 3000, imagen: "img/Organizador.jpg",descripcion: " },
   { categoria: "Varios", nombre: "Pinceles silicona", precio: 6000, imagen: "img/Pinceles.jpg",descripcion: "• Set de 5 pinceles de modelado con punta de goma fina y delicada, de diferentes formas y ángulos. Para moldeado de resina dental." },
   { categoria: "Varios", nombre: "Punta P1 de cavitador", precio: 9000, imagen: "img/PuntaP1.jpg",descripcion: "• Presentación: x unidad." },
-  { categoria: "Varios", nombre: "Vaso dappen", precio: 800, imagen: "img/Vasodappen.jpg",descripcion: " },
-  { categoria: "Varios", nombre: "Vaso dappen x 2 - EN PROMO!", precio: 1500, imagen: "img/Vasodappen.jpg",descripcion: " },
-  { categoria: "Descartables", nombre: "Bolsas rojas 45x60 Pack x10 - EN PROMO!", precio: 1100, imagen: "img/Bolsaroja.jpg",descripcion: " },
-  { categoria: "Descartables", nombre: "Camisolines Descartables 20gr Pack x10 - EN PROMO!", precio: 4900, imagen: "img/Camisolin.jpg",descripcion: " },
   { categoria: "Descartables", nombre: "Campo Fenestrado", precio: 250, imagen: "img/Campofenestrado.jpg",descripcion: "• Campo de friselina con abertura anterior para el paciente." },
   { categoria: "Descartables", nombre: "Compresa", precio: 240, imagen: "img/Compresa.jpg",descripcion: "• Campo de mesa: campo de friselina de 90*90." },
   { categoria: "Descartables", nombre: "Kit de cirugía E", precio: 2900, imagen: "img/Kit_Cirugia.jpg",descripcion: "• Esteril: contiene 2 camisolines, 1 campo fenestrado, 1 campo de mesa, 1 tubuladura de friselina y servilletas." },
@@ -38,6 +33,4 @@ const productos = [
   { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Violeta", precio: 270000, imagen: "img/Kit_NSK_Violeta.jpg",descripcion: "• KIT ESTUDIANTIL VIOLETA tipo kmd 4 Piezas - TURBINA  con luz led spray x3,Rodamientos cerámicos de excelente calidad - Mayor velocidad-Excelente torque 390.000 r.p.m - MICROMOTOR neumático Autoclave a 135° C - Velocidad regulable 5.000 A 20.000 R.P.M -  CONTRA ANGULO a gatillo, refrigeración externa incorporada - Precisión en el tallado - PIEZA DE MANO Hasta 20.000 RPM" },
   { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Rosa", precio: 270000, imagen: "img/Kit_NSK_Rosa.jpg",descripcion: "• KIT ESTUDIANTIL ROSA tipo kmd 4 Piezas - TURBINA  con luz led spray x3,Rodamientos cerámicos de excelente calidad - Mayor velocidad-Excelente torque 390.000 r.p.m - MICROMOTOR neumático Autoclave a 135° C - Velocidad regulable 5.000 A 20.000 R.P.M -  CONTRA ANGULO a gatillo, refrigeración externa incorporada - Precisión en el tallado - PIEZA DE MANO Hasta 20.000 RPM" },
   { categoria: "Turbinas y Lamparas", nombre: "Turbina con luz de LED", precio: 95000, imagen: "img/Turbina.jpg",descripcion: "• Luz autogenerada por dínamo no requiere fibra óptica ni instalación el led tiene un período de vida de 10.000 horas - triple spray - push button - 350.000 rpm. Autoclavable" },
-  { categoria: "Turbinas y Lamparas", nombre: "Lampara", precio: 97000, imagen: "img/Lampara.jpg",descripcion: "" },
-
-];
+  { categoria: "Turbinas y Lamparas", nombre: "Lampara", precio: 97000, imagen: "img/Lampara.jpg",descripcion: "" }];
