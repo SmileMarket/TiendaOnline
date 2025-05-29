@@ -1,4 +1,3 @@
-
 const carrito = [];
 
 function agregarAlCarrito(boton) {
