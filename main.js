@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     contenedor.appendChild(div);
   });
+});
 
   // Modal dinámico para WhatsApp
   if (!document.getElementById('resumen-modal')) {
