@@ -231,81 +231,15 @@
       border-radius: 4px;
       font-weight: bold;
     }
-    .whatsapp-float:hover {
-      transform: scale(1.1);
-      background-color: #20c25e;
-    }
-    @media (max-width: 800px) {
-      .productos {
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-      #carrito {
-        position: static;
-        width: 100%;
-        max-height: none;
-        margin-top: 1rem;
-      }
-    }
-    .producto-imagen-container {
-      position: relative;
-      cursor: pointer;
-    }
-    .info-overlay {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: #f7b0f7;
-      color: black;
-      font-size: 0.8rem;
-      padding: 4px 6px;
-      border-radius: 4px;
-      font-weight: bold;
-    }
-.control-cantidad {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.7rem;
-  justify-content: center;
-  gap: 6px;
-}
-
-.control-cantidad button {
-  width: 20px;
-  height: 20px;
-  border: none;
-  background: #ddd;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  border-radius: 4px;
-  color: #333;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.control-cantidad button:hover {
-  background: #ccc;
-}
-
-.control-cantidad input {
-  width: 20px;
-  height: 20px;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: bold;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: white;
-  padding: 0;
-}
   </style>
 </head>
 <body>
   <header>
     <img src="img/Logo.jpg" alt="Logo SmileMarket" />
+<div style="margin-top: 10px; display: flex; justify-content: flex-end; padding-right: 1rem;">
+  <input type="text" id="buscador" placeholder="Buscar productos..." 
+         style="padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; width: 220px;" />
+</div>
   </header>
   <div class="container">
     <h2>Productos</h2>
