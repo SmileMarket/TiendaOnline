@@ -72,42 +72,57 @@ function cerrarModalInfo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('confirmar').addEventListener('click', () => {
-    if (carrito.length === 0) {
-      alert('Tu carrito está vacío.');
-      return;
-    }
+  const confirmarBtn = document.getElementById('confirmar');
+  if (confirmarBtn) {
+    confirmarBtn.addEventListener('click', () => {
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío.');
+        return;
+      }
 
-    const resumen = document.getElementById('resumen-contenido');
-    resumen.innerHTML = '';
-    let mensaje = 'Hola! Quiero realizar una compra:\n';
-    let total = 0;
+      const resumen = document.getElementById('resumen-contenido');
+      resumen.innerHTML = '';
+      let mensaje = 'Hola! Quiero realizar una compra:\n';
+      let total = 0;
 
-    carrito.forEach(item => {
-      const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
-      resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
-      mensaje += `• ${linea}\n`;
-      total += item.precio * item.cantidad;
+      carrito.forEach(item => {
+        const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+        resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+        mensaje += `• ${linea}\n`;
+        total += item.precio * item.cantidad;
+      });
+
+      mensaje += `\nTotal: $${total.toLocaleString()}`;
+      resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
+
+      const whatsappBtn = document.getElementById('enviar-whatsapp');
+      const modal = document.getElementById('resumen-modal');
+      if (whatsappBtn && modal) {
+        whatsappBtn.dataset.mensaje = mensaje;
+        modal.style.display = 'flex';
+      }
     });
+  }
 
-    mensaje += `\nTotal: $${total.toLocaleString()}`;
-    resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
+  const whatsappBtn = document.getElementById('enviar-whatsapp');
+  if (whatsappBtn) {
+    whatsappBtn.addEventListener('click', () => {
+      const mensaje = whatsappBtn.dataset.mensaje;
+      const numeroWhatsApp = '5491130335334';
+      const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
+      const modal = document.getElementById('resumen-modal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
 
-    document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
-    document.getElementById('resumen-modal').style.display = 'flex';
-  });
-
-  document.getElementById('enviar-whatsapp').addEventListener('click', () => {
-    const mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
-    const numeroWhatsApp = '5491130335334';
-    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
-    document.getElementById('resumen-modal').style.display = 'none';
-  });
-
-  document.getElementById('cancelar-resumen').addEventListener('click', () => {
-    document.getElementById('resumen-modal').style.display = 'none';
-  });
+  const cancelarBtn = document.getElementById('cancelar-resumen');
+  if (cancelarBtn) {
+    cancelarBtn.addEventListener('click', () => {
+      const modal = document.getElementById('resumen-modal');
+      if (modal) modal.style.display = 'none';
+    });
+  }
 
   const contenedor = document.getElementById('productos');
   productos.forEach(producto => {
@@ -136,11 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
     contenedor.appendChild(div);
   });
 
-  // Crear dinámicamente los elementos faltantes
   if (!document.getElementById('resumen-modal')) {
     const modal = document.createElement('div');
     modal.id = 'resumen-modal';
-    modal.style.display = 'none';
     modal.style.position = 'fixed';
     modal.style.top = '0';
     modal.style.left = '0';
