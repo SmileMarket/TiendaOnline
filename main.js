@@ -72,32 +72,8 @@ function cerrarModalInfo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-const contenedor = document.getElementById('productos');
-
-// Agrupar productos por categoría
-const productosPorCategoria = {};
-
-productos.forEach(producto => {
-  const categoria = producto.categoria || 'Sin categoría';
-  if (!productosPorCategoria[categoria]) {
-    productosPorCategoria[categoria] = [];
-  }
-  productosPorCategoria[categoria].push(producto);
-});
-
-// Renderizar productos por categoría
-for (const categoria in productosPorCategoria) {
-  const grupo = document.createElement('div');
-  grupo.className = 'grupo-categoria';
-
-  const titulo = document.createElement('h2');
-  titulo.textContent = categoria;
-  grupo.appendChild(titulo);
-
-  const contenedorCategoria = document.createElement('div');
-  contenedorCategoria.className = 'productos';
-
-  productosPorCategoria[categoria].forEach(producto => {
+  const contenedor = document.getElementById('productos');
+  productos.forEach(producto => {
     const div = document.createElement('div');
     div.className = 'producto';
     div.dataset.nombre = producto.nombre;
@@ -122,13 +98,8 @@ for (const categoria in productosPorCategoria) {
       </div>
       <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
     `;
-
-    contenedorCategoria.appendChild(div);
+    contenedor.appendChild(div);
   });
-
-  grupo.appendChild(contenedorCategoria);
-  contenedor.appendChild(grupo);
-}
 });
 
   // Modal dinámico para WhatsApp
