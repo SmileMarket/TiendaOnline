@@ -78,7 +78,8 @@ document.addEventListener('DOMContentLoaded', () => {
     div.className = 'producto';
     div.dataset.nombre = producto.nombre;
     div.dataset.precio = producto.precio;
-    div.dataset.descripcion = producto.descripcion || 'Sin descripción disponible';
+    div.dataset.descripcion = producto.descripcion || '';
+    div.dataset.categoria = producto.categoria || '';
 
     div.innerHTML = `
       ${producto.imagen ? `
@@ -88,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       ` : ''}
       <h3>${producto.nombre}</h3>
+      <p class="categoria-texto" style="margin: 0 0 0.3rem 0; font-size: 0.9rem; color: #555;">${producto.categoria}</p>
       <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
       <div class="control-cantidad">
         <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
@@ -99,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     contenedor.appendChild(div);
   });
 
-  // Crear dinámicamente el modal oculto
+  // Modal dinámico para WhatsApp
   if (!document.getElementById('resumen-modal')) {
     const modal = document.createElement('div');
     modal.id = 'resumen-modal';
@@ -123,19 +125,15 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.appendChild(modal);
 
-    // Asignar eventos después de insertarlo
-    const whatsappBtn = modal.querySelector('#enviar-whatsapp');
-    const cancelarBtn = modal.querySelector('#cancelar-resumen');
-
-    whatsappBtn.addEventListener('click', () => {
-      const mensaje = whatsappBtn.dataset.mensaje || '';
+    modal.querySelector('#enviar-whatsapp').addEventListener('click', () => {
+      const mensaje = modal.querySelector('#enviar-whatsapp').dataset.mensaje || '';
       const numeroWhatsApp = '5491130335334';
       const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
       window.open(url, '_blank');
       modal.style.display = 'none';
     });
 
-    cancelarBtn.addEventListener('click', () => {
+    modal.querySelector('#cancelar-resumen').addEventListener('click', () => {
       modal.style.display = 'none';
     });
   }
@@ -171,4 +169,39 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // === Buscador ===
+  const inputBuscador = document.getElementById('buscador');
+  inputBuscador.addEventListener('input', () => {
+    const termino = inputBuscador.value.toLowerCase();
+    const productosDOM = document.querySelectorAll('.producto');
+
+    productosDOM.forEach(producto => {
+      const nombre = producto.dataset.nombre.toLowerCase();
+      const descripcion = (producto.dataset.descripcion || '').toLowerCase();
+      const categoria = (producto.dataset.categoria || '').toLowerCase();
+
+      const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
+
+      if (coincide) {
+        producto.style.display = '';
+
+        const nombreElem = producto.querySelector('h3');
+        const categoriaElem = producto.querySelector('.categoria-texto');
+
+        nombreElem.innerHTML = producto.dataset.nombre;
+        categoriaElem.innerHTML = producto.dataset.categoria;
+
+        const terminoRegex = new RegExp(`(${termino})`, 'gi');
+
+        const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+        const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+
+        nombreElem.innerHTML = nombreResaltado;
+        categoriaElem.innerHTML = categoriaResaltada;
+      } else {
+        producto.style.display = 'none';
+      }
+    });
+  });
 });
