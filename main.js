@@ -71,66 +71,68 @@ function cerrarModalInfo() {
   document.getElementById('info-modal').style.display = 'none';
 }
 
-document.getElementById('confirmar').addEventListener('click', () => {
-  if (carrito.length === 0) {
-    alert('Tu carrito está vacío.');
-    return;
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('confirmar').addEventListener('click', () => {
+    if (carrito.length === 0) {
+      alert('Tu carrito está vacío.');
+      return;
+    }
 
-  const resumen = document.getElementById('resumen-contenido');
-  resumen.innerHTML = '';
-  let mensaje = 'Hola! Quiero realizar una compra:\n';
-  let total = 0;
+    const resumen = document.getElementById('resumen-contenido');
+    resumen.innerHTML = '';
+    let mensaje = 'Hola! Quiero realizar una compra:\n';
+    let total = 0;
 
-  carrito.forEach(item => {
-    const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
-    resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
-    mensaje += `• ${linea}\n`;
-    total += item.precio * item.cantidad;
+    carrito.forEach(item => {
+      const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+      resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+      mensaje += `• ${linea}\n`;
+      total += item.precio * item.cantidad;
+    });
+
+    mensaje += `\nTotal: $${total.toLocaleString()}`;
+    resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
+
+    document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+    document.getElementById('resumen-modal').style.display = 'flex';
   });
 
-  mensaje += `\nTotal: $${total.toLocaleString()}`;
-  resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
+  document.getElementById('enviar-whatsapp').addEventListener('click', () => {
+    const mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
+    const numeroWhatsApp = '5491130335334';
+    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+    document.getElementById('resumen-modal').style.display = 'none';
+  });
 
-  document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
-  document.getElementById('resumen-modal').style.display = 'flex';
-});
+  document.getElementById('cancelar-resumen').addEventListener('click', () => {
+    document.getElementById('resumen-modal').style.display = 'none';
+  });
 
-document.getElementById('enviar-whatsapp').addEventListener('click', () => {
-  const mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
-  const numeroWhatsApp = '5491130335334';
-  const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-  window.open(url, '_blank');
-  document.getElementById('resumen-modal').style.display = 'none';
-});
+  const contenedor = document.getElementById('productos');
+  productos.forEach(producto => {
+    const div = document.createElement('div');
+    div.className = 'producto';
+    div.dataset.nombre = producto.nombre;
+    div.dataset.precio = producto.precio;
+    div.dataset.descripcion = producto.descripcion || 'Sin descripción disponible';
 
-document.getElementById('cancelar-resumen').addEventListener('click', () => {
-  document.getElementById('resumen-modal').style.display = 'none';
-});
-
-const contenedor = document.getElementById('productos');
-productos.forEach(producto => {
-  const div = document.createElement('div');
-  div.className = 'producto';
-  div.dataset.nombre = producto.nombre;
-  div.dataset.precio = producto.precio;
-  div.dataset.descripcion = producto.descripcion || 'Sin descripción disponible';
-
-  div.innerHTML = `
-    ${producto.imagen ? `
-      <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
-        <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
-        <div class="info-overlay">+ info</div>
+    div.innerHTML = `
+      ${producto.imagen ? `
+        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+          <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
+          <div class="info-overlay">+ info</div>
+        </div>
+      ` : ''}
+      <h3>${producto.nombre}</h3>
+      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+      <div class="control-cantidad">
+        <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
+        <input class="cantidad-input" type="number" value="1" min="1" readonly />
+        <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
       </div>
-    ` : ''}
-    <h3>${producto.nombre}</h3>
-    <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-    <div class="control-cantidad">
-      <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
-      <input class="cantidad-input" type="number" value="1" min="1" readonly />
-      <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
-    </div>
-    <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
-  `;
-  contenedor.appendChild(div);
+      <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+    `;
+    contenedor.appendChild(div);
+  });
 });
