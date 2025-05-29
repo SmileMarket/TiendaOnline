@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -294,10 +295,17 @@
       padding: 0 2px;
       border-radius: 3px;
     }
+
+    .grupo-categoria h2 {
+      margin-top: 2rem;
+      font-size: 1.4rem;
+      color: #007b7f;
+      border-bottom: 2px solid #f5a2f5;
+      padding-bottom: 0.3rem;
+    }
   </style>
 </head>
 <body>
-
   <header>
     <img src="img/Logo.jpg" alt="Logo SmileMarket" />
     <div id="buscador-container">
@@ -318,6 +326,15 @@
   </div>
 
   <div id="popup">Producto agregado al carrito</div>
+
+  <!-- Modal de información -->
+  <div id="info-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:90%; position:relative;">
+      <button onclick="cerrarModalInfo()" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      <h3 id="modal-titulo"></h3>
+      <p id="modal-descripcion" style="margin-top: 1rem;"></p>
+    </div>
+  </div>
 
   <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" class="whatsapp-float" target="_blank" title="Escribinos por WhatsApp">💬</a>
 
