@@ -1,3 +1,4 @@
+
 const carrito = [];
 
 function agregarAlCarrito(boton) {
@@ -97,6 +98,14 @@ function cerrarModalInfo() {
   document.getElementById('info-modal').style.display = 'none';
 }
 
+function cambiarCantidad(boton, delta) {
+  const input = boton.parentElement.querySelector('.cantidad-input');
+  let cantidad = parseInt(input.value) || 1;
+  cantidad += delta;
+  if (cantidad < 1) cantidad = 1;
+  input.value = cantidad;
+}
+
 const contenedor = document.getElementById('productos');
 productos.forEach(producto => {
   const div = document.createElement('div');
@@ -114,19 +123,12 @@ productos.forEach(producto => {
     ` : ''}
     <h3>${producto.nombre}</h3>
     <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-<div class="control-cantidad">
-  <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
-  <input class="cantidad-input" type="number" value="1" min="1" readonly />
-  <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
-</div>
+    <div class="control-cantidad">
+      <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
+      <input class="cantidad-input" type="number" value="1" min="1" readonly />
+      <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
+    </div>
     <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
   `;
   contenedor.appendChild(div);
-function cambiarCantidad(boton, delta) {
-  const input = boton.parentElement.querySelector('.cantidad-input');
-  let cantidad = parseInt(input.value) || 1;
-  cantidad += delta;
-  if (cantidad < 1) cantidad = 1;
-  input.value = cantidad;
-}
 });
