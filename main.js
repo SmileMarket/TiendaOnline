@@ -171,37 +171,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // === Buscador ===
-  const inputBuscador = document.getElementById('buscador');
-  inputBuscador.addEventListener('input', () => {
-    const termino = inputBuscador.value.toLowerCase();
-    const productosDOM = document.querySelectorAll('.producto');
+const inputBuscador = document.getElementById('buscador');
 
+inputBuscador.addEventListener('input', () => {
+  const termino = inputBuscador.value.trim().toLowerCase();
+
+  const productosDOM = document.querySelectorAll('.producto');
+
+  if (termino === '') {
     productosDOM.forEach(producto => {
-      const nombre = producto.dataset.nombre.toLowerCase();
-      const descripcion = (producto.dataset.descripcion || '').toLowerCase();
-      const categoria = (producto.dataset.categoria || '').toLowerCase();
-
-      const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
-
-      if (coincide) {
-        producto.style.display = '';
-
-        const nombreElem = producto.querySelector('h3');
-        const categoriaElem = producto.querySelector('.categoria-texto');
-
-        nombreElem.innerHTML = producto.dataset.nombre;
-        categoriaElem.innerHTML = producto.dataset.categoria;
-
-        const terminoRegex = new RegExp(`(${termino})`, 'gi');
-
-        const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
-        const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
-
-        nombreElem.innerHTML = nombreResaltado;
-        categoriaElem.innerHTML = categoriaResaltada;
-      } else {
-        producto.style.display = 'none';
-      }
+      producto.style.display = '';
+      const nombreElem = producto.querySelector('h3');
+      const categoriaElem = producto.querySelector('.categoria-texto');
+      nombreElem.innerHTML = producto.dataset.nombre;
+      categoriaElem.innerHTML = producto.dataset.categoria;
     });
+    return; // 👈 Esto es clave para que no siga y evite el resaltado vacío
+  }
+
+  productosDOM.forEach(producto => {
+    const nombre = producto.dataset.nombre.toLowerCase();
+    const descripcion = (producto.dataset.descripcion || '').toLowerCase();
+    const categoria = (producto.dataset.categoria || '').toLowerCase();
+
+    const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
+
+    if (coincide) {
+      producto.style.display = '';
+
+      const nombreElem = producto.querySelector('h3');
+      const categoriaElem = producto.querySelector('.categoria-texto');
+
+      nombreElem.innerHTML = producto.dataset.nombre;
+      categoriaElem.innerHTML = producto.dataset.categoria;
+
+      const terminoRegex = new RegExp(`(${termino})`, 'gi');
+
+      const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+      const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+
+      nombreElem.innerHTML = nombreResaltado;
+      categoriaElem.innerHTML = categoriaResaltada;
+    } else {
+      producto.style.display = 'none';
+    }
   });
 });
