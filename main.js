@@ -72,6 +72,74 @@ function cerrarModalInfo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const contenedor = document.getElementById('productos');
+  productos.forEach(producto => {
+    const div = document.createElement('div');
+    div.className = 'producto';
+    div.dataset.nombre = producto.nombre;
+    div.dataset.precio = producto.precio;
+    div.dataset.descripcion = producto.descripcion || 'Sin descripción disponible';
+
+    div.innerHTML = `
+      ${producto.imagen ? `
+        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+          <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
+          <div class="info-overlay">+ info</div>
+        </div>
+      ` : ''}
+      <h3>${producto.nombre}</h3>
+      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+      <div class="control-cantidad">
+        <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
+        <input class="cantidad-input" type="number" value="1" min="1" readonly />
+        <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
+      </div>
+      <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+    `;
+    contenedor.appendChild(div);
+  });
+
+  // Crear dinámicamente el modal oculto
+  if (!document.getElementById('resumen-modal')) {
+    const modal = document.createElement('div');
+    modal.id = 'resumen-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.style.zIndex = '10000';
+    modal.style.display = 'none';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.innerHTML = `
+      <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:100%">
+        <h2>Resumen de tu pedido</h2>
+        <div id="resumen-contenido" style="margin-bottom: 1rem;"></div>
+        <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px;">Enviar por WhatsApp</button>
+        <button id="cancelar-resumen" class="boton" style="background:#ccc; color:#333">Cancelar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Asignar eventos después de insertarlo
+    const whatsappBtn = modal.querySelector('#enviar-whatsapp');
+    const cancelarBtn = modal.querySelector('#cancelar-resumen');
+
+    whatsappBtn.addEventListener('click', () => {
+      const mensaje = whatsappBtn.dataset.mensaje || '';
+      const numeroWhatsApp = '5491130335334';
+      const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
+      modal.style.display = 'none';
+    });
+
+    cancelarBtn.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+  }
+
   const confirmarBtn = document.getElementById('confirmar');
   if (confirmarBtn) {
     confirmarBtn.addEventListener('click', () => {
@@ -102,76 +170,5 @@ document.addEventListener('DOMContentLoaded', () => {
         modal.style.display = 'flex';
       }
     });
-  }
-
-  const whatsappBtn = document.getElementById('enviar-whatsapp');
-  if (whatsappBtn) {
-    whatsappBtn.addEventListener('click', () => {
-      const mensaje = whatsappBtn.dataset.mensaje;
-      const numeroWhatsApp = '5491130335334';
-      const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, '_blank');
-      const modal = document.getElementById('resumen-modal');
-      if (modal) modal.style.display = 'none';
-    });
-  }
-
-  const cancelarBtn = document.getElementById('cancelar-resumen');
-  if (cancelarBtn) {
-    cancelarBtn.addEventListener('click', () => {
-      const modal = document.getElementById('resumen-modal');
-      if (modal) modal.style.display = 'none';
-    });
-  }
-
-  const contenedor = document.getElementById('productos');
-  productos.forEach(producto => {
-    const div = document.createElement('div');
-    div.className = 'producto';
-    div.dataset.nombre = producto.nombre;
-    div.dataset.precio = producto.precio;
-    div.dataset.descripcion = producto.descripcion || 'Sin descripción disponible';
-
-    div.innerHTML = `
-      ${producto.imagen ? `
-        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
-          <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
-          <div class="info-overlay">+ info</div>
-        </div>
-      ` : ''}
-      <h3>${producto.nombre}</h3>
-      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-      <div class="control-cantidad">
-        <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
-        <input class="cantidad-input" type="number" value="1" min="1" readonly />
-        <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
-      </div>
-      <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
-    `;
-    contenedor.appendChild(div);
-  });
-
-  if (!document.getElementById('resumen-modal')) {
-    const modal = document.createElement('div');
-    modal.id = 'resumen-modal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-    modal.style.zIndex = '10000';
-    modal.style.display = 'flex';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
-    modal.innerHTML = `
-      <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:100%">
-        <h2>Resumen de tu pedido</h2>
-        <div id="resumen-contenido" style="margin-bottom: 1rem;"></div>
-        <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px;">Enviar por WhatsApp</button>
-        <button id="cancelar-resumen" class="boton" style="background:#ccc; color:#333">Cancelar</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
   }
 });
