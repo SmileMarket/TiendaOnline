@@ -173,7 +173,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // === Buscador ===
   const inputBuscador = document.getElementById('buscador');
   inputBuscador.addEventListener('input', () => {
-    const termino = inputBuscador.value.toLowerCase();
+const termino = inputBuscador.value.trim().toLowerCase();
+if (termino === '') {
+  document.querySelectorAll('.producto').forEach(producto => {
+    producto.style.display = '';
+    const nombreElem = producto.querySelector('h3');
+    const categoriaElem = producto.querySelector('.categoria-texto');
+    nombreElem.innerHTML = producto.dataset.nombre;
+    categoriaElem.innerHTML = producto.dataset.categoria;
+  });
+  return;
+}
     const productosDOM = document.querySelectorAll('.producto');
 
     productosDOM.forEach(producto => {
