@@ -1,275 +1,41 @@
 const productos = [
-  {
-    "categoria": "Varios",
-    "nombre": "Adaptador fresas para CA",
-    "precio": 6000,
-    "imagen": "img/Adaptadorfresa.jpg",
-    "descripcion": "Adaptador universal para todo tipo de fresas"
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Endo Z - EN PROMO!",
-    "precio": 5500,
-    "imagen": "img/EndoZ.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Espaciador A B C D",
-    "precio": 5000,
-    "imagen": "img/Espaciador.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Espejo de Rhodio",
-    "precio": 3400,
-    "imagen": "img/EspejodeRodhio.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Fresa de largo #1 28mm",
-    "precio": 3500,
-    "imagen": "img/Fresadelargo1.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Fresa de largo #2 28mm",
-    "precio": 3500,
-    "imagen": "img/Fresadelargo2.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Fresa de largo #3 28mm",
-    "precio": 3500,
-    "imagen": "img/Fresadelargo3.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Gancho localizador",
-    "precio": 5000,
-    "imagen": "img/Gancholocalizador.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Kit Matrices - EN PROMO!",
-    "precio": 14600,
-    "imagen": "img/Kitmatrices.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima H Acero #15-40 25mm",
-    "precio": 3800,
-    "imagen": "img/LimasH15-40.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima H Acero #45-80 25mm",
-    "precio": 3800,
-    "imagen": "img/LimasH45-80.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima H Acero #15 25mm C/U",
-    "precio": 640,
-    "imagen": "img/LimasH15.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima K Acero #15-40 25mm",
-    "precio": 3800,
-    "imagen": "img/LimasK15-40.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima K Acero #8 25mm C/U",
-    "precio": 640,
-    "imagen": "img/LimasK08.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima K Acero #10 25mm C/U",
-    "precio": 640,
-    "imagen": "img/LimasK10.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima K Acero #15 25mm C/U",
-    "precio": 640,
-    "imagen": "img/LimasK15.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Lima K Acero #20 25mm C/U",
-    "precio": 640,
-    "imagen": "img/LimasK20.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Llave para Ajustes de Puntas",
-    "precio": 12600,
-    "imagen": "img/Llaveajuste.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Microbrush",
-    "precio": 4400,
-    "imagen": "img/Microbrush.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Microbrush Ecopack",
-    "precio": 3100,
-    "imagen": "",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Mini endo 72 Violeta - EN PROMO!",
-    "precio": 45000,
-    "imagen": "img/Miniendovioleta.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Mini endo 72 Plateada - EN PROMO!",
-    "precio": 45000,
-    "imagen": "img/Miniendoplateada.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Organizador",
-    "precio": 3000,
-    "imagen": "img/Organizador.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Pinceles silicona",
-    "precio": 6000,
-    "imagen": "img/Pinceles.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Punta P1 de cavitador",
-    "precio": 9000,
-    "imagen": "img/PuntaP1.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Vaso dappen",
-    "precio": 800,
-    "imagen": "img/Vasodappen.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Varios",
-    "nombre": "Vaso dappen x 2 - EN PROMO!",
-    "precio": 1500,
-    "imagen": "img/Vasodappen.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Bolsas rojas 45x60 Pack x10 - EN PROMO!",
-    "precio": 1100,
-    "imagen": "img/Bolsaroja.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Camisolines Descartables 20gr Pack x10 - EN PROMO!",
-    "precio": 4900,
-    "imagen": "img/Camisolin.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Campo Fenestrado",
-    "precio": 250,
-    "imagen": "img/Campofenestrado.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Compresa",
-    "precio": 240,
-    "imagen": "img/Compresa.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Kit de cirugía E",
-    "precio": 2900,
-    "imagen": "img/Kit_Cirugia.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Kit de cirugía SE",
-    "precio": 2700,
-    "imagen": "img/Kit_Cirugia.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Tubos Largo - Cubre mangueras",
-    "precio": 260,
-    "imagen": "img/Tubolargo.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Descartables",
-    "nombre": "Tubuladura plástica x 100",
-    "precio": 1320,
-    "imagen": "img/Tubuladuraplastica.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Turbinas y Lamparas",
-    "nombre": "Kit NSK Violeta",
-    "precio": 270000,
-    "imagen": "img/Kit_NSK_Violeta.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Turbinas y Lamparas",
-    "nombre": "Kit NSK Rosa",
-    "precio": 270000,
-    "imagen": "img/Kit_NSK_Rosa.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Turbinas y Lamparas",
-    "nombre": "Turbina calidad luz led A",
-    "precio": 95000,
-    "imagen": "img/Turbina.jpg",
-    "descripcion": ""
-  },
-  {
-    "categoria": "Turbinas y Lamparas",
-    "nombre": "Lampara",
-    "precio": 97000,
-    "imagen": "img/Lampara.jpg",
-    "descripcion": ""
-  }
+  { categoria: "Varios", nombre: "Adaptador fresas para CA", precio: 6000, imagen: "img/Adaptadorfresa.jpg",descripcion: "• Adaptador Fresa A Contra Angulo: el adaptador garantiza una conexión segura y estable entre las fresas y el contra ángulo. Esto minimiza el riesgo de deslizamiento o aflojamiento durante el uso, lo que proporciona al odontólogo una mayor confianza y control durante los procedimientos." },
+  { categoria: "Varios", nombre: "Endo Z - EN PROMO!", precio: 5500, imagen: "img/EndoZ.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Espaciador A B C D", precio: 5000, imagen: "img/Espaciador.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Espejo de Rhodio", precio: 3400, imagen: "img/EspejodeRodhio.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Fresa de largo #1 28mm", precio: 3500, imagen: "img/Fresadelargo1.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Fresa de largo #2 28mm", precio: 3500, imagen: "img/Fresadelargo2.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Fresa de largo #3 28mm", precio: 3500, imagen: "img/Fresadelargo3.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Gancho localizador", precio: 5000, imagen: "img/Gancholocalizador.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Kit Matrices - EN PROMO!", precio: 14600, imagen: "img/Kitmatrices.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima H Acero #15-40 25mm", precio: 3800, imagen: "img/LimasH15-40.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima H Acero #45-80 25mm", precio: 3800, imagen: "img/LimasH45-80.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima H Acero #15 25mm C/U", precio: 640, imagen: "img/LimasH15.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima K Acero #15-40 25mm", precio: 3800, imagen: "img/LimasK15-40.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima K Acero #8 25mm C/U", precio: 640, imagen: "img/LimasK08.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima K Acero #10 25mm C/U", precio: 640, imagen: "img/LimasK10.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima K Acero #15 25mm C/U", precio: 640, imagen: "img/LimasK15.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Lima K Acero #20 25mm C/U", precio: 640, imagen: "img/LimasK20.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Llave para Ajustes de Puntas", precio: 12600, imagen: "img/Llaveajuste.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Microbrush", precio: 4400, imagen: "img/Microbrush.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Microbrush Ecopack", precio: 3100, imagen: "",descripcion: "" },
+  { categoria: "Varios", nombre: "Mini endo 72 Violeta - EN PROMO!", precio: 45000, imagen: "img/Miniendovioleta.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Mini endo 72 Plateada - EN PROMO!", precio: 45000, imagen: "img/Miniendoplateada.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Organizador", precio: 3000, imagen: "img/Organizador.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Pinceles silicona", precio: 6000, imagen: "img/Pinceles.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Punta P1 de cavitador", precio: 9000, imagen: "img/PuntaP1.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Vaso dappen", precio: 800, imagen: "img/Vasodappen.jpg",descripcion: "" },
+  { categoria: "Varios", nombre: "Vaso dappen x 2 - EN PROMO!", precio: 1500, imagen: "img/Vasodappen.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Bolsas rojas 45x60 Pack x10 - EN PROMO!", precio: 1100, imagen: "img/Bolsaroja.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Camisolines Descartables 20gr Pack x10 - EN PROMO!", precio: 4900, imagen: "img/Camisolin.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Campo Fenestrado", precio: 250, imagen: "img/Campofenestrado.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Compresa", precio: 240, imagen: "img/Compresa.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Kit de cirugía E", precio: 2900, imagen: "img/Kit_Cirugia.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Kit de cirugía SE", precio: 2700, imagen: "img/Kit_Cirugia.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Tubos Largo - Cubre mangueras", precio: 260, imagen: "img/Tubolargo.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Tubuladura plástica x 100", precio: 1320, imagen: "img/Tubuladuraplastica.jpg",descripcion: "" },
+  { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Violeta", precio: 270000, imagen: "img/Kit_NSK_Violeta.jpg",descripcion: "" },
+  { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Rosa", precio: 270000, imagen: "img/Kit_NSK_Rosa.jpg",descripcion: "" },
+  { categoria: "Turbinas y Lamparas", nombre: "Turbina calidad luz led A", precio: 95000, imagen: "img/Turbina.jpg",descripcion: "" },
+  { categoria: "Turbinas y Lamparas", nombre: "Lampara", precio: 97000, imagen: "img/Lampara.jpg",descripcion: "" },
 ];
