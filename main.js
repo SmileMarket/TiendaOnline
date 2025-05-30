@@ -71,150 +71,124 @@ function cerrarModalInfo() {
   document.getElementById('info-modal').style.display = 'none';
 }
 
+function agregarRecomendaciones(productoElement, recomendacionesArray) {
+  if (!productoElement || !Array.isArray(recomendacionesArray)) return;
+
+  const recomendacionesDiv = document.createElement('div');
+  recomendacionesDiv.className = 'recomendaciones';
+  const contenido = recomendacionesArray.map(item => `<li>${item}</li>`).join('');
+  recomendacionesDiv.innerHTML = `<strong>Recomendado:</strong><ul style="padding-left: 1.2rem; margin: 0.3rem 0;">${contenido}</ul>`;
+  productoElement.appendChild(recomendacionesDiv);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const contenedor = document.getElementById('productos');
+  const productosPorCategoria = {};
+
   productos.forEach(producto => {
-    const div = document.createElement('div');
-    div.className = 'producto';
-    div.dataset.nombre = producto.nombre;
-    div.dataset.precio = producto.precio;
-    div.dataset.descripcion = producto.descripcion || '';
-    div.dataset.categoria = producto.categoria || '';
-
-    div.innerHTML = `
-      ${producto.imagen ? `
-        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
-          <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
-          <div class="info-overlay">+ info</div>
-        </div>
-      ` : ''}
-      <h3>${producto.nombre}</h3>
-      <p class="categoria-texto" style="margin: 0 0 0.3rem 0; font-size: 0.9rem; color: #555;">${producto.categoria}</p>
-      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-      <div class="control-cantidad">
-        <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
-        <input class="cantidad-input" type="number" value="1" min="1" readonly />
-        <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
-      </div>
-      <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
-    `;
-    contenedor.appendChild(div);
-  });
-});
-
-  // Modal dinámico para WhatsApp
-  if (!document.getElementById('resumen-modal')) {
-    const modal = document.createElement('div');
-    modal.id = 'resumen-modal';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-    modal.style.zIndex = '10000';
-    modal.style.display = 'none';
-    modal.style.justifyContent = 'center';
-    modal.style.alignItems = 'center';
-    modal.innerHTML = `
-      <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:100%">
-        <h2>Resumen de tu pedido</h2>
-        <div id="resumen-contenido" style="margin-bottom: 1rem;"></div>
-        <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px;">Enviar por WhatsApp</button>
-        <button id="cancelar-resumen" class="boton" style="background:#ccc; color:#333">Cancelar</button>
-      </div>
-    `;
-    document.body.appendChild(modal);
-
-    modal.querySelector('#enviar-whatsapp').addEventListener('click', () => {
-      const mensaje = modal.querySelector('#enviar-whatsapp').dataset.mensaje || '';
-      const numeroWhatsApp = '5491130335334';
-      const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-      window.open(url, '_blank');
-      modal.style.display = 'none';
-    });
-
-    modal.querySelector('#cancelar-resumen').addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
-  }
-
-  const confirmarBtn = document.getElementById('confirmar');
-  if (confirmarBtn) {
-    confirmarBtn.addEventListener('click', () => {
-      if (carrito.length === 0) {
-        alert('Tu carrito está vacío.');
-        return;
-      }
-
-      const resumen = document.getElementById('resumen-contenido');
-      resumen.innerHTML = '';
-      let mensaje = 'Hola! Quiero realizar una compra:\n';
-      let total = 0;
-
-      carrito.forEach(item => {
-        const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
-        resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
-        mensaje += `• ${linea}\n`;
-        total += item.precio * item.cantidad;
-      });
-
-      mensaje += `\nTotal: $${total.toLocaleString()}`;
-      resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
-
-      const whatsappBtn = document.getElementById('enviar-whatsapp');
-      const modal = document.getElementById('resumen-modal');
-      if (whatsappBtn && modal) {
-        whatsappBtn.dataset.mensaje = mensaje;
-        modal.style.display = 'flex';
-      }
-    });
-  }
-
-  // === Buscador ===
-const inputBuscador = document.getElementById('buscador');
-
-inputBuscador.addEventListener('input', () => {
-  const termino = inputBuscador.value.trim().toLowerCase();
-
-  const productosDOM = document.querySelectorAll('.producto');
-
-  if (termino === '') {
-    productosDOM.forEach(producto => {
-      producto.style.display = '';
-      const nombreElem = producto.querySelector('h3');
-      const categoriaElem = producto.querySelector('.categoria-texto');
-      nombreElem.innerHTML = producto.dataset.nombre;
-      categoriaElem.innerHTML = producto.dataset.categoria;
-    });
-    return; // 👈 Esto es clave para que no siga y evite el resaltado vacío
-  }
-
-  productosDOM.forEach(producto => {
-    const nombre = producto.dataset.nombre.toLowerCase();
-    const descripcion = (producto.dataset.descripcion || '').toLowerCase();
-    const categoria = (producto.dataset.categoria || '').toLowerCase();
-
-    const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
-
-    if (coincide) {
-      producto.style.display = '';
-
-      const nombreElem = producto.querySelector('h3');
-      const categoriaElem = producto.querySelector('.categoria-texto');
-
-      nombreElem.innerHTML = producto.dataset.nombre;
-      categoriaElem.innerHTML = producto.dataset.categoria;
-
-      const terminoRegex = new RegExp(`(${termino})`, 'gi');
-
-      const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
-      const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
-
-      nombreElem.innerHTML = nombreResaltado;
-      categoriaElem.innerHTML = categoriaResaltada;
-    } else {
-      producto.style.display = 'none';
+    const categoria = producto.categoria || 'Sin categoría';
+    if (!productosPorCategoria[categoria]) {
+      productosPorCategoria[categoria] = [];
     }
+    productosPorCategoria[categoria].push(producto);
+  });
+
+  const recomendacionesPorProducto = {
+    'Lima K Acero #15 25mm C/U': ['Organizador', 'Caja Mini Endo 72', 'Punta P1 de cavitador'],
+    'Turbina con luz de LED': ['Micromotor neumático', 'Contra ángulo', 'Kit NSK Violeta'],
+    'Kit de cirugía E': ['Campo fenestrado adicional', 'Tubuladura plástica x 100'],
+    'Microbrush': ['Pinceles de silicona', 'Organizador'],
+    'Kit NSK Violeta': ['Limas K', 'Caja mini endo', 'Lubricante de piezas de mano'],
+    'Endo Z - EN PROMO!': ['Limas H', 'Organizador', 'Caja esterilizadora']
+  };
+
+  for (const categoria in productosPorCategoria) {
+    const grupo = document.createElement('div');
+    grupo.className = 'grupo-categoria';
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = categoria;
+    titulo.id = `cat-${categoria.toLowerCase().replace(/\s+/g, '-')}`;
+    grupo.appendChild(titulo);
+
+    const contenedorCategoria = document.createElement('div');
+    contenedorCategoria.className = 'productos';
+
+    productosPorCategoria[categoria].forEach(producto => {
+      const div = document.createElement('div');
+      div.className = 'producto';
+      div.dataset.nombre = producto.nombre;
+      div.dataset.precio = producto.precio;
+      div.dataset.descripcion = producto.descripcion || '';
+      div.dataset.categoria = producto.categoria || '';
+
+      div.innerHTML = `
+        ${producto.imagen ? `
+          <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+            <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
+            <div class="info-overlay">+ info</div>
+          </div>
+        ` : ''}
+        <h3>${producto.nombre}</h3>
+        <p class="categoria-texto" style="margin: 0 0 0.3rem 0; font-size: 0.9rem; color: #555;">${producto.categoria}</p>
+        <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+        <div class="control-cantidad">
+          <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
+          <input class="cantidad-input" type="number" value="1" min="1" readonly />
+          <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
+        </div>
+        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+      `;
+
+      const recomendaciones = recomendacionesPorProducto[producto.nombre];
+      if (recomendaciones) {
+        agregarRecomendaciones(div, recomendaciones);
+      }
+
+      contenedorCategoria.appendChild(div);
+    });
+
+    grupo.appendChild(contenedorCategoria);
+    contenedor.appendChild(grupo);
+  }
+
+  // Buscador
+  const inputBuscador = document.getElementById('buscador');
+  inputBuscador.addEventListener('input', () => {
+    const termino = inputBuscador.value.trim().toLowerCase();
+    const productosDOM = document.querySelectorAll('.producto');
+
+    if (termino === '') {
+      productosDOM.forEach(producto => {
+        producto.style.display = '';
+        const nombreElem = producto.querySelector('h3');
+        const categoriaElem = producto.querySelector('.categoria-texto');
+        nombreElem.innerHTML = producto.dataset.nombre;
+        categoriaElem.innerHTML = producto.dataset.categoria;
+      });
+      return;
+    }
+
+    productosDOM.forEach(producto => {
+      const nombre = producto.dataset.nombre.toLowerCase();
+      const descripcion = (producto.dataset.descripcion || '').toLowerCase();
+      const categoria = (producto.dataset.categoria || '').toLowerCase();
+      const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
+
+      if (coincide) {
+        producto.style.display = '';
+        const nombreElem = producto.querySelector('h3');
+        const categoriaElem = producto.querySelector('.categoria-texto');
+        nombreElem.innerHTML = producto.dataset.nombre;
+        categoriaElem.innerHTML = producto.dataset.categoria;
+        const terminoRegex = new RegExp(`(${termino})`, 'gi');
+        const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+        const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+        nombreElem.innerHTML = nombreResaltado;
+        categoriaElem.innerHTML = categoriaResaltada;
+      } else {
+        producto.style.display = 'none';
+      }
+    });
   });
 });
