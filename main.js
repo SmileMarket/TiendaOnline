@@ -1,6 +1,15 @@
-// === Leer stock desde Google Sheets ===
+// === Variables globales de control ===
 let stockData = {};
+let productosCargados = false;
+let stockCargado = false;
 
+function intentarRenderizar() {
+  if (stockCargado && productosCargados) {
+    renderizarProductos();
+  }
+}
+
+// === Leer stock desde Google Sheets ===
 function cargarStockDesdeGoogleSheet() {
   Tabletop.init({
     key: '1xWB7Wy37IGoWWnXuA7QVCPCbgHSxgNQKk_FQerbamFQ',
@@ -10,7 +19,8 @@ function cargarStockDesdeGoogleSheet() {
       data.forEach(item => {
         stockData[item.nombre] = parseInt(item.stock);
       });
-      renderizarProductos();
+      stockCargado = true;
+      intentarRenderizar();
     }
   });
 }
@@ -234,4 +244,8 @@ function renderizarProductos() {
 // === Iniciar app ===
 document.addEventListener('DOMContentLoaded', () => {
   cargarStockDesdeGoogleSheet();
+  if (typeof productos !== 'undefined') {
+    productosCargados = true;
+    intentarRenderizar();
+  }
 });
