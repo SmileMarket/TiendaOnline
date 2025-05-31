@@ -39,4 +39,7 @@ const productos = [
   { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Violeta", precio: 270000, imagen: "img/Kit_NSK_Violeta.jpg",descripcion: "• KIT ESTUDIANTIL VIOLETA tipo kmd 4 Piezas - TURBINA  con luz led spray x3,Rodamientos cerámicos de excelente calidad - Mayor velocidad-Excelente torque 390.000 r.p.m - MICROMOTOR neumático Autoclave a 135° C - Velocidad regulable 5.000 A 20.000 R.P.M -  CONTRA ANGULO a gatillo, refrigeración externa incorporada - Precisión en el tallado - PIEZA DE MANO Hasta 20.000 RPM" },
   { categoria: "Turbinas y Lamparas", nombre: "Kit NSK Rosa", precio: 270000, imagen: "img/Kit_NSK_Rosa.jpg",descripcion: "• KIT ESTUDIANTIL ROSA tipo kmd 4 Piezas - TURBINA  con luz led spray x3,Rodamientos cerámicos de excelente calidad - Mayor velocidad-Excelente torque 390.000 r.p.m - MICROMOTOR neumático Autoclave a 135° C - Velocidad regulable 5.000 A 20.000 R.P.M -  CONTRA ANGULO a gatillo, refrigeración externa incorporada - Precisión en el tallado - PIEZA DE MANO Hasta 20.000 RPM" },
   { categoria: "Turbinas y Lamparas", nombre: "Turbina con luz de LED", precio: 95000, imagen: "img/Turbina.jpg",descripcion: "• Luz autogenerada por dínamo no requiere fibra óptica ni instalación el led tiene un período de vida de 10.000 horas - triple spray - push button - 350.000 rpm. Autoclavable" },
-  { categoria: "Turbinas y Lamparas", nombre: "Lampara", precio: 97000, imagen: "img/Lampara.jpg",descripcion: "" }];
+  { categoria: "Turbinas y Lamparas", nombre: "Lampara", precio: 97000, imagen: "img/Lampara.jpg",descripcion: "" }
+productosCargados = true;
+intentarRenderizar();
+];
