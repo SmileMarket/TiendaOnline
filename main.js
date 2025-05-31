@@ -244,8 +244,5 @@ function renderizarProductos() {
 // === Iniciar app ===
 document.addEventListener('DOMContentLoaded', () => {
   cargarStockDesdeGoogleSheet();
-  if (typeof productos !== 'undefined') {
-    productosCargados = true;
-    intentarRenderizar();
-  }
+
 });
