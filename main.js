@@ -1,31 +1,3 @@
-// === Variables globales de control ===
-let stockData = {};
-let productosCargados = false;
-let stockCargado = false;
-
-function intentarRenderizar() {
-  if (stockCargado && productosCargados) {
-    renderizarProductos();
-  }
-}
-
-// === Leer stock desde Google Sheets ===
-function cargarStockDesdeGoogleSheet() {
-  Tabletop.init({
-    key: '1xWB7Wy37IGoWWnXuA7QVCPCbgHSxgNQKk_FQerbamFQ',
-    simpleSheet: true,
-    callback: function(data) {
-      stockData = {};
-      data.forEach(item => {
-        stockData[item.nombre] = parseInt(item.stock);
-      });
-      stockCargado = true;
-      intentarRenderizar();
-    }
-  });
-}
-
-// === Carrito y funciones ===
 const carrito = [];
 
 function agregarAlCarrito(boton) {
@@ -99,150 +71,179 @@ function cerrarModalInfo() {
   document.getElementById('info-modal').style.display = 'none';
 }
 
-function agregarRecomendaciones(productoElement, recomendacionesArray) {
-  if (!productoElement || !Array.isArray(recomendacionesArray)) return;
-  const recomendacionesDiv = document.createElement('div');
-  recomendacionesDiv.className = 'recomendaciones';
-  const contenido = recomendacionesArray.map(item => `<li>${item}</li>`).join('');
-  recomendacionesDiv.innerHTML = `<strong>Recomendado:</strong><ul style="padding-left: 1.2rem; margin: 0.3rem 0;">${contenido}</ul>`;
-  productoElement.appendChild(recomendacionesDiv);
-}
+document.addEventListener('DOMContentLoaded', () => {
+const contenedor = document.getElementById('productos');
 
-function renderizarProductos() {
-  const contenedor = document.getElementById('productos');
-  contenedor.innerHTML = '';
-  const productosPorCategoria = {};
+// Agrupar productos por categoría
+const productosPorCategoria = {};
 
-  productos.forEach(producto => {
-    const categoria = producto.categoria || 'Sin categoría';
-    if (!productosPorCategoria[categoria]) {
-      productosPorCategoria[categoria] = [];
-    }
-    productosPorCategoria[categoria].push(producto);
+productos.forEach(producto => {
+  const categoria = producto.categoria || 'Sin categoría';
+  if (!productosPorCategoria[categoria]) {
+    productosPorCategoria[categoria] = [];
+  }
+  productosPorCategoria[categoria].push(producto);
+});
+
+// Renderizar productos por categoría
+for (const categoria in productosPorCategoria) {
+  const grupo = document.createElement('div');
+  grupo.className = 'grupo-categoria';
+
+  const titulo = document.createElement('h2');
+  titulo.textContent = categoria;
+  grupo.appendChild(titulo);
+
+  const contenedorCategoria = document.createElement('div');
+  contenedorCategoria.className = 'productos';
+
+  productosPorCategoria[categoria].forEach(producto => {
+    const div = document.createElement('div');
+    div.className = 'producto';
+    div.dataset.nombre = producto.nombre;
+    div.dataset.precio = producto.precio;
+    div.dataset.descripcion = producto.descripcion || '';
+    div.dataset.categoria = producto.categoria || '';
+
+    div.innerHTML = `
+      ${producto.imagen ? `
+        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+          <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
+          <div class="info-overlay">+ info</div>
+        </div>
+      ` : ''}
+      <h3>${producto.nombre}</h3>
+      <p class="categoria-texto" style="margin: 0 0 0.3rem 0; font-size: 0.9rem; color: #555;">${producto.categoria}</p>
+      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+      <div class="control-cantidad">
+        <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
+        <input class="cantidad-input" type="number" value="1" min="1" readonly />
+        <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
+      </div>
+      <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+    `;
+
+    contenedorCategoria.appendChild(div);
   });
 
-  const recomendacionesPorProducto = {
-    'Lima K Acero #15 25mm C/U': ['Organizador', 'Caja Mini Endo 72', 'Punta P1 de cavitador'],
-    'Turbina con luz de LED': ['Micromotor neumático', 'Contra ángulo', 'Kit NSK Violeta'],
-    'Kit de cirugía E': ['Campo fenestrado adicional', 'Tubuladura plástica x 100'],
-    'Microbrush': ['Pinceles de silicona', 'Organizador'],
-    'Kit NSK Violeta': ['Limas K', 'Caja mini endo', 'Lubricante de piezas de mano'],
-    'Endo Z - EN PROMO!': ['Limas H', 'Organizador', 'Caja esterilizadora']
-  };
+  grupo.appendChild(contenedorCategoria);
+  contenedor.appendChild(grupo);
+}
+});
 
-  for (const categoria in productosPorCategoria) {
-    const grupo = document.createElement('div');
-    grupo.className = 'grupo-categoria';
+  // Modal dinámico para WhatsApp
+  if (!document.getElementById('resumen-modal')) {
+    const modal = document.createElement('div');
+    modal.id = 'resumen-modal';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    modal.style.zIndex = '10000';
+    modal.style.display = 'none';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.innerHTML = `
+      <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:100%">
+        <h2>Resumen de tu pedido</h2>
+        <div id="resumen-contenido" style="margin-bottom: 1rem;"></div>
+        <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px;">Enviar por WhatsApp</button>
+        <button id="cancelar-resumen" class="boton" style="background:#ccc; color:#333">Cancelar</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
 
-    const titulo = document.createElement('h2');
-    titulo.textContent = categoria;
-    titulo.id = `cat-${categoria.toLowerCase().replace(/\s+/g, '-')}`;
-    grupo.appendChild(titulo);
-
-    const contenedorCategoria = document.createElement('div');
-    contenedorCategoria.className = 'productos';
-
-    productosPorCategoria[categoria].forEach(producto => {
-      const div = document.createElement('div');
-      div.className = 'producto';
-      div.dataset.nombre = producto.nombre;
-      div.dataset.precio = producto.precio;
-      div.dataset.descripcion = producto.descripcion || '';
-      div.dataset.categoria = producto.categoria || '';
-
-      div.innerHTML = `
-        ${producto.imagen ? `
-          <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
-            <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
-            <div class="info-overlay">+ info</div>
-          </div>
-        ` : ''}
-        <h3>${producto.nombre}</h3>
-        <p class="categoria-texto">${producto.categoria}</p>
-        <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
-        <div class="control-cantidad">
-          <button class="menos" onclick="cambiarCantidad(this, -1)">−</button>
-          <input class="cantidad-input" type="number" value="1" min="1" readonly />
-          <button class="mas" onclick="cambiarCantidad(this, 1)">+</button>
-        </div>
-        <button class="boton" onclick="agregarAlCarrito(this)">Agregar al carrito</button>
-      `;
-
-      const recomendaciones = recomendacionesPorProducto[producto.nombre];
-      if (recomendaciones) {
-        agregarRecomendaciones(div, recomendaciones);
-      }
-
-      // Stock check
-      const stock = stockData[producto.nombre] ?? 99;
-      if (stock === 0) {
-        const overlay = document.createElement('div');
-        overlay.textContent = 'SIN STOCK';
-        overlay.style.position = 'absolute';
-        overlay.style.top = '8px';
-        overlay.style.left = '8px';
-        overlay.style.background = 'rgba(255,0,0,0.85)';
-        overlay.style.color = 'white';
-        overlay.style.padding = '4px 8px';
-        overlay.style.borderRadius = '4px';
-        overlay.style.fontWeight = 'bold';
-        div.querySelector('.producto-imagen-container')?.appendChild(overlay);
-
-        const boton = div.querySelector('.boton');
-        boton.disabled = true;
-        boton.style.opacity = '0.5';
-        boton.textContent = 'Sin stock';
-      }
-
-      contenedorCategoria.appendChild(div);
+    modal.querySelector('#enviar-whatsapp').addEventListener('click', () => {
+      const mensaje = modal.querySelector('#enviar-whatsapp').dataset.mensaje || '';
+      const numeroWhatsApp = '5491130335334';
+      const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+      window.open(url, '_blank');
+      modal.style.display = 'none';
     });
 
-    grupo.appendChild(contenedorCategoria);
-    contenedor.appendChild(grupo);
+    modal.querySelector('#cancelar-resumen').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
   }
 
-  const inputBuscador = document.getElementById('buscador');
-  inputBuscador.addEventListener('input', () => {
-    const termino = inputBuscador.value.trim().toLowerCase();
-    const productosDOM = document.querySelectorAll('.producto');
+  const confirmarBtn = document.getElementById('confirmar');
+  if (confirmarBtn) {
+    confirmarBtn.addEventListener('click', () => {
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío.');
+        return;
+      }
 
-    if (termino === '') {
-      productosDOM.forEach(producto => {
-        producto.style.display = '';
-        const nombreElem = producto.querySelector('h3');
-        const categoriaElem = producto.querySelector('.categoria-texto');
-        nombreElem.innerHTML = producto.dataset.nombre;
-        categoriaElem.innerHTML = producto.dataset.categoria;
+      const resumen = document.getElementById('resumen-contenido');
+      resumen.innerHTML = '';
+      let mensaje = 'Hola! Quiero realizar una compra:\n';
+      let total = 0;
+
+      carrito.forEach(item => {
+        const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+        resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+        mensaje += `• ${linea}\n`;
+        total += item.precio * item.cantidad;
       });
-      return;
-    }
 
-    productosDOM.forEach(producto => {
-      const nombre = producto.dataset.nombre.toLowerCase();
-      const descripcion = (producto.dataset.descripcion || '').toLowerCase();
-      const categoria = (producto.dataset.categoria || '').toLowerCase();
-      const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
+      mensaje += `\nTotal: $${total.toLocaleString()}`;
+      resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
 
-      if (coincide) {
-        producto.style.display = '';
-        const nombreElem = producto.querySelector('h3');
-        const categoriaElem = producto.querySelector('.categoria-texto');
-        nombreElem.innerHTML = producto.dataset.nombre;
-        categoriaElem.innerHTML = producto.dataset.categoria;
-        const terminoRegex = new RegExp(`(${termino})`, 'gi');
-        const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
-        const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
-        nombreElem.innerHTML = nombreResaltado;
-        categoriaElem.innerHTML = categoriaResaltada;
-      } else {
-        producto.style.display = 'none';
+      const whatsappBtn = document.getElementById('enviar-whatsapp');
+      const modal = document.getElementById('resumen-modal');
+      if (whatsappBtn && modal) {
+        whatsappBtn.dataset.mensaje = mensaje;
+        modal.style.display = 'flex';
       }
     });
+  }
+
+  // === Buscador ===
+const inputBuscador = document.getElementById('buscador');
+
+inputBuscador.addEventListener('input', () => {
+  const termino = inputBuscador.value.trim().toLowerCase();
+
+  const productosDOM = document.querySelectorAll('.producto');
+
+  if (termino === '') {
+    productosDOM.forEach(producto => {
+      producto.style.display = '';
+      const nombreElem = producto.querySelector('h3');
+      const categoriaElem = producto.querySelector('.categoria-texto');
+      nombreElem.innerHTML = producto.dataset.nombre;
+      categoriaElem.innerHTML = producto.dataset.categoria;
+    });
+    return; // 👈 Esto es clave para que no siga y evite el resaltado vacío
+  }
+
+  productosDOM.forEach(producto => {
+    const nombre = producto.dataset.nombre.toLowerCase();
+    const descripcion = (producto.dataset.descripcion || '').toLowerCase();
+    const categoria = (producto.dataset.categoria || '').toLowerCase();
+
+    const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
+
+    if (coincide) {
+      producto.style.display = '';
+
+      const nombreElem = producto.querySelector('h3');
+      const categoriaElem = producto.querySelector('.categoria-texto');
+
+      nombreElem.innerHTML = producto.dataset.nombre;
+      categoriaElem.innerHTML = producto.dataset.categoria;
+
+      const terminoRegex = new RegExp(`(${termino})`, 'gi');
+
+      const nombreResaltado = producto.dataset.nombre.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+      const categoriaResaltada = producto.dataset.categoria.replace(terminoRegex, '<mark style="background-color: #f7b0f7;">$1</mark>');
+
+      nombreElem.innerHTML = nombreResaltado;
+      categoriaElem.innerHTML = categoriaResaltada;
+    } else {
+      producto.style.display = 'none';
+    }
   });
-}
-
-// === Iniciar app ===
-document.addEventListener('DOMContentLoaded', () => {
-  cargarStockDesdeGoogleSheet();
-
 });
