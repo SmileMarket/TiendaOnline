@@ -1,6 +1,6 @@
 const productos = [
 
-  { categoria: "Varios", nombre: "Adaptador fresas para CA", precio: 6000, imagen: "img/Adaptadorfresa.jpg",descripcion: "• El adaptador garantiza una conexión segura y estable entre las fresas y el contra ángulo. Esto minimiza el riesgo de deslizamiento o aflojamiento durante el uso, lo que proporciona al odontólogo una mayor confianza y control durante los procedimientos.", nuevo: true, masVendido: true, recomendado: true },
+  { categoria: "Varios", nombre: "Adaptador fresas para CA", precio: 6000, imagen: "img/Adaptadorfresa.jpg",descripcion: "• El adaptador garantiza una conexión segura y estable entre las fresas y el contra ángulo. Esto minimiza el riesgo de deslizamiento o aflojamiento durante el uso, lo que proporciona al odontólogo una mayor confianza y control durante los procedimientos."},
   { categoria: "Varios", nombre: "Endo Z - EN PROMO!", precio: 5500, imagen: "img/EndoZ.jpg",descripcion: "• Fresa de Carburo (21mm) Para FG. Precio X1 pcs." },
   { categoria: "Varios", nombre: "Espaciador A B C D", precio: 5000, imagen: "img/Espaciador.jpg",descripcion: "• De Acero ABCD X4 Unidades 25mm" },
   { categoria: "Varios", nombre: "Espejo de Rhodio", precio: 3400, imagen: "img/EspejodeRodhio.jpg",descripcion: "• Para el diagnóstico y la evaluación de la cavidad oral. Sujeción optimizada. Peso liviano y cómodo - Reflexión frontal de rodio - Resistente y duradero - Autoclavable 134ºC hasta 200 ciclos" },
