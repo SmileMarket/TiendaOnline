@@ -1,10 +1,10 @@
 const productos = [
 
-  { categoria: "Varios", nombre: "Adaptador fresas para CA", precio: 6000, imagen: "img/Adaptadorfresa.jpg",descripcion: "• El adaptador garantiza una conexión segura y estable entre las fresas y el contra ángulo. Esto minimiza el riesgo de deslizamiento o aflojamiento durante el uso, lo que proporciona al odontólogo una mayor confianza y control durante los procedimientos."},
+  { categoria: "Varios", nombre: "Adaptador fresas para CA", precio: 6000, imagen: "img/Adaptadorfresa.jpg",descripcion: "• El adaptador garantiza una conexión segura y estable entre las fresas y el contra ángulo. Esto minimiza el riesgo de deslizamiento o aflojamiento durante el uso, lo que proporciona al odontólogo una mayor confianza y control durante los procedimientos.", nuevo: true, masVendido: true, recomendado: true },
   { categoria: "Varios", nombre: "Endo Z - EN PROMO!", precio: 5500, imagen: "img/EndoZ.jpg",descripcion: "• Fresa de Carburo (21mm) Para FG. Precio X1 pcs." },
   { categoria: "Varios", nombre: "Espaciador A B C D", precio: 5000, imagen: "img/Espaciador.jpg",descripcion: "• De Acero ABCD X4 Unidades 25mm" },
   { categoria: "Varios", nombre: "Espejo de Rhodio", precio: 3400, imagen: "img/EspejodeRodhio.jpg",descripcion: "• Para el diagnóstico y la evaluación de la cavidad oral. Sujeción optimizada. Peso liviano y cómodo - Reflexión frontal de rodio - Resistente y duradero - Autoclavable 134ºC hasta 200 ciclos" },
-  { categoria: "Varios", nombre: "Film Stretch Virgen 10 cm", precio: 3200, imagen: "img/Filmstretch.jpg",descripcion: "• De 10 cm de ancho y 144 mts de largo. Maleable para cualquier aplicación. Facil de guardar transportar." },
+  { categoria: "Varios", nombre: "Film Stretch", precio: 3200, imagen: "img/Filmstretch.jpg",descripcion: "• De 10 cm de ancho y 144 mts de largo. Maleable para cualquier aplicación. Facil de guardar transportar." },
   { categoria: "Varios", nombre: "Fresa de largo #1 28mm", precio: 3500, imagen: "img/Fresadelargo1.jpg",descripcion: "• Fresa indicada como auxiliar para la preparación biomecánica de conductos radiculares, teniendo una parte activa más larga que la Gates, usada para la confección de espacio para retenedores radiculares. Precio por unidad." },
   { categoria: "Varios", nombre: "Fresa de largo #2 28mm", precio: 3500, imagen: "img/Fresadelargo2.jpg",descripcion: "• Fresa indicada como auxiliar para la preparación biomecánica de conductos radiculares, teniendo una parte activa más larga que la Gates, usada para la confección de espacio para retenedores radiculares. Precio por unidad." },
   { categoria: "Varios", nombre: "Fresa de largo #3 28mm", precio: 3500, imagen: "img/Fresadelargo3.jpg",descripcion: "• Fresa indicada como auxiliar para la preparación biomecánica de conductos radiculares, teniendo una parte activa más larga que la Gates, usada para la confección de espacio para retenedores radiculares. Precio por unidad." },
@@ -30,7 +30,7 @@ const productos = [
   { categoria: "Varios", nombre: "Vaso dappen", precio: 800, imagen: "img/Vasodappen.jpg",descripcion: "Transparente" },
   { categoria: "Varios", nombre: "Vaso dappen x 2 - EN PROMO!", precio: 1500, imagen: "img/Vasodappen.jpg",descripcion: "Transparentes" },
   { categoria: "Descartables", nombre: "Bolsas rojas 45x60 Pack x10 - EN PROMO!", precio: 1100, imagen: "img/Bolsaroja.jpg",descripcion: "" },
-  { categoria: "Descartables", nombre: "Camisolines Descartables 20gr Pack x10 - EN PROMO!", precio: 4900, imagen: "img/Camisolin.jpg",descripcion: "" },
+  { categoria: "Descartables", nombre: "Camisolines Descartables 20gr Pack x10", precio: 5200, imagen: "img/Camisolin.jpg",descripcion: "" },
   { categoria: "Descartables", nombre: "Campo Fenestrado", precio: 250, imagen: "img/Campofenestrado.jpg",descripcion: "• Campo de friselina con abertura anterior para el paciente." },
   { categoria: "Descartables", nombre: "Compresa", precio: 240, imagen: "img/Compresa.jpg",descripcion: "• Campo de mesa: campo de friselina de 90*90." },
   { categoria: "Descartables", nombre: "Kit de cirugía E", precio: 2900, imagen: "img/KitCirugia.jpg",descripcion: "• Esteril: contiene 2 camisolines, 1 campo fenestrado, 1 campo de mesa, 1 tubuladura de friselina y servilletas." },
