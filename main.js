@@ -1,24 +1,27 @@
 const carrito = [];
+let productos = [];
 
-async function cargarStockDesdeGoogleSheet() {
-  const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=0&single=true&output=csv';
-
+async function cargarProductosDesdeGoogleSheet() {
+  const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=1670706691&single=true&output=csv';
   const response = await fetch(urlCSV);
   const texto = await response.text();
-  const lineas = texto.split('\n');
+  const lineas = texto.split('\n').filter(l => l.trim() !== '');
   const headers = lineas[0].split(',').map(h => h.trim());
 
-  const stockData = {};
-  for (let i = 1; i < lineas.length; i++) {
-    const columnas = lineas[i].split(',').map(c => c.trim());
-    const fila = Object.fromEntries(headers.map((h, j) => [h, columnas[j]]));
-    const nombre = fila.nombre?.trim();
-    const stock = Number(fila.stock?.trim().replace(",", "."));
-    stockData[nombre] = isNaN(stock) ? 0 : stock;
-  }
-
-  productos.forEach(p => {
-    p.stock = stockData[p.nombre] ?? 0;
+  productos = lineas.slice(1).map(linea => {
+    const columnas = linea.split(',').map(c => c.trim());
+    const producto = Object.fromEntries(headers.map((h, i) => [h, columnas[i] || '']));
+    return {
+      nombre: producto.nombre || 'Sin nombre',
+      categoria: producto.categoria || 'Sin categoría',
+      precio: parseFloat(producto.precio) || 0,
+      descripcion: producto.descripcion || '',
+      imagen: producto.imagen || '',
+      stock: parseInt(producto.stock) || 0,
+      nuevo: producto.nuevo === 'TRUE',
+      masVendido: producto.masVendido === 'TRUE',
+      recomendado: producto.recomendado === 'TRUE'
+    };
   });
 }
 
@@ -99,13 +102,15 @@ function cerrarModalInfo() {
 function animarCarrito() {
   const icono = document.getElementById('carrito-icono');
   if (icono) {
+    icono.classList.remove('vibrar');
+    void icono.offsetWidth;
     icono.classList.add('vibrar');
     setTimeout(() => icono.classList.remove('vibrar'), 500);
   }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  await cargarStockDesdeGoogleSheet();
+  await cargarProductosDesdeGoogleSheet();
 
   const contenedor = document.getElementById('productos');
   const productosPorCategoria = {};
@@ -134,8 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       div.className = 'producto';
       div.dataset.nombre = producto.nombre;
       div.dataset.precio = producto.precio;
-      div.dataset.descripcion = producto.descripcion || '';
-      div.dataset.categoria = producto.categoria || '';
+      div.dataset.descripcion = producto.descripcion;
+      div.dataset.categoria = producto.categoria;
 
       const etiquetas = [];
       if (producto.nuevo) etiquetas.push('🆕 Nuevo');
@@ -146,17 +151,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? `<div class="etiquetas">${etiquetas.map(t => `<span class="etiqueta">${t}</span>`).join('')}</div>`
         : '';
 
-      let imagenHTML = "";
-      if (producto.imagen) {
-        imagenHTML = `
-          <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
-            <img src="${producto.imagen}" alt="${producto.nombre}" style="max-width:100%; height:auto; margin-bottom:10px;" />
-            ${producto.stock <= 0
-              ? '<div class="info-overlay" style="background:red;color:white;">SIN STOCK</div>'
-              : '<div class="info-overlay">+ info</div>'}
-          </div>
-        `;
-      }
+      const imagenHTML = producto.imagen ? `
+        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+          <img src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain;" />
+          ${producto.stock <= 0
+            ? '<div class="sin-stock-overlay">SIN STOCK</div>'
+            : '<div class="info-overlay">+ info</div>'}
+        </div>` : '';
 
       div.innerHTML = `
         ${imagenHTML}
@@ -173,7 +174,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           ${producto.stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
         </button>
       `;
-
       contenedorCategoria.appendChild(div);
     });
 
@@ -181,78 +181,52 @@ document.addEventListener('DOMContentLoaded', async () => {
     contenedor.appendChild(grupo);
   }
 
-  const confirmarBtn = document.getElementById('confirmar');
-  confirmarBtn.addEventListener('click', () => {
-    if (carrito.length === 0) {
-      alert('Tu carrito está vacío.');
-      return;
-    }
-
-    let mensaje = 'Hola! Quiero realizar una compra:\n';
-    let total = 0;
-
-    carrito.forEach(item => {
-      const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
-      mensaje += `• ${linea}\n`;
-      total += item.precio * item.cantidad;
-    });
-
-    mensaje += `\nTotal: $${total.toLocaleString()}`;
-
-    const numeroWhatsApp = '5491130335334';
-    const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
-  });
-
-  // === Mostrar/ocultar carrito ===
   const carritoIcono = document.getElementById('carrito-icono');
-  const carritoOverlay = document.getElementById('carrito-overlay');
-  const cerrarCarrito = document.getElementById('cerrar-carrito');
+  const carritoPanel = document.getElementById('carrito');
 
-  carritoIcono.addEventListener('click', (e) => {
-    e.preventDefault();
-    const esMobile = window.innerWidth <= 768;
-    if (esMobile) {
-      carritoOverlay.style.display = 'flex';
-    } else {
-      carritoOverlay.style.display = carritoOverlay.style.display === 'flex' ? 'none' : 'flex';
-    }
-  });
-
-  cerrarCarrito.addEventListener('click', () => {
-    carritoOverlay.style.display = 'none';
-  });
-
-  // Cerrar si clic fuera del carrito (solo mobile)
-  carritoOverlay.addEventListener('click', (e) => {
-    if (e.target === carritoOverlay && window.innerWidth <= 768) {
-      carritoOverlay.style.display = 'none';
-    }
-  });
-
-  // Buscador
-  const inputBuscador = document.getElementById('buscador');
-  inputBuscador.addEventListener('input', () => {
-    const termino = inputBuscador.value.trim().toLowerCase();
-    const productosDOM = document.querySelectorAll('.producto');
-
-    productosDOM.forEach(producto => {
-      const nombre = producto.dataset.nombre.toLowerCase();
-      const descripcion = (producto.dataset.descripcion || '').toLowerCase();
-      const categoria = (producto.dataset.categoria || '').toLowerCase();
-      const coincide = nombre.includes(termino) || descripcion.includes(termino) || categoria.includes(termino);
-
-      const nombreElem = producto.querySelector('h3');
-      const categoriaElem = producto.querySelector('.categoria-texto');
-
-      if (coincide || termino === '') {
-        producto.style.display = '';
-        const terminoRegex = new RegExp(`(${termino})`, 'gi');
-        nombreElem.innerHTML = producto.dataset.nombre.replace(terminoRegex, '<mark>$1</mark>');
-        categoriaElem.innerHTML = producto.dataset.categoria.replace(terminoRegex, '<mark>$1</mark>');
-      } else {
-        producto.style.display = 'none';
-      }
+  if (carritoIcono && carritoPanel) {
+    carritoIcono.addEventListener('click', (e) => {
+      e.preventDefault();
+      carritoPanel.classList.toggle('mostrar');
     });
+  }
+
+  const confirmarBtn = document.getElementById('confirmar');
+  if (confirmarBtn) {
+    confirmarBtn.addEventListener('click', () => {
+      if (carrito.length === 0) {
+        alert('Tu carrito está vacío.');
+        return;
+      }
+
+      const resumen = document.getElementById('resumen-contenido');
+      resumen.innerHTML = '';
+      let mensaje = 'Hola! Quiero realizar una compra:\n';
+      let total = 0;
+
+      carrito.forEach(item => {
+        const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+        resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+        mensaje += `• ${linea}\n`;
+        total += item.precio * item.cantidad;
+      });
+
+      mensaje += `\nTotal: $${total.toLocaleString()}`;
+      resumen.innerHTML += `<div style="margin-top: 1rem; font-weight: bold;">Total: $${total.toLocaleString()}</div>`;
+
+      document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+      document.getElementById('resumen-modal').style.display = 'flex';
+    });
+  }
+
+  document.getElementById('enviar-whatsapp')?.addEventListener('click', () => {
+    const mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
+    const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+    document.getElementById('resumen-modal').style.display = 'none';
+  });
+
+  document.getElementById('seguir-comprando')?.addEventListener('click', () => {
+    document.getElementById('resumen-modal').style.display = 'none';
   });
 });
