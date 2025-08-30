@@ -294,4 +294,28 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
     document.getElementById('resumen-modal').style.display = 'none';
   });
+
+  // === FILTRO DE BUSCADOR ===
+  const buscador = document.getElementById('buscador');
+  if (buscador) {
+    buscador.addEventListener('input', () => {
+      const texto = buscador.value.toLowerCase();
+
+      document.querySelectorAll('.producto').forEach(prod => {
+        const nombre = prod.dataset.nombre?.toLowerCase() || '';
+        const categoria = prod.dataset.categoria?.toLowerCase() || '';
+        const descripcion = prod.dataset.descripcion?.toLowerCase() || '';
+
+        if (
+          nombre.includes(texto) ||
+          categoria.includes(texto) ||
+          descripcion.includes(texto)
+        ) {
+          prod.style.display = 'flex';
+        } else {
+          prod.style.display = 'none';
+        }
+      });
+    });
+  }
 });
