@@ -147,10 +147,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const grupo = document.createElement('div');
     grupo.className = 'grupo-categoria';
 
-    const titulo = document.createElement('h2');
-    titulo.textContent = categoria;
-    grupo.appendChild(titulo);
-
     const contenedorCategoria = document.createElement('div');
     contenedorCategoria.className = 'productos';
 
@@ -301,20 +297,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     buscador.addEventListener('input', () => {
       const texto = buscador.value.toLowerCase();
 
-      document.querySelectorAll('.producto').forEach(prod => {
-        const nombre = prod.dataset.nombre?.toLowerCase() || '';
-        const categoria = prod.dataset.categoria?.toLowerCase() || '';
-        const descripcion = prod.dataset.descripcion?.toLowerCase() || '';
+      document.querySelectorAll('.grupo-categoria').forEach(grupo => {
+        let coincidencias = 0;
 
-        if (
-          nombre.includes(texto) ||
-          categoria.includes(texto) ||
-          descripcion.includes(texto)
-        ) {
-          prod.style.display = 'flex';
-        } else {
-          prod.style.display = 'none';
-        }
+        grupo.querySelectorAll('.producto').forEach(prod => {
+          const nombre = prod.dataset.nombre?.toLowerCase() || '';
+          const categoria = prod.dataset.categoria?.toLowerCase() || '';
+          const descripcion = prod.dataset.descripcion?.toLowerCase() || '';
+
+          if (
+            nombre.includes(texto) ||
+            categoria.includes(texto) ||
+            descripcion.includes(texto)
+          ) {
+            prod.style.display = 'flex'; // mostrar producto
+            coincidencias++;
+          } else {
+            prod.style.display = 'none'; // ocultar producto
+          }
+        });
+
+        // Ocultar grupo si no hay coincidencias
+        grupo.style.display = coincidencias > 0 ? 'block' : 'none';
       });
     });
   }
