@@ -136,6 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const contenedor = document.getElementById('productos');
   const productosPorCategoria = {};
 
+  // Agrupar productos por categoría
   productos.forEach(producto => {
     const categoria = producto.categoria || 'Sin categoría';
     if (!productosPorCategoria[categoria]) {
@@ -143,9 +144,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     productosPorCategoria[categoria].push(producto);
   });
-  for (const categoria in productosPorCategoria) {
+
+  // Ordenar categorías alfabéticamente
+  const categoriasOrdenadas = Object.keys(productosPorCategoria).sort((a, b) =>
+    a.localeCompare(b, 'es', { sensitivity: 'base' })
+  );
+
+  // Renderizar cada categoría con título y productos
+  categoriasOrdenadas.forEach(categoria => {
     const grupo = document.createElement('div');
     grupo.className = 'grupo-categoria';
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = categoria;
+    titulo.className = 'titulo-categoria';
+    grupo.appendChild(titulo);
 
     const contenedorCategoria = document.createElement('div');
     contenedorCategoria.className = 'productos';
@@ -160,7 +173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       const etiquetas = [];
       if (producto.nuevo) etiquetas.push('🆕 Nuevo');
-      if (producto.masVendido) etiquetas.push('🔥 Muy vendido');
+      if (producto.masvendido) etiquetas.push('🔥 Muy vendido');
       if (producto.recomendado) etiquetas.push('⭐ Recomendado');
 
       const etiquetasHTML = etiquetas.length > 0
@@ -195,7 +208,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     grupo.appendChild(contenedorCategoria);
     contenedor.appendChild(grupo);
-  }
+  });
+
   const carritoIcono = document.getElementById('carrito-icono');
   const carritoPanel = document.getElementById('carrito');
 
@@ -310,15 +324,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             categoria.includes(texto) ||
             descripcion.includes(texto)
           ) {
-            prod.style.display = 'flex'; // mostrar producto
+            prod.style.display = 'flex'; 
             coincidencias++;
           } else {
-            prod.style.display = 'none'; // ocultar producto
+            prod.style.display = 'none';
           }
         });
 
-        // Ocultar grupo si no hay coincidencias
+        // mostrar/ocultar categoría y título
         grupo.style.display = coincidencias > 0 ? 'block' : 'none';
+        const titulo = grupo.querySelector('.titulo-categoria');
+        if (titulo) {
+          titulo.style.display = texto ? 'none' : 'block';
+        }
       });
     });
   }
