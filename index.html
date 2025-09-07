@@ -360,15 +360,20 @@ h2 {
     <div id="resumen-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
       <div style="background:white; padding:20px; border-radius:8px; width:90%; max-width:400px;">
         <h2>Resumen de tu pedido</h2>
-<div id="resumen-contenido" style="margin-bottom:1rem;"></div>
+        <div id="resumen-contenido" style="margin-bottom:1rem;"></div>
 
-<div style="margin-bottom: 1rem;">
-  <label for="cupon" style="font-weight: bold;">Código de descuento:</label><br>
-  <input type="text" id="cupon" placeholder="Ingresá tu cupón" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;" />
-  <button id="aplicar-cupon" class="boton" style="margin-top: 0.5rem; background: #007b7f;">Agregar código</button>
-  <div id="cupon-feedback" style="color: red; font-size: 0.9rem; margin-top: 4px;"></div>
-</div>
+        <!-- Campo de nombre agregado -->
+        <div style="margin-bottom: 1rem;">
+          <label for="nombre-cliente" style="font-weight: bold;">Tu nombre:</label><br>
+          <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;" />
+        </div>
 
+        <div style="margin-bottom: 1rem;">
+          <label for="cupon" style="font-weight: bold;">Código de descuento:</label><br>
+          <input type="text" id="cupon" placeholder="Ingresá tu cupón" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;" />
+          <button id="aplicar-cupon" class="boton" style="margin-top: 0.5rem; background: #007b7f;">Agregar código</button>
+          <div id="cupon-feedback" style="color: red; font-size: 0.9rem; margin-top: 4px;"></div>
+        </div>
 
         <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px;">Enviar por WhatsApp</button>
         <button id="seguir-comprando" class="boton" style="background:#ccc;color:#333;">Seguir comprando</button>

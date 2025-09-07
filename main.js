@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const resumen = document.getElementById('resumen-contenido');
     resumen.innerHTML = '';
     totalGlobal = 0;
-    let mensaje = 'Hola! Quiero realizar una compra:\n';
+    let mensaje = '';
 
     carrito.forEach(item => {
       const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
@@ -295,7 +295,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('enviar-whatsapp')?.addEventListener('click', () => {
-    const mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
+    const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
+    if (!nombreCliente) {
+      alert("Por favor, ingresá tu nombre antes de enviar el pedido.");
+      return;
+    }
+
+    let mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
+    mensaje = `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n` + mensaje;
+
     const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
     document.getElementById('resumen-modal').style.display = 'none';
