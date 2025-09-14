@@ -16,26 +16,48 @@
       background: #f9f9f9;
       color: #333;
       overflow-x: hidden;
-}
-header {
-  position: sticky;
-  top: 0;
-  background: #f7b0f7;
-  z-index: 1001;
-  padding: 0.5rem 1rem;
-  text-align: center;
-  min-height: 90px;
-}
+    }
 
-header img {
-  max-width: 180px;
-  height: auto;
-}
+    header {
+      position: sticky;
+      top: 0;
+      background: #f7b0f7;
+      z-index: 1001;
+      padding: 0.5rem 1rem;
+      text-align: center;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    header img {
+      max-width: 180px;
+      height: auto;
+    }
+
+    #header-right {
+      display:flex;
+      align-items:center;
+      gap:1rem;
+    }
+
+    .confianza {
+      font-size: 0.85rem;
+      color: #333;
+      background: rgba(255,255,255,0.85);
+      padding: 6px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(0,0,0,0.05);
+      font-weight: 700;
+    }
 
     #buscador-container {
       display: flex;
       justify-content: center;
-      margin-top: 1rem;
+      align-items: center;
+      width: 100%;
     }
 
     #buscador {
@@ -47,19 +69,84 @@ header img {
       font-size: 1rem;
     }
 
-.container {
-  max-width: 1100px;
-  margin: 2rem auto;
-  padding: 3rem 1rem 1rem; /* ← más espacio arriba para evitar vibración scroll inicial */
-  transition: padding-top 0.3s ease;
-}
+    /* Sugerencias desplegable */
+    #sugerencias {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(80% - 20px);
+      max-width: 360px;
+      background: white;
+      border: 1px solid #e6e6e6;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      z-index: 1500;
+      display: none;
+      max-height: 320px;
+      overflow-y: auto;
+    }
 
-h2 {
-  border-bottom: 2px solid #f5a2f5;
-  padding-bottom: .3rem;
-  margin: 1.5rem 0 1rem; /* ← Agrega margen arriba para evitar vibración */
-  color: #007b7f;
-}
+    .sugerencia-item {
+      display:flex;
+      gap:8px;
+      padding:8px;
+      align-items:center;
+      cursor:pointer;
+      border-bottom:1px solid #fafafa;
+    }
+
+    .sugerencia-item img {
+      width:40px;
+      height:40px;
+      object-fit:contain;
+      background:white;
+      border-radius:4px;
+      border:1px solid #eee;
+    }
+
+    .sugerencia-item:hover { background:#faf7ff; }
+
+    .sugerencia-text { font-size:0.9rem; }
+
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 3rem 1rem 1rem; /* ← más espacio arriba para evitar vibración scroll inicial */
+      transition: padding-top 0.3s ease;
+    }
+
+    /* Controles de filtros */
+    #controls {
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      margin-bottom: 1rem;
+      flex-wrap:wrap;
+    }
+
+    .control {
+      display:flex;
+      gap:6px;
+      align-items:center;
+    }
+
+    select, .filter-btn {
+      padding:8px 10px;
+      border-radius:6px;
+      border:1px solid #ccc;
+      background:white;
+      cursor:pointer;
+      font-weight:700;
+    }
+
+    h2 {
+      border-bottom: 2px solid #f5a2f5;
+      padding-bottom: .3rem;
+      margin: 1.5rem 0 1rem; /* ← Agrega margen arriba para evitar vibración */
+      color: #007b7f;
+    }
 
     .productos {
       display: flex;
@@ -77,6 +164,7 @@ h2 {
       display: flex;
       flex-direction: column;
       align-items: center;
+      position: relative;
     }
 
     .producto img {
@@ -84,6 +172,7 @@ h2 {
       height: 160px;
       object-fit: contain;
       margin-bottom: 0.5rem;
+      background: white; /* fondo blanco uniforme */
     }
 
     .producto h3 {
@@ -179,6 +268,25 @@ h2 {
       z-index: 3;
     }
 
+    .etiquetas { display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap; justify-content:center; }
+    .etiqueta {
+      padding:4px 8px;
+      border-radius:12px;
+      font-size:0.75rem;
+      font-weight:700;
+      color:white;
+    }
+    .etiqueta.nuevo { background:#28a745; } /* verde */
+    .etiqueta.masvendido { background:#dc3545; } /* rojo */
+    .etiqueta.recomendado { background:#d4af37; color:#111; } /* dorado */
+
+    .stock-urgente {
+      font-size:0.8rem;
+      color:#b33;
+      font-weight:700;
+      margin-top:4px;
+    }
+
     #popup {
       position: fixed;
       bottom: 20px;
@@ -237,6 +345,21 @@ h2 {
       padding: 0;
     }
 
+    /* Mini carrito flotante (al pasar por el icono) */
+    #mini-carrito {
+      position: absolute;
+      top: -10px;
+      right: 60px;
+      width: 260px;
+      background:white;
+      border-radius:8px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      padding:10px;
+      display:none;
+      z-index:2100;
+      font-size:0.95rem;
+    }
+
     #confirmar {
       margin-top: 1rem;
       width: 100%;
@@ -247,6 +370,15 @@ h2 {
       font-weight: 700;
       border-radius: 4px;
       cursor: pointer;
+    }
+
+    #enviar-whatsapp {
+      background: #007b7f; /* checkout destacado */
+    }
+
+    #seguir-comprando {
+      background:#ccc;
+      color:#333;
     }
 
     #cerrar-carrito {
@@ -320,33 +452,144 @@ h2 {
       animation: vibrar 0.3s ease;
     }
 
+    /* Splash / loading */
+    #splash {
+      position: fixed;
+      inset: 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(255,255,255,0.95);
+      z-index: 30000;
+      flex-direction: column;
+      gap:12px;
+    }
+
+    .progress-bar {
+      width: 70%;
+      max-width:400px;
+      height: 10px;
+      background: #eee;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height:100%;
+      background: linear-gradient(90deg,#f5a2f5,#007b7f);
+      transition: width 300ms linear;
+    }
+
     @media (max-width: 768px) {
-      header img { max-width: 180px; }
+      header img { max-width: 140px; }
       .producto { width: 45%; }
       #carrito {
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 90%;
-        max-height: 90vh;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        transform: translateY(0);
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 12px 12px 0 0;
+        display:none;
       }
+
+      /* Mobile: slide-up modal style for resumen */
+      #resumen-modal .modal-contenido {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        max-height: 80vh;
+        border-radius: 12px 12px 0 0;
+        padding: 16px;
+        box-shadow: 0 -8px 30px rgba(0,0,0,0.2);
+      }
+
+      /* Botón fijo búsqueda en mobile */
+      #busqueda-mobile {
+        position: fixed;
+        left: 16px;
+        right: 86px;
+        bottom: 16px;
+        height:48px;
+        background:white;
+        border-radius: 12px;
+        display:flex;
+        align-items:center;
+        padding:8px 12px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        z-index: 9999;
+      }
+
+      #busqueda-mobile button {
+        border:none;
+        background:#007b7f;
+        color:white;
+        padding:8px 12px;
+        border-radius:10px;
+        font-weight:700;
+        cursor:pointer;
+      }
+
+      /* mini-carrito reposition */
+      #mini-carrito { right: 80px; top: -12px; }
+      .producto { width: 46%; }
     }
   </style>
 </head>
 <body>
 
+  <!-- SPLASH -->
+  <div id="splash" style="display:flex;">
+    <div style="font-weight:700;">Cargando productos…</div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div style="font-size:0.9rem; color:#666;">Esto puede tardar unos segundos si tu conexión es lenta</div>
+  </div>
+
   <header id="main-header">
     <img src="https://raw.githubusercontent.com/SmileMarket/Pruebas/refs/heads/main/img/Logo.jpg" alt="Logo SmileMarket" />
-    <div id="buscador-container">
-      <input type="text" id="buscador" placeholder="Buscar productos..." />
+    <div id="header-right">
+      <div class="confianza">Atención personalizada</div>
+      <div id="buscador-container" style="position:relative;">
+        <input type="text" id="buscador" placeholder="Buscar productos..." autocomplete="off" />
+        <div id="sugerencias"></div>
+      </div>
     </div>
   </header>
 
   <div class="container">
     <h2>Productos</h2>
+
+    <!-- CONTROLES DE FILTROS Y ORDEN -->
+    <div id="controls">
+      <div class="control">
+        <label for="orden">Ordenar:</label>
+        <select id="orden">
+          <option value="default">Por defecto</option>
+          <option value="precio-asc">Precio: menor a mayor</option>
+          <option value="precio-desc">Precio: mayor a menor</option>
+          <option value="masvendido">Más vendidos</option>
+          <option value="nuevo">Nuevos</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label for="filtro-categoria">Categoría:</label>
+        <select id="filtro-categoria">
+          <option value="todos">Todas</option>
+          <!-- categorías se llenan dinámicamente -->
+        </select>
+      </div>
+      <div style="flex:1;"></div>
+    </div>
+
     <div id="productos" class="productos"></div>
   </div>
 
+    <!-- CARRO -->
     <div id="carrito">
       <button id="cerrar-carrito">&times;</button>
       <h2>Carrito</h2>
@@ -355,14 +598,22 @@ h2 {
       <button id="confirmar">Confirmar compra</button>
     </div>
 
+    <!-- MINI-CARRITO FLOTANTE (visible on hover over cart icon) -->
+    <div id="mini-carrito">
+      <div style="font-weight:700; margin-bottom:6px;">Resumen</div>
+      <div id="mini-items"></div>
+      <div id="mini-total" style="font-weight:700; margin-top:8px;"></div>
+    </div>
+
     <div id="popup">Producto agregado al carrito</div>
 
+    <!-- RESUMEN / MODAL: en mobile se muestra slide-up (CSS) -->
     <div id="resumen-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
-      <div style="background:white; padding:20px; border-radius:8px; width:90%; max-width:400px;">
+      <div class="modal-contenido" style="background:white; padding:20px; border-radius:8px; width:90%; max-width:400px; position:relative;">
         <h2>Resumen de tu pedido</h2>
         <div id="resumen-contenido" style="margin-bottom:1rem;"></div>
 
-        <!-- Campo de nombre agregado -->
+        <!-- Campo de nombre (ya existente) -->
         <div style="margin-bottom: 1rem;">
           <label for="nombre-cliente" style="font-weight: bold;">Tu nombre:</label><br>
           <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;" />
@@ -405,6 +656,12 @@ h2 {
 
     <div id="ir-arriba" title="Volver arriba">⬆</div>
 
+    <!-- Busqueda fixed mobile -->
+    <div id="busqueda-mobile" style="display:none;">
+      <input id="busq-mobile-input" placeholder="Buscar..." style="flex:1; border:none; outline:none; font-weight:700;" />
+      <button id="busq-mobile-btn">Buscar</button>
+    </div>
+
   <script src="main.js"></script>
 <script>
   const irArriba = document.getElementById('ir-arriba');
@@ -412,8 +669,8 @@ h2 {
   let lastScroll = window.scrollY;
 
   window.addEventListener('scroll', () => {
-  irArriba.style.display = window.scrollY > 300 ? 'block' : 'none';
-}, { passive: true }); // ✅ Esta línea previene la vibración
+    irArriba.style.display = window.scrollY > 300 ? 'block' : 'none';
+  }, { passive: true }); // ✅ Esta línea previene la vibración
 
   irArriba?.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -426,6 +683,25 @@ h2 {
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
     document.getElementById('resumen-modal').style.display = 'none';
   });
+
+  // Mostrar botón búsqueda mobile si es pantalla chica
+  function ajustarMobileBusqueda() {
+    const busqMobile = document.getElementById('busqueda-mobile');
+    if (window.innerWidth <= 768) {
+      busqMobile.style.display = 'flex';
+      // sincroniza foco mobile con buscador principal
+      document.getElementById('busq-mobile-btn').addEventListener('click', () => {
+        const q = document.getElementById('busq-mobile-input').value || '';
+        document.getElementById('buscador').value = q;
+        document.getElementById('buscador').dispatchEvent(new Event('input'));
+        window.scrollTo({ top: 220, behavior: 'smooth' });
+      });
+    } else {
+      busqMobile.style.display = 'none';
+    }
+  }
+  ajustarMobileBusqueda();
+  window.addEventListener('resize', ajustarMobileBusqueda);
 </script>
 </body>
 </html>
