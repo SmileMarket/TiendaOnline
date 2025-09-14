@@ -774,3 +774,20 @@ document.getElementById('buscador')?.addEventListener('blur', () => {
 
 // Inicio: iniciar progress simulado cuando se prepara la carga (por seguridad)
 iniciarProgressSimulado();
+
+// === Búsqueda en vivo ===
+document.getElementById("buscador").addEventListener("input", (e) => {
+  const termino = e.target.value.toLowerCase();
+  const productos = document.querySelectorAll(".producto");
+
+  productos.forEach((producto) => {
+    const nombre = producto.querySelector("h3").textContent.toLowerCase();
+    const categoria = producto.querySelector(".categoria-texto")?.textContent.toLowerCase() || "";
+
+    if (nombre.includes(termino) || categoria.includes(termino)) {
+      producto.style.display = "flex";
+    } else {
+      producto.style.display = "none";
+    }
+  });
+});
