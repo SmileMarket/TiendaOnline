@@ -714,13 +714,14 @@ document.getElementById('enviar-whatsapp')?.addEventListener('click', async () =
   };
 
   try {
-    await fetch("https://script.google.com/macros/s/AKfycbw828-h1Xo2kJwAS2_FvKMJzKIA9bf3HIpozYM_lc_850AaG38A2KyBdPp0F7ghOqs/exec", {
+    await fetch("https://script.google.com/macros/s/AKfycbx1FauSLBp5k766M-x-aGNmnz1gYGfIEpepHO9FVOoBmVZMD7BPGHy_2VYdGRsbSz0/exec", {
       method: "POST",
-      body: JSON.stringify(pedidoData)
-    });
-  } catch (e) {
-    console.error("Error enviando a Google Sheets", e);
-  }
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(pedidoData)
+  });
+} catch (e) {
+  console.error("Error enviando a Google Sheets", e);
+}
 
   // abrir WhatsApp
   const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
