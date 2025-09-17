@@ -127,17 +127,18 @@ function actualizarCarrito() {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'carrito-item';
     itemDiv.innerHTML = `
-  <div style="flex:1">
-    <div><strong>${item.nombre}</strong></div>
-    <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
-      <button onclick="cambiarCantidadCarrito(${index}, -1)" style="width:24px; height:24px; border:none; background:#ddd; border-radius:4px; cursor:pointer;">−</button>
-      <input type="number" value="${item.cantidad}" min="1" readonly style="width:36px; text-align:center; font-weight:bold; border:1px solid #ccc; border-radius:4px;" />
-      <button onclick="cambiarCantidadCarrito(${index}, 1)" style="width:24px; height:24px; border:none; background:#ddd; border-radius:4px; cursor:pointer;">+</button>
+  <div style="flex:1; min-width:140px;">
+    <div style="font-size:0.9rem;"><strong>${item.nombre}</strong></div>
+    <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+      <button onclick="cambiarCantidadCarrito(${index}, -1)" style="width:32px; height:32px; border:none; background:#ddd; border-radius:6px; font-size:1.2rem; cursor:pointer;">−</button>
+      <input type="number" value="${item.cantidad}" min="1" style="width:48px; height:32px; text-align:center; font-weight:bold; border:1px solid #ccc; border-radius:6px;" onchange="cambiarCantidadCarritoInput(${index}, this.value)" />
+      <button onclick="cambiarCantidadCarrito(${index}, 1)" style="width:32px; height:32px; border:none; background:#ddd; border-radius:6px; font-size:1.2rem; cursor:pointer;">+</button>
     </div>
   </div>
-  <div style="min-width:70px; text-align:right;">$${(item.precio * item.cantidad).toLocaleString()}</div>
-  <button onclick="eliminarDelCarrito(${index})" style="margin-left:6px; background:none; border:none; color:#d9534f; font-size:1.2rem; cursor:pointer;">&times;</button>
+  <div style="min-width:70px; text-align:right; font-size:0.9rem;">$${(item.precio * item.cantidad).toLocaleString()}</div>
+  <button onclick="eliminarDelCarrito(${index})" style="margin-left:6px; background:none; border:none; color:#d9534f; font-size:1.4rem; cursor:pointer;">&times;</button>
 `;
+
     carritoItems.appendChild(itemDiv);
     total += item.precio * item.cantidad;
     cantidadTotal += item.cantidad;
@@ -157,13 +158,15 @@ function mostrarPopup() {
   }
 }
 
-function cambiarCantidadCarrito(index, delta) {
+function cambiarCantidadCarritoInput(index, value) {
   if (!carrito[index]) return;
-  carrito[index].cantidad += delta;
-  if (carrito[index].cantidad < 1) carrito[index].cantidad = 1;
+  let cantidad = parseInt(value);
+  if (isNaN(cantidad) || cantidad < 1) cantidad = 1;
+  carrito[index].cantidad = cantidad;
   guardarCarritoEnLocalStorage();
   actualizarCarrito();
 }
+
 
 function mostrarModalInfo(nombre, descripcion) {
   document.getElementById('modal-titulo').textContent = nombre;
