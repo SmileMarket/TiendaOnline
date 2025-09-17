@@ -127,10 +127,17 @@ function actualizarCarrito() {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'carrito-item';
     itemDiv.innerHTML = `
-      <div>${item.nombre} x ${item.cantidad}</div>
-      <div>$${(item.precio * item.cantidad).toLocaleString()}</div>
-      <button onclick="eliminarDelCarrito(${index})">&times;</button>
-    `;
+  <div style="flex:1">
+    <div><strong>${item.nombre}</strong></div>
+    <div style="display:flex; align-items:center; gap:6px; margin-top:4px;">
+      <button onclick="cambiarCantidadCarrito(${index}, -1)" style="width:24px; height:24px; border:none; background:#ddd; border-radius:4px; cursor:pointer;">−</button>
+      <input type="number" value="${item.cantidad}" min="1" readonly style="width:36px; text-align:center; font-weight:bold; border:1px solid #ccc; border-radius:4px;" />
+      <button onclick="cambiarCantidadCarrito(${index}, 1)" style="width:24px; height:24px; border:none; background:#ddd; border-radius:4px; cursor:pointer;">+</button>
+    </div>
+  </div>
+  <div style="min-width:70px; text-align:right;">$${(item.precio * item.cantidad).toLocaleString()}</div>
+  <button onclick="eliminarDelCarrito(${index})" style="margin-left:6px; background:none; border:none; color:#d9534f; font-size:1.2rem; cursor:pointer;">&times;</button>
+`;
     carritoItems.appendChild(itemDiv);
     total += item.precio * item.cantidad;
     cantidadTotal += item.cantidad;
@@ -150,12 +157,12 @@ function mostrarPopup() {
   }
 }
 
-function cambiarCantidad(boton, delta) {
-  const input = boton.parentElement.querySelector('.cantidad-input');
-  let cantidad = parseInt(input.value) || 1;
-  cantidad += delta;
-  if (cantidad < 1) cantidad = 1;
-  input.value = cantidad;
+function cambiarCantidadCarrito(index, delta) {
+  if (!carrito[index]) return;
+  carrito[index].cantidad += delta;
+  if (carrito[index].cantidad < 1) carrito[index].cantidad = 1;
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
 }
 
 function mostrarModalInfo(nombre, descripcion) {
