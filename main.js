@@ -138,7 +138,6 @@ function actualizarCarrito() {
   <div style="min-width:70px; text-align:right; font-size:0.9rem;">$${(item.precio * item.cantidad).toLocaleString()}</div>
   <button onclick="eliminarDelCarrito(${index})" style="margin-left:6px; background:none; border:none; color:#d9534f; font-size:1.4rem; cursor:pointer;">&times;</button>
 `;
-
     carritoItems.appendChild(itemDiv);
     total += item.precio * item.cantidad;
     cantidadTotal += item.cantidad;
@@ -158,6 +157,14 @@ function mostrarPopup() {
   }
 }
 
+function cambiarCantidadCarrito(index, delta) {
+  if (!carrito[index]) return;
+  carrito[index].cantidad += delta;
+  if (carrito[index].cantidad < 1) carrito[index].cantidad = 1;
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+}
+
 function cambiarCantidadCarritoInput(index, value) {
   if (!carrito[index]) return;
   let cantidad = parseInt(value);
@@ -166,7 +173,6 @@ function cambiarCantidadCarritoInput(index, value) {
   guardarCarritoEnLocalStorage();
   actualizarCarrito();
 }
-
 
 function mostrarModalInfo(nombre, descripcion) {
   document.getElementById('modal-titulo').textContent = nombre;
