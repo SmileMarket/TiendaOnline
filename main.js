@@ -456,3 +456,28 @@ window.mostrarModalInfo = mostrarModalInfo;
 window.cerrarModalInfo = cerrarModalInfo;
 
 setInterval(guardarCarritoEnLocalStorage, 3000);
+
+// --- Popup Promocional ---
+function mostrarPromoPopup() {
+  const popup = document.getElementById('promo-popup');
+  if (popup) {
+    popup.style.display = 'flex';
+  }
+}
+
+function cerrarPromoPopup() {
+  const popup = document.getElementById('promo-popup');
+  if (popup) {
+    popup.style.display = 'none';
+    localStorage.setItem("promoMostrada", "true"); // evita que aparezca en cada recarga
+  }
+}
+
+// Mostrar popup solo la primera vez que entra el usuario
+document.addEventListener("DOMContentLoaded", () => {
+  const promoMostrada = localStorage.getItem("promoMostrada");
+  if (!promoMostrada) {
+    setTimeout(mostrarPromoPopup, 1500); // espera 1,5s antes de mostrar
+  }
+});
+
