@@ -194,6 +194,31 @@ function animarCarrito() {
   }
 }
 
+// --- Personalización con nombre ---
+function guardarNombreCliente(nombre) {
+  try {
+    localStorage.setItem('smilemarket_nombre', nombre);
+  } catch (e) { console.warn('No se pudo guardar nombre en localStorage', e); }
+}
+
+function obtenerNombreCliente() {
+  try {
+    return localStorage.getItem('smilemarket_nombre') || '';
+  } catch (e) { return ''; }
+}
+
+function mostrarSaludo() {
+  const nombre = obtenerNombreCliente();
+  const saludoDiv = document.getElementById('saludo-usuario');
+  if (saludoDiv) {
+    if (nombre) {
+      saludoDiv.textContent = `Hola, ${nombre} 👋 ¿Listo para tu próxima compra?`;
+    } else {
+      saludoDiv.textContent = '¡Bienvenido a SmileMarket! 😃';
+    }
+  }
+}
+
 // Buscar sugerencias
 function mostrarSugerencias(texto) {
   const cont = document.getElementById('sugerencias');
@@ -252,11 +277,19 @@ function filtrarPorTexto(texto){
 document.addEventListener('DOMContentLoaded', async () => {
   iniciarSplash();
   cargarCarritoDesdeLocalStorage();
-
+  
   await cargarProductosDesdeGoogleSheet();
   await cargarCuponesDesdeGoogleSheet();
 
   finalizarSplash();
+
+  mostrarSaludo(); // ✅ saludo en header
+
+  // Autocompletar campo nombre en el modal
+  const inputNombre = document.getElementById('nombre-cliente');
+  if (inputNombre) {
+    inputNombre.value = obtenerNombreCliente();
+  }
 
   const contenedor = document.getElementById('productos');
   const productosPorCategoria = {};
@@ -422,6 +455,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
+    guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
+
     let mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
     mensaje = `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n` + mensaje;
 
@@ -473,11 +508,32 @@ function cerrarPromoPopup() {
   }
 }
 
+// --- Promos estratégicas dinámicas ---
+function promoSegunDia() {
+  const promos = {
+    0: { img: "https://via.placeholder.com/400x400?text=Promo+Domingo", alt: "Promo Domingo" },
+    1: { img: "https://via.placeholder.com/400x400?text=Puntas+Odontológicas", alt: "Promo Puntas" },
+    2: { img: "https://via.placeholder.com/400x400?text=Dosetas+Especiales", alt: "Promo Dosetas" },
+    3: { img: "https://via.placeholder.com/400x400?text=Kits+Cirugía", alt: "Promo Kits" },
+    4: { img: "https://via.placeholder.com/400x400?text=Descuentos+Instrumental", alt: "Promo Instrumental" },
+    5: { img: "https://via.placeholder.com/400x400?text=Promo+Viernes+Flash", alt: "Promo Viernes" },
+    6: { img: "https://via.placeholder.com/400x400?text=Promo+Sábado+Pack", alt: "Promo Sábado" }
+  };
+
+  const hoy = new Date().getDay(); // 0=domingo, 6=sábado
+  const promo = promos[hoy];
+  const promoImg = document.getElementById("promo-imagen");
+  if (promo && promoImg) {
+    promoImg.src = promo.img;
+    promoImg.alt = promo.alt;
+  }
+}
+
 // Mostrar popup solo la primera vez que entra el usuario
 document.addEventListener("DOMContentLoaded", () => {
   const promoMostrada = localStorage.getItem("promoMostrada");
   if (!promoMostrada) {
+    promoSegunDia(); // ✅ carga la promo del día
     setTimeout(mostrarPromoPopup, 1500); // espera 1,5s antes de mostrar
   }
 });
-
