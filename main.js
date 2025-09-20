@@ -23,7 +23,7 @@ function cargarCarritoDesdeLocalStorage() {
         parsed.forEach(item => carrito.push(item));
       }
     }
-  } catch (e) { console.warn('No se pudo cargar carrito', e); }
+  } catch (e) { console.warn('No se pudo cargar carrito en localStorage', e); }
 }
 
 // --- Splash y progreso ---
@@ -504,7 +504,6 @@ function cerrarPromoPopup() {
   const popup = document.getElementById('promo-popup');
   if (popup) {
     popup.style.display = 'none';
-    localStorage.setItem("promoMostrada", "true"); // evita que aparezca en cada recarga
   }
 }
 
@@ -529,11 +528,8 @@ function promoSegunDia() {
   }
 }
 
-// Mostrar popup solo la primera vez que entra el usuario
+// --- Mostrar popup SIEMPRE ---
 document.addEventListener("DOMContentLoaded", () => {
-  const promoMostrada = localStorage.getItem("promoMostrada");
-  if (!promoMostrada) {
-    promoSegunDia(); // ✅ carga la promo del día
-    setTimeout(mostrarPromoPopup, 1500); // espera 1,5s antes de mostrar
-  }
+  promoSegunDia(); // ✅ carga la promo del día
+  setTimeout(mostrarPromoPopup, 1500); // ✅ siempre se muestra
 });
