@@ -507,29 +507,18 @@ function cerrarPromoPopup() {
   }
 }
 
-// --- Promos estratégicas dinámicas ---
+// --- Promos fijas ---
 function promoSegunDia() {
-  const promos = {
-    0: { img: "https://via.placeholder.com/400x400?text=Promo+Domingo", alt: "Promo Domingo" },
-    1: { img: "https://via.placeholder.com/400x400?text=Puntas+Odontológicas", alt: "Promo Puntas" },
-    2: { img: "https://via.placeholder.com/400x400?text=Dosetas+Especiales", alt: "Promo Dosetas" },
-    3: { img: "https://via.placeholder.com/400x400?text=Kits+Cirugía", alt: "Promo Kits" },
-    4: { img: "https://via.placeholder.com/400x400?text=Descuentos+Instrumental", alt: "Promo Instrumental" },
-    5: { img: "https://via.placeholder.com/400x400?text=Promo+Viernes+Flash", alt: "Promo Viernes" },
-    6: { img: "https://via.placeholder.com/400x400?text=Promo+Sábado+Pack", alt: "Promo Sábado" }
-  };
-
-  const hoy = new Date().getDay(); // 0=domingo, 6=sábado
-  const promo = promos[hoy];
   const promoImg = document.getElementById("promo-imagen");
-  if (promo && promoImg) {
-    promoImg.src = promo.img;
-    promoImg.alt = promo.alt;
+  if (promoImg) {
+    promoImg.src = "img/Promo.jpg";
+    promoImg.alt = "Promoción SmileMarket";
   }
 }
 
 // --- Mostrar popup SIEMPRE ---
 document.addEventListener("DOMContentLoaded", () => {
-  promoSegunDia(); // ✅ carga la promo del día
+  promoSegunDia(); // ✅ ahora siempre carga img/Promo.jpg
   setTimeout(mostrarPromoPopup, 1500); // ✅ siempre se muestra
 });
+
