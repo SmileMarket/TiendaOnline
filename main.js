@@ -522,3 +522,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setTimeout(mostrarPromoPopup, 1500); // ✅ siempre se muestra
 });
 
+window.onload = () => {
+  promoSegunDia();
+  setTimeout(mostrarPromoPopup, 1500);
+};
+
