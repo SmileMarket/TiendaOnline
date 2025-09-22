@@ -518,12 +518,6 @@ function promoSegunDia() {
 
 // --- Mostrar popup SIEMPRE ---
 document.addEventListener("DOMContentLoaded", () => {
-  promoSegunDia(); // ✅ ahora siempre carga img/Promo.jpg
-  setTimeout(mostrarPromoPopup, 1500); // ✅ siempre se muestra
-});
-
-window.onload = () => {
   promoSegunDia();
   setTimeout(mostrarPromoPopup, 1500);
-};
-
+});
