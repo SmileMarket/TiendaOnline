@@ -482,6 +482,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (!document.getElementById('buscador').contains(ev.target) && !s.contains(ev.target)) s.style.display = 'none';
     });
   }
+
+  // ✅ Mostrar popup siempre al cargar
+  promoSegunDia();
+  setTimeout(mostrarPromoPopup, 1500);
 });
 
 window.agregarAlCarrito = agregarAlCarrito;
@@ -496,7 +500,8 @@ setInterval(guardarCarritoEnLocalStorage, 3000);
 function mostrarPromoPopup() {
   const popup = document.getElementById('promo-popup');
   if (popup) {
-    popup.style.display = 'flex';
+    // Fuerza el display flex aunque haya inline en el HTML
+    popup.style.setProperty('display', 'flex', 'important');
   }
 }
 
@@ -515,9 +520,3 @@ function promoSegunDia() {
     promoImg.alt = "Promoción SmileMarket";
   }
 }
-
-// --- Mostrar popup SIEMPRE ---
-document.addEventListener("DOMContentLoaded", () => {
-  promoSegunDia();
-  setTimeout(mostrarPromoPopup, 1500);
-});
