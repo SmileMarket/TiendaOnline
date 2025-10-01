@@ -488,6 +488,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   setTimeout(mostrarPromoPopup, 1500);
 });
 
+function cambiarCantidad(boton, delta) {
+  const producto = boton.closest('.producto');
+  if (!producto) return;
+
+  const input = producto.querySelector('.cantidad-input');
+  let valor = parseInt(input.value) || 1;
+  valor += delta;
+  if (valor < 1) valor = 1;
+  input.value = valor;
+}
+
+
 window.agregarAlCarrito = agregarAlCarrito;
 window.eliminarDelCarrito = eliminarDelCarrito;
 window.cambiarCantidad = cambiarCantidad;
