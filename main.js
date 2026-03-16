@@ -409,9 +409,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
-
-document.getElementById("checkout-total").textContent =
-"$" + totalGlobal.toLocaleString();
   }
 
   document.getElementById('confirmar')?.addEventListener('click', () => {
@@ -424,6 +421,7 @@ document.getElementById("checkout-total").textContent =
     document.getElementById('cupon-feedback').textContent = '';
     document.getElementById('resumen-modal').style.display = 'flex';
     calcularResumen();
+    mostrarProductosRelacionados();
   });
 
   document.getElementById('aplicar-cupon')?.addEventListener('click', () => {
@@ -449,6 +447,7 @@ document.getElementById("checkout-total").textContent =
     }
 
     calcularResumen();
+    mostrarProductosRelacionados();
   });
 
   document.getElementById('enviar-whatsapp')?.addEventListener('click', () => {
@@ -534,4 +533,66 @@ function promoSegunDia() {
     promoImg.src = "img/Promo.jpg";
     promoImg.alt = "Promoción SmileMarket";
   }
+}
+
+
+// -------------------------------
+// PRODUCTOS RELACIONADOS
+// -------------------------------
+
+function mostrarProductosRelacionados() {
+
+  const contenedor = document.getElementById("productos-relacionados");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  if (carrito.length === 0) return;
+
+  const categoriasCarrito = carrito.map(item => {
+    const prod = productos.find(p => p.nombre === item.nombre);
+    return prod?.categoria;
+  });
+
+  const categoriasUnicas = [...new Set(categoriasCarrito)];
+
+  const relacionados = productos
+    .filter(p => categoriasUnicas.includes(p.categoria))
+    .filter(p => !carrito.some(c => c.nombre === p.nombre))
+    .slice(0,4);
+
+  if (relacionados.length === 0) return;
+
+  contenedor.innerHTML = `
+    <div class="relacionados-container">
+      <div class="relacionados-titulo">También te puede interesar</div>
+      <div class="relacionados-grid">
+      ${relacionados.map(p => `
+        <div class="relacionado-item">
+          <img src="${p.imagen || 'https://via.placeholder.com/80'}">
+          <div style="font-size:0.75rem">${p.nombre}</div>
+          <div style="font-weight:bold;font-size:0.8rem">$${p.precio.toLocaleString()}</div>
+          <button onclick="agregarRelacionado('${p.nombre}', ${p.precio})">
+            Agregar
+          </button>
+        </div>
+      `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function agregarRelacionado(nombre, precio){
+
+  const existente = carrito.find(item => item.nombre === nombre);
+
+  if (existente){
+    existente.cantidad += 1;
+  } else {
+    carrito.push({nombre, precio, cantidad:1});
+  }
+
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+  mostrarProductosRelacionados();
 }

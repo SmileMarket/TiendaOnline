@@ -113,185 +113,47 @@
 
     /* ✅ popup oculto al inicio */
     #promo-popup { display:none; }
+  
+/* PRODUCTOS RELACIONADOS */
 
-/* ============================= */
-/* MODAL CHECKOUT PRO */
-/* ============================= */
-
-.modal-overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.65);
-  display:none;
-  justify-content:center;
-  align-items:center;
-  z-index:10000;
+.relacionados-container{
+  margin-top:15px;
 }
 
-.modal-checkout{
-  background:white;
-  width:95%;
-  max-width:420px;
-  max-height:90vh;
-  border-radius:12px;
-  display:flex;
-  flex-direction:column;
-  overflow:hidden;
-}
-
-/* HEADER */
-
-.modal-header{
-  padding:16px;
-  border-bottom:1px solid #eee;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-.modal-header h2{
-  margin:0;
-  font-size:1.2rem;
-}
-
-.modal-cerrar{
-  border:none;
-  background:none;
-  font-size:1.4rem;
-  cursor:pointer;
-}
-
-/* BODY */
-
-.modal-body{
-  padding:16px;
-  overflow-y:auto;
-  flex:1;
-}
-
-/* LISTA PRODUCTOS */
-
-.checkout-items{
-  max-height:220px;
-  overflow-y:auto;
-  border-bottom:1px solid #eee;
-  margin-bottom:15px;
-  padding-bottom:10px;
-}
-
-.checkout-items div{
-  font-size:0.9rem;
-  margin-bottom:4px;
-}
-
-/* FORM */
-
-.checkout-form label{
+.relacionados-titulo{
   font-weight:bold;
-  font-size:0.85rem;
-  margin-top:10px;
-  display:block;
+  margin-bottom:8px;
+  font-size:0.95rem;
 }
 
-.checkout-form input{
-  width:100%;
-  padding:8px;
-  border:1px solid #ccc;
-  border-radius:6px;
-  margin-top:4px;
-  margin-bottom:10px;
-}
-
-.cupon-feedback{
-  font-size:0.85rem;
-  margin-top:4px;
-}
-
-/* FOOTER */
-
-.modal-footer{
-  padding:14px;
-  border-top:1px solid #eee;
+.relacionados-grid{
   display:flex;
-  flex-direction:column;
   gap:8px;
+  overflow-x:auto;
+}
+
+.relacionado-item{
+  min-width:120px;
+  border:1px solid #eee;
+  border-radius:8px;
+  padding:6px;
+  text-align:center;
   background:#fafafa;
 }
 
-/* BOTONES */
-
-.boton{
-  border:none;
-  padding:10px;
-  border-radius:6px;
-  font-weight:bold;
-  cursor:pointer;
+.relacionado-item img{
+  width:100%;
+  height:60px;
+  object-fit:contain;
 }
 
-.boton-secundario{
-  background:#007b7f;
-  color:white;
+.relacionado-item button{
+  margin-top:4px;
+  font-size:0.75rem;
+  padding:4px 6px;
 }
 
-.boton-whatsapp{
-  background:#25d366;
-  color:white;
-}
-
-.boton-gris{
-  background:#ddd;
-  color:#333;
-}
-/* TOTAL GRANDE CHECKOUT */
-
-.checkout-total{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-size:1.2rem;
-  font-weight:bold;
-  margin-bottom:10px;
-  padding-bottom:8px;
-  border-bottom:1px solid #eee;
-}
-
-.checkout-total strong{
-  color:#007b7f;
-  font-size:1.4rem;
-}
-
-/* MOBILE */
-
-@media (max-width:600px){
-
-  .modal-checkout{
-    width:100%;
-    height:95vh;
-    max-height:none;
-    border-radius:14px 14px 0 0;
-  }
-/* ANIMACION MODAL */
-
-.modal-checkout{
-  animation: modalSlide 0.35s ease;
-}
-
-@keyframes modalSlide{
-
-  from{
-    transform:translateY(40px);
-    opacity:0;
-  }
-
-  to{
-    transform:translateY(0);
-    opacity:1;
-  }
-
-}
-}
-
-  </style>
+</style>
 </head>
 <body>
 
@@ -327,56 +189,28 @@
 
   <div id="popup">Producto agregado al carrito</div>
 
-  <div id="resumen-modal" class="modal-overlay">
-
-  <div class="modal-checkout">
-
-    <div class="modal-header">
+  <div id="resumen-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:8px; width:90%; max-width:400px;">
       <h2>Resumen de tu pedido</h2>
-      <button onclick="document.getElementById('resumen-modal').style.display='none'" class="modal-cerrar">✕</button>
-    </div>
+      <div id="resumen-contenido" style="margin-bottom:1rem;"></div>
+      <div id="productos-relacionados"></div>
 
-    <div class="modal-body">
-
-      <div id="resumen-contenido" class="checkout-items"></div>
-
-      <div class="checkout-form">
-
-        <label>Tu nombre</label>
-        <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre">
-
-        <label>Código de descuento</label>
-        <input type="text" id="cupon" placeholder="Ingresá tu cupón">
-
-        <button id="aplicar-cupon" class="boton boton-secundario">
-          Aplicar código
-        </button>
-
-        <div id="cupon-feedback" class="cupon-feedback"></div>
-
+      <div style="margin-bottom: 1rem;">
+        <label for="nombre-cliente" style="font-weight: bold;">Tu nombre:</label><br>
+        <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;" />
       </div>
 
+      <div style="margin-bottom: 1rem;">
+        <label for="cupon" style="font-weight: bold;">Código de descuento:</label><br>
+        <input type="text" id="cupon" placeholder="Ingresá tu cupón" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px;" />
+        <button id="aplicar-cupon" class="boton" style="margin-top: 0.5rem; background: #007b7f;">Agregar código</button>
+        <div id="cupon-feedback" style="color: red; font-size: 0.9rem; margin-top: 4px;"></div>
+      </div>
+
+      <button id="enviar-whatsapp" class="boton" style="margin-bottom:10px; background:#28a745;">Enviar por WhatsApp</button>
+      <button id="seguir-comprando" class="boton" style="background:#ccc;color:#333;">Seguir comprando</button>
     </div>
-<div class="modal-footer">
-
-  <div class="checkout-total">
-    <span>Total</span>
-    <strong id="checkout-total">$0</strong>
   </div>
-
-  <button id="seguir-comprando" class="boton boton-gris">
-    Seguir comprando
-  </button>
-
-  <button id="enviar-whatsapp" class="boton boton-whatsapp">
-    Enviar pedido por WhatsApp
-  </button>
-
-</div>
-
-  </div>
-
-</div>
 
   <div id="info-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
     <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:90%; position:relative;">
