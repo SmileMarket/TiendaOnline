@@ -242,6 +242,23 @@
   background:#ddd;
   color:#333;
 }
+/* TOTAL GRANDE CHECKOUT */
+
+.checkout-total{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-size:1.2rem;
+  font-weight:bold;
+  margin-bottom:10px;
+  padding-bottom:8px;
+  border-bottom:1px solid #eee;
+}
+
+.checkout-total strong{
+  color:#007b7f;
+  font-size:1.4rem;
+}
 
 /* MOBILE */
 
@@ -253,7 +270,25 @@
     max-height:none;
     border-radius:14px 14px 0 0;
   }
+/* ANIMACION MODAL */
 
+.modal-checkout{
+  animation: modalSlide 0.35s ease;
+}
+
+@keyframes modalSlide{
+
+  from{
+    transform:translateY(40px);
+    opacity:0;
+  }
+
+  to{
+    transform:translateY(0);
+    opacity:1;
+  }
+
+}
 }
 
   </style>
@@ -322,18 +357,22 @@
       </div>
 
     </div>
+<div class="modal-footer">
 
-    <div class="modal-footer">
+  <div class="checkout-total">
+    <span>Total</span>
+    <strong id="checkout-total">$0</strong>
+  </div>
 
-      <button id="seguir-comprando" class="boton boton-gris">
-        Seguir comprando
-      </button>
+  <button id="seguir-comprando" class="boton boton-gris">
+    Seguir comprando
+  </button>
 
-      <button id="enviar-whatsapp" class="boton boton-whatsapp">
-        Enviar pedido por WhatsApp
-      </button>
+  <button id="enviar-whatsapp" class="boton boton-whatsapp">
+    Enviar pedido por WhatsApp
+  </button>
 
-    </div>
+</div>
 
   </div>
 

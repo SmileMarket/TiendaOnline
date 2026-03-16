@@ -409,6 +409,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+
+document.getElementById("checkout-total").textContent =
+"$" + totalGlobal.toLocaleString();
   }
 
   document.getElementById('confirmar')?.addEventListener('click', () => {
