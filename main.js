@@ -447,6 +447,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     calcularResumen();
+document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLocaleString();
     mostrarProductosRelacionados();
   });
 
