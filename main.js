@@ -145,6 +145,7 @@ function actualizarCarrito() {
 
   document.getElementById('total').textContent = 'Total: $' + total.toLocaleString();
   document.getElementById('contador-carrito').textContent = cantidadTotal;
+  totalGlobal = total;
 }
 
 function mostrarPopup() {
