@@ -377,39 +377,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  function calcularResumen() {
-    const resumen = document.getElementById('resumen-contenido');
-    resumen.innerHTML = '';
-    totalGlobal = 0;
-    let mensaje = '';
+function calcularResumen() {
+  const resumen = document.getElementById('resumen-contenido');
+  resumen.innerHTML = '';
+  totalGlobal = 0;
+  let mensaje = '';
 
-    carrito.forEach(item => {
-      const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
-      resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
-      mensaje += `• ${linea}\n`;
-      totalGlobal += item.precio * item.cantidad;
-    });
+  carrito.forEach(item => {
+    const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+    resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+    mensaje += `• ${linea}\n`;
+    totalGlobal += item.precio * item.cantidad;
+  });
 
-    resumen.innerHTML += `<div style="margin-top: 1rem;">Subtotal: $${totalGlobal.toLocaleString()}</div>`;
+  resumen.innerHTML += `<div style="margin-top: 1rem;">Subtotal: $${totalGlobal.toLocaleString()}</div>`;
 
-    if (descuentoGlobal > 0) {
-      const montoDescuento = totalGlobal * (descuentoGlobal / 100);
-      const totalConDescuento = totalGlobal - montoDescuento;
+  if (descuentoGlobal > 0) {
+    const montoDescuento = totalGlobal * (descuentoGlobal / 100);
+    const totalConDescuento = totalGlobal - montoDescuento;
 
-      resumen.innerHTML += `<div>Descuento (${descuentoGlobal}%): -$${montoDescuento.toLocaleString()}</div>`;
-      resumen.innerHTML += `<div style="font-weight:bold;">Total: $${totalConDescuento.toLocaleString()}</div>`;
-      totalGlobal = totalConDescuento;
+    resumen.innerHTML += `<div>Descuento (${descuentoGlobal}%): -$${montoDescuento.toLocaleString()}</div>`;
+    resumen.innerHTML += `<div style="font-weight:bold;">Total: $${totalConDescuento.toLocaleString()}</div>`;
+    totalGlobal = totalConDescuento;
 
-      mensaje += `\nSubtotal: $${(totalGlobal + montoDescuento).toLocaleString()}`;
-      mensaje += `\nDescuento (${descuentoGlobal}%): -$${montoDescuento.toLocaleString()}`;
-      mensaje += `\nTotal: $${totalConDescuento.toLocaleString()}`;
-    } else {
-      resumen.innerHTML += `<div style="font-weight:bold;">Total: $${totalGlobal.toLocaleString()}</div>`;
-      mensaje += `\nTotal: $${totalGlobal.toLocaleString()}`;
-    }
-
-    document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+  } else {
+    resumen.innerHTML += `<div style="font-weight:bold;">Total: $${totalGlobal.toLocaleString()}</div>`;
   }
+
+  // 👉 ESTA LÍNEA ES LA CLAVE (acá adentro)
+  document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLocaleString();
+
+  document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+}
 
   document.getElementById('confirmar')?.addEventListener('click', () => {
     if (carrito.length === 0) {
