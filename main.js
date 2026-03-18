@@ -451,22 +451,53 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     mostrarProductosRelacionados();
   });
 
-  document.getElementById('enviar-whatsapp')?.addEventListener('click', () => {
-    const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
-    if (!nombreCliente) {
-      alert("Por favor, ingresá tu nombre antes de enviar el pedido.");
-      return;
-    }
+  document.getElementById('enviar-whatsapp')?.addEventListener('click', async () => {
 
-    guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
+  const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
 
-    let mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
-    mensaje = `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n` + mensaje;
+  if (!nombreCliente) {
+    alert("Por favor, ingresá tu nombre.");
+    return;
+  }
+
+  let mensajeBase = document.getElementById('enviar-whatsapp').dataset.mensaje;
+
+  // 👇 calcular cantidad total
+  let cantidadTotal = 0;
+  carrito.forEach(item => {
+    cantidadTotal += item.cantidad;
+  });
+
+  try {
+
+    const response = await fetch("https://script.google.com/macros/s/AKfycbw3TxwWMzjnmc4HkyjO-oksqyoibeADQILP0juUZEF5fCmiNJFzt_cHl3CUkv2iO4s/exec", {
+      method: "POST",
+      body: JSON.stringify({
+        nombre: nombreCliente,
+        detalle: mensajeBase,
+        cantidad: cantidadTotal,
+        total: totalGlobal
+      })
+    });
+
+    const data = await response.json();
+
+    const numeroPedido = data.numeroPedido;
+
+    let mensaje = `🧾 Pedido: ${numeroPedido}\n`;
+    mensaje += `Hola! mi nombre es ${nombreCliente}, quiero comprar:\n\n`;
+    mensaje += mensajeBase;
+    mensaje += `\nTotal: $${totalGlobal.toLocaleString()}`;
 
     const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
-    document.getElementById('resumen-modal').style.display = 'none';
-  });
+
+  } catch (error) {
+    alert("Error al generar el pedido");
+    console.error(error);
+  }
+
+});
 
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
     document.getElementById('resumen-modal').style.display = 'none';
