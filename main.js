@@ -469,15 +469,35 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
 
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
 
+// ✅ Validación
+if (!carrito || carrito.length === 0) {
+  alert('El carrito está vacío');
+  return;
+}
+
+// ✅ Mensaje base
 let mensaje = `Pedido #${window.numeroPedidoActual}\n\n`;
 
 mensaje += `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n`;
 
 mensaje += document.getElementById('enviar-whatsapp').dataset.mensaje;
 
-    const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
-    window.open(url, '_blank');
-    document.getElementById('resumen-modal').style.display = 'none';
+// ✅ Calcular total correctamente
+let total = 0;
+
+carrito.forEach(item => {
+  total += Number(item.precio) * Number(item.cantidad);
+});
+
+// ✅ Agregar total
+mensaje += `\n\nTotal: $${total.toLocaleString()}`;
+
+// ✅ Enviar a WhatsApp
+const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
+window.open(url, '_blank');
+
+// ✅ Cerrar modal
+document.getElementById('resumen-modal').style.display = 'none';
   });
 
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
