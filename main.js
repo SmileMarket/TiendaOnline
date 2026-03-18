@@ -76,7 +76,7 @@ async function cargarProductosDesdeGoogleSheet() {
 }
 
 async function cargarCuponesDesdeGoogleSheet() {
-  const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=713979488&single=true&output=csv';
+  const urlCSV = 'https://script.google.com/macros/s/AKfycbycL1rPy9qt3G_1prSx4X8tA-SEyDquL7aoKE4GqzaUkjStBKDW1N_yjvRs-OKQEzQ/exec';
   const response = await fetch(urlCSV);
   const texto = await response.text();
   const lineas = texto.split('\n').filter(l => l.trim() !== '');
