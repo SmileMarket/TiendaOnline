@@ -490,7 +490,8 @@ carrito.forEach(item => {
 });
 
 // ✅ Agregar total
-mensaje += `\n\nTotal: $${total.toLocaleString()}`;
+mensaje = mensaje.trim();
+mensaje += `\nTotal: $${total.toLocaleString()}`;
 
 // ✅ Enviar a WhatsApp
 const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
