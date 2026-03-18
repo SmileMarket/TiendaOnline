@@ -2,8 +2,6 @@
 
 const carrito = [];
 let productos = [];
-let cupones = [];
-let cuponAplicado = null;
 let totalGlobal = 0;
 let descuentoGlobal = 0;
 
@@ -52,7 +50,7 @@ function finalizarSplash() {
 }
 
 async function cargarProductosDesdeGoogleSheet() {
-  const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=1670706691&single=true&output=csv';
+  const urlCSV = 'https://script.google.com/macros/s/AKfycbyVzde8oRG_HIvGDgeSy-bsf9RsUIjrjQ_DA2-MDlZMfo7nbSZmaTh6m-s0TzyMNQk/exec';
   const response = await fetch(urlCSV);
   const texto = await response.text();
   const lineas = texto.split('\n').filter(l => l.trim() !== '');
@@ -75,22 +73,7 @@ async function cargarProductosDesdeGoogleSheet() {
   });
 }
 
-async function cargarCuponesDesdeGoogleSheet() {
-  const urlCSV = 'https://script.google.com/macros/s/AKfycbycL1rPy9qt3G_1prSx4X8tA-SEyDquL7aoKE4GqzaUkjStBKDW1N_yjvRs-OKQEzQ/exec';
-  const response = await fetch(urlCSV);
-  const texto = await response.text();
-  const lineas = texto.split('\n').filter(l => l.trim() !== '');
-  const headers = lineas[0].split(',').map(h => h.trim().toLowerCase());
 
-  cupones = lineas.slice(1).map(linea => {
-    const columnas = linea.split(',').map(c => c.trim());
-    const fila = Object.fromEntries(headers.map((h, i) => [h, columnas[i] || '']));
-    return {
-      codigo: fila.codigo?.toUpperCase() || '',
-      descuento: parseFloat(fila.descuento) || 0
-    };
-  });
-}
 
 function agregarAlCarrito(boton) {
   const producto = boton.closest('.producto');
@@ -280,7 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   cargarCarritoDesdeLocalStorage();
   
   await cargarProductosDesdeGoogleSheet();
-  await cargarCuponesDesdeGoogleSheet();
 
   finalizarSplash();
 
@@ -418,38 +400,11 @@ function calcularResumen() {
     }
 
     descuentoGlobal = 0;
-    document.getElementById('cupon-feedback').textContent = '';
     document.getElementById('resumen-modal').style.display = 'flex';
     calcularResumen();
     mostrarProductosRelacionados();
   });
 
-  document.getElementById('aplicar-cupon')?.addEventListener('click', () => {
-    const inputCupon = document.getElementById('cupon');
-    const feedback = document.getElementById('cupon-feedback');
-    const codigoIngresado = inputCupon?.value.trim().toUpperCase();
-
-    if (!codigoIngresado) {
-      feedback.textContent = 'Ingresá un código';
-      feedback.style.color = 'red';
-      return;
-    }
-
-    const cuponValido = cupones.find(c => c.codigo === codigoIngresado);
-    if (cuponValido) {
-      descuentoGlobal = cuponValido.descuento;
-      feedback.textContent = `Cupón aplicado: ${descuentoGlobal}% de descuento`;
-      feedback.style.color = 'green';
-    } else {
-      descuentoGlobal = 0;
-      feedback.textContent = 'Cupón no válido';
-      feedback.style.color = 'red';
-    }
-
-    calcularResumen();
-document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLocaleString();
-    mostrarProductosRelacionados();
-  });
 
   document.getElementById('enviar-whatsapp')?.addEventListener('click', async () => {
 
