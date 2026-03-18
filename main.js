@@ -411,18 +411,28 @@ function calcularResumen() {
   document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
 }
 
-  document.getElementById('confirmar')?.addEventListener('click', () => {
-    if (carrito.length === 0) {
-      alert('Tu carrito está vacío.');
-      return;
-    }
+  const numeroPedido = generarNumeroPedido();
+document.getElementById('confirmar')?.addEventListener('click', () => {
 
-    descuentoGlobal = 0;
-    document.getElementById('cupon-feedback').textContent = '';
-    document.getElementById('resumen-modal').style.display = 'flex';
-    calcularResumen();
-    mostrarProductosRelacionados();
-  });
+  if (carrito.length === 0) {
+    alert('Tu carrito está vacío.');
+    return;
+  }
+
+  // 🔥 Generar número de pedido en el momento correcto
+  const numeroPedido = generarNumeroPedido();
+  window.numeroPedidoActual = numeroPedido;
+
+  document.getElementById('numero-pedido').innerText = "Pedido #" + numeroPedido;
+
+  descuentoGlobal = 0;
+  document.getElementById('cupon-feedback').textContent = '';
+  document.getElementById('resumen-modal').style.display = 'flex';
+
+  calcularResumen();
+  mostrarProductosRelacionados();
+});
+
 
   document.getElementById('aplicar-cupon')?.addEventListener('click', () => {
     const inputCupon = document.getElementById('cupon');
@@ -460,8 +470,11 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
 
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
 
-    let mensaje = document.getElementById('enviar-whatsapp').dataset.mensaje;
-    mensaje = `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n` + mensaje;
+let mensaje = `Pedido #${window.numeroPedidoActual}\n\n`;
+
+mensaje += `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n`;
+
+mensaje += document.getElementById('enviar-whatsapp').dataset.mensaje;
 
     const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
     window.open(url, '_blank');
@@ -596,4 +609,14 @@ function agregarRelacionado(nombre, precio){
   guardarCarritoEnLocalStorage();
   actualizarCarrito();
   mostrarProductosRelacionados();
+}
+function generarNumeroPedido() {
+  const ahora = new Date();
+
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const hora = String(ahora.getHours()).padStart(2, '0');
+  const minuto = String(ahora.getMinutes()).padStart(2, '0');
+
+  return `${mes}${dia}${hora}${minuto}${segundos}`;
 }
