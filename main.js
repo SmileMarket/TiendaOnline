@@ -278,7 +278,7 @@ function filtrarPorTexto(texto){
 document.addEventListener('DOMContentLoaded', async () => {
   iniciarSplash();
   cargarCarritoDesdeLocalStorage();
-  
+
   await cargarProductosDesdeGoogleSheet();
   await cargarCuponesDesdeGoogleSheet();
 
