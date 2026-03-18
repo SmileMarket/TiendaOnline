@@ -420,8 +420,7 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
   }
 
   // 🔥 Generar número de pedido en el momento correcto
-  const numeroPedido = generarNumeroPedido();
-  window.numeroPedidoActual = numeroPedido;
+    window.numeroPedidoActual = numeroPedido;
 
   document.getElementById('numero-pedido').innerText = "Pedido #" + numeroPedido;
 
@@ -617,6 +616,7 @@ function generarNumeroPedido() {
   const dia = String(ahora.getDate()).padStart(2, '0');
   const hora = String(ahora.getHours()).padStart(2, '0');
   const minuto = String(ahora.getMinutes()).padStart(2, '0');
+  const segundos = String(ahora.getSeconds()).padStart(2, '0');
 
   return `${mes}${dia}${hora}${minuto}${segundos}`;
 }
