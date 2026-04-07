@@ -7,29 +7,6 @@ let cuponAplicado = null;
 let totalGlobal = 0;
 let descuentoGlobal = 0;
 
-// ✅ NUEVO: parser CSV correcto (soporta comas y comillas)
-function parseCSVLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-
-  for (let i = 0; i < line.length; i++) {
-    const char = line[i];
-
-    if (char === '"') {
-      inQuotes = !inQuotes;
-    } else if (char === ',' && !inQuotes) {
-      result.push(current.trim());
-      current = '';
-    } else {
-      current += char;
-    }
-  }
-
-  result.push(current.trim());
-  return result;
-}
-
 // --- Persistencia de carrito en localStorage ---
 function guardarCarritoEnLocalStorage() {
   try {
@@ -79,14 +56,11 @@ async function cargarProductosDesdeGoogleSheet() {
   const response = await fetch(urlCSV);
   const texto = await response.text();
   const lineas = texto.split('\n').filter(l => l.trim() !== '');
-
-  const headers = parseCSVLine(lineas[0]).map(h => h.trim());
+  const headers = lineas[0].split(',').map(h => h.trim());
 
   productos = lineas.slice(1).map(linea => {
-    const columnas = parseCSVLine(linea);
-
+    const columnas = linea.split(',').map(c => c.trim());
     const producto = Object.fromEntries(headers.map((h, i) => [h.toLowerCase(), columnas[i] || '']));
-
     return {
       nombre: producto.nombre || 'Sin nombre',
       categoria: producto.categoria || 'Sin categoría',
@@ -106,11 +80,10 @@ async function cargarCuponesDesdeGoogleSheet() {
   const response = await fetch(urlCSV);
   const texto = await response.text();
   const lineas = texto.split('\n').filter(l => l.trim() !== '');
-
-  const headers = parseCSVLine(lineas[0]).map(h => h.trim().toLowerCase());
+  const headers = lineas[0].split(',').map(h => h.trim().toLowerCase());
 
   cupones = lineas.slice(1).map(linea => {
-    const columnas = parseCSVLine(linea);
+    const columnas = linea.split(',').map(c => c.trim());
     const fila = Object.fromEntries(headers.map((h, i) => [h, columnas[i] || '']));
     return {
       codigo: fila.codigo?.toUpperCase() || '',
@@ -118,9 +91,6 @@ async function cargarCuponesDesdeGoogleSheet() {
     };
   });
 }
-
-// 🔥 DESDE ACÁ ES EXACTAMENTE TU CÓDIGO ORIGINAL (NO TOCADO)
-// (👇 todo sigue igual 👇)
 
 function agregarAlCarrito(boton) {
   const producto = boton.closest('.producto');
@@ -141,4 +111,533 @@ function agregarAlCarrito(boton) {
   actualizarCarrito();
 }
 
-// ⚠️ NO recorto nada: TODO lo demás sigue igual en tu archivo original
+function eliminarDelCarrito(index) {
+  carrito.splice(index, 1);
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+}
+
+function actualizarCarrito() {
+  const carritoItems = document.getElementById('carrito-items');
+  carritoItems.innerHTML = '';
+  let total = 0;
+  let cantidadTotal = 0;
+
+  carrito.forEach((item, index) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'carrito-item';
+    itemDiv.innerHTML = `
+  <div style="flex:1; min-width:140px;">
+    <div style="font-size:0.9rem;"><strong>${item.nombre}</strong></div>
+    <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+      <button type="button" onclick="cambiarCantidadCarrito(${index}, -1)" style="width:32px; height:32px; border:none; background:#ddd; border-radius:6px; font-size:1.2rem; cursor:pointer;">−</button>
+      <input type="number" value="${item.cantidad}" min="1" style="width:48px; height:32px; text-align:center; font-weight:bold; border:1px solid #ccc; border-radius:6px;" onchange="cambiarCantidadCarritoInput(${index}, this.value)" />
+      <button type="button" onclick="cambiarCantidadCarrito(${index}, 1)" style="width:32px; height:32px; border:none; background:#ddd; border-radius:6px; font-size:1.2rem; cursor:pointer;">+</button>
+    </div>
+  </div>
+  <div style="min-width:70px; text-align:right; font-size:0.9rem;">$${(item.precio * item.cantidad).toLocaleString()}</div>
+  <button type="button" onclick="eliminarDelCarrito(${index})" style="margin-left:6px; background:none; border:none; color:#d9534f; font-size:1.4rem; cursor:pointer;">&times;</button>
+`;
+    carritoItems.appendChild(itemDiv);
+    total += item.precio * item.cantidad;
+    cantidadTotal += item.cantidad;
+  });
+
+  document.getElementById('total').textContent = 'Total: $' + total.toLocaleString();
+  document.getElementById('contador-carrito').textContent = cantidadTotal;
+  totalGlobal = total;
+}
+
+function mostrarPopup() {
+  const popup = document.getElementById('popup');
+  if (popup) {
+    popup.style.display = 'block';
+    setTimeout(() => {
+      popup.style.display = 'none';
+    }, 1000);
+  }
+}
+
+function cambiarCantidadCarrito(index, delta) {
+  if (!carrito[index]) return;
+  carrito[index].cantidad += delta;
+  if (carrito[index].cantidad < 1) carrito[index].cantidad = 1;
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+}
+
+function cambiarCantidadCarritoInput(index, value) {
+  if (!carrito[index]) return;
+  let cantidad = parseInt(value);
+  if (isNaN(cantidad) || cantidad < 1) cantidad = 1;
+  carrito[index].cantidad = cantidad;
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+}
+
+function mostrarModalInfo(nombre, descripcion) {
+  document.getElementById('modal-titulo').textContent = nombre;
+  document.getElementById('modal-descripcion').textContent = descripcion;
+  document.getElementById('info-modal').style.display = 'flex';
+}
+
+function cerrarModalInfo() {
+  document.getElementById('info-modal').style.display = 'none';
+}
+
+function animarCarrito() {
+  const icono = document.getElementById('carrito-icono');
+  if (icono) {
+    icono.classList.remove('vibrar');
+    void icono.offsetWidth;
+    icono.classList.add('vibrar');
+    setTimeout(() => icono.classList.remove('vibrar'), 500);
+  }
+}
+
+// --- Personalización con nombre ---
+function guardarNombreCliente(nombre) {
+  try {
+    localStorage.setItem('smilemarket_nombre', nombre);
+  } catch (e) { console.warn('No se pudo guardar nombre en localStorage', e); }
+}
+
+function obtenerNombreCliente() {
+  try {
+    return localStorage.getItem('smilemarket_nombre') || '';
+  } catch (e) { return ''; }
+}
+
+function mostrarSaludo() {
+  const nombre = obtenerNombreCliente();
+  const saludoDiv = document.getElementById('saludo-usuario');
+  if (saludoDiv) {
+    if (nombre) {
+      saludoDiv.textContent = `Hola, ${nombre} 👋 ¿Listo para tu próxima compra?`;
+    } else {
+      saludoDiv.textContent = '¡Bienvenido a SmileMarket! 😃';
+    }
+  }
+}
+
+// Buscar sugerencias
+function mostrarSugerencias(texto) {
+  const cont = document.getElementById('sugerencias');
+  cont.innerHTML = '';
+  if (!texto || texto.trim() === '') { cont.style.display = 'none'; return; }
+  const lower = texto.toLowerCase();
+  const matches = productos.filter(p => (p.nombre||'').toLowerCase().includes(lower) || (p.descripcion||'').toLowerCase().includes(lower)).slice(0,8);
+  if (matches.length === 0) { cont.style.display = 'none'; return; }
+  matches.forEach(m => {
+    const item = document.createElement('div');
+    item.className = 'sugerencia-item';
+    item.innerHTML = `
+      <img loading="lazy" src="${m.imagen || 'https://via.placeholder.com/80?text=img'}" alt="${m.nombre}" />
+      <div style="flex:1">
+        <div class="sugerencia-text">${m.nombre}</div>
+        <div class="sugerencia-precio">$ ${m.precio.toLocaleString()}</div>
+      </div>
+    `;
+    item.addEventListener('click', () => {
+      document.getElementById('buscador').value = m.nombre;
+      document.getElementById('sugerencias').style.display = 'none';
+      filtrarPorTexto(m.nombre);
+    });
+    cont.appendChild(item);
+  });
+  cont.style.display = 'block';
+}
+
+function filtrarPorTexto(texto){
+  const lower = (texto||'').toLowerCase();
+  document.querySelectorAll('.grupo-categoria').forEach(grupo => {
+    let coincidencias = 0;
+
+    grupo.querySelectorAll('.producto').forEach(prod => {
+      const nombre = prod.dataset.nombre?.toLowerCase() || '';
+      const categoria = prod.dataset.categoria?.toLowerCase() || '';
+      const descripcion = prod.dataset.descripcion?.toLowerCase() || '';
+
+      if (nombre.includes(lower) || categoria.includes(lower) || descripcion.includes(lower)) {
+        prod.style.display = 'flex'; 
+        coincidencias++;
+      } else {
+        prod.style.display = 'none';
+      }
+    });
+
+    grupo.style.display = coincidencias > 0 ? 'block' : 'none';
+    const titulo = grupo.querySelector('.titulo-categoria');
+    if (titulo) {
+      titulo.style.display = texto ? 'none' : 'block';
+    }
+  });
+}
+
+// Inicialización
+document.addEventListener('DOMContentLoaded', async () => {
+  iniciarSplash();
+  cargarCarritoDesdeLocalStorage();
+
+  await cargarProductosDesdeGoogleSheet();
+  await cargarCuponesDesdeGoogleSheet();
+
+  finalizarSplash();
+
+  mostrarSaludo(); // ✅ saludo en header
+
+  // Autocompletar campo nombre en el modal
+  const inputNombre = document.getElementById('nombre-cliente');
+  if (inputNombre) {
+    inputNombre.value = obtenerNombreCliente();
+  }
+
+  const contenedor = document.getElementById('productos');
+  const productosPorCategoria = {};
+
+  productos.forEach(producto => {
+    const categoria = producto.categoria || 'Sin categoría';
+    if (!productosPorCategoria[categoria]) {
+      productosPorCategoria[categoria] = [];
+    }
+    productosPorCategoria[categoria].push(producto);
+  });
+
+  const categoriasOrdenadas = Object.keys(productosPorCategoria).sort((a, b) =>
+    a.localeCompare(b, 'es', { sensitivity: 'base' })
+  );
+
+  categoriasOrdenadas.forEach(categoria => {
+    const grupo = document.createElement('div');
+    grupo.className = 'grupo-categoria';
+
+    const titulo = document.createElement('h2');
+    titulo.textContent = categoria;
+    titulo.className = 'titulo-categoria';
+    grupo.appendChild(titulo);
+
+    const contenedorCategoria = document.createElement('div');
+    contenedorCategoria.className = 'productos';
+
+    productosPorCategoria[categoria].forEach(producto => {
+      const div = document.createElement('div');
+      div.className = 'producto';
+      div.dataset.nombre = producto.nombre;
+      div.dataset.precio = producto.precio;
+      div.dataset.descripcion = producto.descripcion;
+      div.dataset.categoria = producto.categoria;
+
+      const etiquetas = [];
+      if (producto.nuevo) etiquetas.push('nuevo');
+      if (producto.masvendido) etiquetas.push('masvendido');
+      if (producto.recomendado) etiquetas.push('recomendado');
+
+      const etiquetasHTML = etiquetas.length > 0
+        ? `<div class="etiquetas">${etiquetas.map(t => `<span class="etiqueta ${t}">${t==='nuevo'? '🆕 Nuevo' : t==='masvendido' ? '🔥 Muy vendido' : '⭐ Recomendado' }</span>`).join('')}</div>`
+        : '';
+
+      const imagenHTML = producto.imagen ? `
+        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+          <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain; background:white;" />
+          ${producto.stock <= 0
+            ? '<div class="sin-stock-overlay">SIN STOCK</div>'
+            : '<div class="info-overlay">+ info</div>'}
+        </div>` : '';
+
+      div.innerHTML = `
+        ${imagenHTML}
+        <h3>${producto.nombre}</h3>
+        ${etiquetasHTML}
+        <p class="categoria-texto">${producto.categoria}</p>
+        <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+        <div class="control-cantidad">
+          <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
+          <input class="cantidad-input" type="number" value="1" min="1" readonly />
+          <button class="mas" onclick="cambiarCantidad(this, 1)" ${producto.stock <= 0 ? 'disabled' : ''}>+</button>
+        </div>
+        <button class="boton" onclick="agregarAlCarrito(this)" ${producto.stock <= 0 ? 'disabled style="background:#ccc;cursor:not-allowed;"' : ''}>
+          ${producto.stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
+        </button>
+      `;
+      contenedorCategoria.appendChild(div);
+    });
+
+    grupo.appendChild(contenedorCategoria);
+    contenedor.appendChild(grupo);
+  });
+
+  actualizarCarrito();
+
+  const carritoIcono = document.getElementById('carrito-icono');
+  const carritoPanel = document.getElementById('carrito');
+
+  if (carritoIcono && carritoPanel) {
+    carritoIcono.addEventListener('click', (e) => {
+      e.preventDefault();
+      carritoPanel.classList.toggle('mostrar');
+    });
+  }
+
+function calcularResumen() {
+  const resumen = document.getElementById('resumen-contenido');
+  resumen.innerHTML = '';
+  totalGlobal = 0;
+  let mensaje = '';
+
+  carrito.forEach(item => {
+    const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
+    resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
+    mensaje += `• ${linea}\n`;
+    totalGlobal += item.precio * item.cantidad;
+  });
+
+  resumen.innerHTML += `<div style="margin-top: 1rem;">Subtotal: $${totalGlobal.toLocaleString()}</div>`;
+
+  if (descuentoGlobal > 0) {
+    const montoDescuento = totalGlobal * (descuentoGlobal / 100);
+    const totalConDescuento = totalGlobal - montoDescuento;
+
+    resumen.innerHTML += `<div>Descuento (${descuentoGlobal}%): -$${montoDescuento.toLocaleString()}</div>`;
+    resumen.innerHTML += `<div style="font-weight:bold;">Total: $${totalConDescuento.toLocaleString()}</div>`;
+    totalGlobal = totalConDescuento;
+
+  } else {
+    resumen.innerHTML += `<div style="font-weight:bold;">Total: $${totalGlobal.toLocaleString()}</div>`;
+  }
+
+  // 👉 ESTA LÍNEA ES LA CLAVE (acá adentro)
+  document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLocaleString();
+
+  document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
+}
+
+  const numeroPedido = generarNumeroPedido();
+document.getElementById('confirmar')?.addEventListener('click', () => {
+
+  if (carrito.length === 0) {
+    alert('Tu carrito está vacío.');
+    return;
+  }
+
+  // 🔥 Generar número de pedido en el momento correcto
+    window.numeroPedidoActual = numeroPedido;
+
+  document.getElementById('numero-pedido').innerText = "Pedido #" + numeroPedido;
+
+  descuentoGlobal = 0;
+  document.getElementById('cupon-feedback').textContent = '';
+  document.getElementById('resumen-modal').style.display = 'flex';
+
+  calcularResumen();
+  mostrarProductosRelacionados();
+});
+
+
+  document.getElementById('aplicar-cupon')?.addEventListener('click', () => {
+    const inputCupon = document.getElementById('cupon');
+    const feedback = document.getElementById('cupon-feedback');
+    const codigoIngresado = inputCupon?.value.trim().toUpperCase();
+
+    if (!codigoIngresado) {
+      feedback.textContent = 'Ingresá un código';
+      feedback.style.color = 'red';
+      return;
+    }
+
+    const cuponValido = cupones.find(c => c.codigo === codigoIngresado);
+    if (cuponValido) {
+      descuentoGlobal = cuponValido.descuento;
+      feedback.textContent = `Cupón aplicado: ${descuentoGlobal}% de descuento`;
+      feedback.style.color = 'green';
+    } else {
+      descuentoGlobal = 0;
+      feedback.textContent = 'Cupón no válido';
+      feedback.style.color = 'red';
+    }
+
+    calcularResumen();
+document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLocaleString();
+    mostrarProductosRelacionados();
+  });
+
+  document.getElementById('enviar-whatsapp')?.addEventListener('click', () => {
+    const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
+    if (!nombreCliente) {
+      alert("Por favor, ingresá tu nombre antes de enviar el pedido.");
+      return;
+    }
+
+    guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
+
+// ✅ Validación
+if (!carrito || carrito.length === 0) {
+  alert('El carrito está vacío');
+  return;
+}
+
+// ✅ Mensaje base
+let mensaje = `Pedido #${window.numeroPedidoActual}\n\n`;
+
+mensaje += `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n`;
+
+mensaje += document.getElementById('enviar-whatsapp').dataset.mensaje;
+
+// ✅ Calcular total correctamente
+let total = 0;
+
+carrito.forEach(item => {
+  total += Number(item.precio) * Number(item.cantidad);
+});
+
+// ✅ Agregar total
+mensaje = mensaje.trim();
+mensaje += `\nTotal: $${total.toLocaleString()}`;
+
+// ✅ Enviar a WhatsApp
+const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
+window.open(url, '_blank');
+
+// ✅ Cerrar modal
+document.getElementById('resumen-modal').style.display = 'none';
+  });
+
+  document.getElementById('seguir-comprando')?.addEventListener('click', () => {
+    document.getElementById('resumen-modal').style.display = 'none';
+  });
+
+  const buscador = document.getElementById('buscador');
+  if (buscador) {
+    buscador.addEventListener('input', (e) => {
+      const texto = buscador.value;
+      mostrarSugerencias(texto);
+      filtrarPorTexto(texto);
+    });
+
+    document.addEventListener('click', (ev)=>{
+      const s = document.getElementById('sugerencias');
+      if (!document.getElementById('buscador').contains(ev.target) && !s.contains(ev.target)) s.style.display = 'none';
+    });
+  }
+
+  // ✅ Mostrar popup siempre al cargar
+  promoSegunDia();
+  setTimeout(mostrarPromoPopup, 1500);
+});
+
+function cambiarCantidad(boton, delta) {
+  const producto = boton.closest('.producto');
+  if (!producto) return;
+
+  const input = producto.querySelector('.cantidad-input');
+  let valor = parseInt(input.value) || 1;
+  valor += delta;
+  if (valor < 1) valor = 1;
+  input.value = valor;
+}
+
+
+window.agregarAlCarrito = agregarAlCarrito;
+window.eliminarDelCarrito = eliminarDelCarrito;
+window.cambiarCantidad = cambiarCantidad;
+window.mostrarModalInfo = mostrarModalInfo;
+window.cerrarModalInfo = cerrarModalInfo;
+
+setInterval(guardarCarritoEnLocalStorage, 3000);
+
+// --- Popup Promocional ---
+function mostrarPromoPopup() {
+  const popup = document.getElementById('promo-popup');
+  if (popup) {
+    // Fuerza el display flex aunque haya inline en el HTML
+    popup.style.setProperty('display', 'flex', 'important');
+  }
+}
+
+function cerrarPromoPopup() {
+  const popup = document.getElementById('promo-popup');
+  if (popup) {
+    popup.style.display = 'none';
+  }
+}
+
+// --- Promos fijas ---
+function promoSegunDia() {
+  const promoImg = document.getElementById("promo-imagen");
+  if (promoImg) {
+    promoImg.src = "img/Promo.jpg";
+    promoImg.alt = "Promoción SmileMarket";
+  }
+}
+
+
+// -------------------------------
+// PRODUCTOS RELACIONADOS
+// -------------------------------
+
+function mostrarProductosRelacionados() {
+
+  const contenedor = document.getElementById("productos-relacionados");
+  if (!contenedor) return;
+
+  contenedor.innerHTML = "";
+
+  if (carrito.length === 0) return;
+
+  const categoriasCarrito = carrito.map(item => {
+    const prod = productos.find(p => p.nombre === item.nombre);
+    return prod?.categoria;
+  });
+
+  const categoriasUnicas = [...new Set(categoriasCarrito)];
+
+  const relacionados = productos
+    .filter(p => categoriasUnicas.includes(p.categoria))
+    .filter(p => !carrito.some(c => c.nombre === p.nombre))
+    .slice(0,4);
+
+  if (relacionados.length === 0) return;
+
+  contenedor.innerHTML = `
+    <div class="relacionados-container">
+      <div class="relacionados-titulo">También te puede interesar</div>
+      <div class="relacionados-grid">
+      ${relacionados.map(p => `
+        <div class="relacionado-item">
+          <img src="${p.imagen || 'https://via.placeholder.com/80'}">
+          <div style="font-size:0.75rem">${p.nombre}</div>
+          <div style="font-weight:bold;font-size:0.8rem">$${p.precio.toLocaleString()}</div>
+          <button onclick="agregarRelacionado('${p.nombre}', ${p.precio})">
+            Agregar
+          </button>
+        </div>
+      `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+function agregarRelacionado(nombre, precio){
+
+  const existente = carrito.find(item => item.nombre === nombre);
+
+  if (existente){
+    existente.cantidad += 1;
+  } else {
+    carrito.push({nombre, precio, cantidad:1});
+  }
+
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+  mostrarProductosRelacionados();
+}
+function generarNumeroPedido() {
+  const ahora = new Date();
+
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const hora = String(ahora.getHours()).padStart(2, '0');
+  const minuto = String(ahora.getMinutes()).padStart(2, '0');
+  const segundos = String(ahora.getSeconds()).padStart(2, '0');
+
+  return `${mes}${dia}${hora}${minuto}${segundos}`;
+}
