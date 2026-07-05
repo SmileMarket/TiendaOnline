@@ -1,4 +1,4 @@
-// guardá este bloque como main.js
+const URL_PEDIDOS_WEB = "https://script.google.com/macros/s/AKfycbwZufXHX4nwp0y0T1yhGjL3NKoDZtfCCBZ2bU8vBz9I2DC84WPaUEWtTHjLo3nX_815/exec";
 
 const carrito = [];
 let productos = [];
@@ -274,6 +274,21 @@ function filtrarPorTexto(texto){
   });
 }
 
+// ✅ NUEVO: envía el pedido a la planilla "Pedidos Web" (no bloquea el flujo si falla)
+function guardarPedidoEnPlanilla(datosPedido) {
+  if (!URL_PEDIDOS_WEB || URL_PEDIDOS_WEB.indexOf('PEGAR_AQUI') !== -1) {
+    console.warn('Falta configurar URL_PEDIDOS_WEB en main.js');
+    return;
+  }
+  fetch(URL_PEDIDOS_WEB, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(datosPedido)
+  }).catch(err => {
+    console.warn('No se pudo guardar el pedido en la planilla (el pedido igual se envía por WhatsApp):', err);
+  });
+}
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', async () => {
   iniciarSplash();
@@ -492,6 +507,17 @@ carrito.forEach(item => {
 // ✅ Agregar total
 mensaje = mensaje.trim();
 mensaje += `\nTotal: $${total.toLocaleString()}`;
+
+// ✅ NUEVO: guardar el pedido en la planilla "Pedidos Web" ANTES de abrir WhatsApp
+// (así queda registrado aunque el cliente no llegue a enviar el mensaje)
+guardarPedidoEnPlanilla({
+  numeroPedido: window.numeroPedidoActual,
+  cliente: nombreCliente,
+  carrito: carrito,
+  cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
+  descuento: descuentoGlobal,
+  total: total
+});
 
 // ✅ Enviar a WhatsApp
 const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
