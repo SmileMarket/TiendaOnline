@@ -4,30 +4,68 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SmileMarket</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" />
   <style>
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+
+    :root {
+      --rosa-pastel: #F6C9DE;
+      --rosa-pastel-suave: #FBE3EF;
+      --rosa-acento: #E8749E;
+      --rosa-acento-hover: #D65C88;
+      --rosa-oscuro: #7A2E52;
+      --menta: #BFE8DC;
+      --menta-oscuro: #1F6F5C;
+      --durazno: #FCEFD8;
+      --durazno-oscuro: #8A5A0B;
+      --lavanda: #E4DBF5;
+      --lavanda-oscuro: #5B3E96;
+      --fondo: #FAF7F8;
+      --superficie: #FFFFFF;
+      --borde: #ECE3E8;
+      --texto: #3A3247;
+      --texto-secundario: #8A8092;
+    }
+
     body {
-      font-family: 'Comic Neue', cursive;
+      font-family: 'Work Sans', sans-serif;
       margin: 0;
       padding: 0;
-      background: #f9f9f9;
-      color: #333;
+      background: var(--fondo);
+      color: var(--texto);
       overflow-x: hidden;
     }
+
     header {
       position: sticky;
       top: 0;
-      background: #f7b0f7;
+      background: var(--rosa-pastel-suave);
+      border-bottom: 1px solid var(--borde);
       z-index: 1001;
       padding: 0.5rem 1rem;
       text-align: center;
       min-height: 90px;
     }
-    header img { max-width: 180px; height: auto; }
+    header img { max-width: 170px; height: auto; }
+
+    #saludo-usuario { font-family: 'Quicksand', sans-serif; }
+
     #buscador-container { display: flex; justify-content: center; margin-top: 1rem; position: relative; }
-    #buscador { padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; width: 80%; max-width: 320px; font-size: 1rem; }
+    #buscador {
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--borde);
+      width: 80%;
+      max-width: 320px;
+      font-size: 0.95rem;
+      font-family: 'Work Sans', sans-serif;
+      background: var(--superficie);
+      color: var(--texto);
+    }
+    #buscador:focus { outline: none; border-color: var(--rosa-acento); }
     #sugerencias {
       position: absolute;
       top: calc(100% + 6px);
@@ -35,81 +73,150 @@
       transform: translateX(-50%);
       width: 80%;
       max-width: 360px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+      background: var(--superficie);
+      border-radius: 12px;
+      border: 1px solid var(--borde);
+      box-shadow: 0 6px 18px rgba(122, 46, 82, 0.08);
       display: none;
       z-index: 1500;
       max-height: 300px;
       overflow-y: auto;
       padding: 6px;
     }
-    .sugerencia-item { display:flex; gap:8px; align-items:center; padding:6px; border-radius:6px; cursor:pointer; }
-    .sugerencia-item:hover{ background:#f1f1f1 }
-    .sugerencia-item img{ width:46px; height:46px; object-fit:contain; background:white; border-radius:6px; padding:4px; box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+    .sugerencia-item { display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px; cursor:pointer; }
+    .sugerencia-item:hover{ background: var(--rosa-pastel-suave) }
+    .sugerencia-item img{ width:46px; height:46px; object-fit:contain; background:var(--superficie); border-radius:6px; padding:4px; border: 1px solid var(--borde); }
     .sugerencia-text{ font-size:0.9rem }
-    .sugerencia-precio{ font-weight:700; font-size:0.9rem; color:#007b7f }
+    .sugerencia-precio{ font-weight:600; font-size:0.9rem; color: var(--rosa-acento-hover) }
 
     .container { max-width: 1100px; margin: 2rem auto; padding: 3rem 1rem 1rem; transition: padding-top 0.3s ease; }
-    h2 { border-bottom: 2px solid #f5a2f5; padding-bottom: .3rem; margin: 1.5rem 0 1rem; color: #007b7f; }
+
+    h2 {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 600;
+      font-size: 1.3rem;
+      color: var(--rosa-oscuro);
+      border-bottom: none;
+      border-left: 4px solid var(--rosa-acento);
+      padding: 0.2rem 0 0.2rem 0.7rem;
+      margin: 2rem 0 1.2rem;
+    }
 
     .productos { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
-    .producto { background: white; border-radius: 10px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); padding: 1rem; width: 200px; display: flex; flex-direction: column; align-items: center; }
-    .producto img { width: 100%; height: 160px; object-fit: contain; margin-bottom: 0.5rem; background: white; }
-    .producto h3 { font-size: 1.1rem; margin: 0 0 0.3rem 0; text-align: center; }
-    .categoria-texto { font-size: 0.85rem; color: #555; margin-bottom: 0.3rem; text-align: center; }
-    .precio { color: #f5a2f5; font-weight: 700; margin: 0.5rem 0; }
+    .producto {
+      background: var(--superficie);
+      border: 1px solid var(--borde);
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(122, 46, 82, 0.05);
+      padding: 1rem;
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .producto:hover { box-shadow: 0 6px 16px rgba(122, 46, 82, 0.1); transform: translateY(-2px); }
+    .producto img { width: 100%; height: 160px; object-fit: contain; margin-bottom: 0.5rem; background: var(--superficie); }
+    .producto h3 { font-family: 'Quicksand', sans-serif; font-weight: 600; font-size: 1.05rem; margin: 0 0 0.3rem 0; text-align: center; color: var(--texto); }
+    .categoria-texto { font-size: 0.8rem; color: var(--texto-secundario); margin-bottom: 0.3rem; text-align: center; }
+    .precio { color: var(--rosa-acento-hover); font-weight: 600; font-size: 1.1rem; margin: 0.5rem 0; }
 
     .control-cantidad { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 0.7rem; }
-    .control-cantidad button { width: 32px; height: 32px; border: none; background: #ddd; font-weight: bold; font-size: 1.2rem; cursor: pointer; border-radius: 6px; }
-    .control-cantidad input { width: 40px; height: 32px; text-align: center; font-size: 1rem; font-weight: bold; border: 1px solid #ccc; border-radius: 6px; }
+    .control-cantidad button {
+      width: 30px; height: 30px; border: 1px solid var(--borde); background: var(--fondo);
+      font-weight: 600; font-size: 1.1rem; cursor: pointer; border-radius: 8px; color: var(--texto);
+    }
+    .control-cantidad input {
+      width: 40px; height: 30px; text-align: center; font-size: 1rem; font-weight: 600;
+      border: 1px solid var(--borde); border-radius: 8px; color: var(--texto);
+    }
 
-    .boton { background: #f5a2f5; border: none; color: white; padding: 0.5rem; cursor: pointer; font-weight: bold; border-radius: 6px; width: 100%; }
-    .boton:hover { background: #e392e3; }
+    .boton {
+      background: var(--rosa-acento);
+      border: none;
+      color: white;
+      padding: 0.6rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: 'Work Sans', sans-serif;
+      border-radius: 8px;
+      width: 100%;
+    }
+    .boton:hover { background: var(--rosa-acento-hover); }
 
     .producto-imagen-container { position: relative; width: 100%; }
-    .info-overlay { position: absolute; bottom: 8px; right: 8px; background: #f7b0f7; color: white; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-    .sin-stock-overlay { background: rgba(255, 0, 0, 0.85); color: white; padding: 4px 10px; border-radius: 6px; position: absolute; top: 10px; left: 10px; font-size: 0.8rem; font-weight: bold; z-index: 3; }
+    .info-overlay {
+      position: absolute; bottom: 8px; right: 8px;
+      background: var(--rosa-acento); color: white;
+      font-size: 0.7rem; padding: 4px 10px; border-radius: 999px; font-weight: 600;
+    }
+    .sin-stock-overlay {
+      background: #E24B4A; color: white; padding: 4px 10px; border-radius: 999px;
+      position: absolute; top: 10px; left: 10px; font-size: 0.75rem; font-weight: 600; z-index: 3;
+    }
 
-    #popup { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #f7b0f7; color: white; padding: 1rem 2rem; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); display: none; z-index: 1000; font-weight: bold; font-size: 1rem; }
+    #popup {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--rosa-oscuro); color: white; padding: 1rem 2rem; border-radius: 999px;
+      box-shadow: 0 4px 14px rgba(122, 46, 82, 0.25); display: none; z-index: 1000;
+      font-weight: 600; font-size: 0.95rem; font-family: 'Work Sans', sans-serif;
+    }
 
-    #carrito { position: fixed; top: 80px; right: 20px; width: 320px; max-height: 80vh; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); padding: 1rem; font-family: 'Comic Neue', cursive; font-size: 0.95rem; z-index: 2000; overflow-y: auto; display: none; }
+    #carrito {
+      position: fixed; top: 80px; right: 20px; width: 320px; max-height: 80vh;
+      background: var(--superficie); border: 1px solid var(--borde); border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(122, 46, 82, 0.1); padding: 1rem;
+      font-family: 'Work Sans', sans-serif; font-size: 0.95rem; z-index: 2000;
+      overflow-y: auto; display: none;
+    }
     #carrito.mostrar { display: block; }
-    #carrito h2 { margin-top: 0; }
-    .carrito-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 0.4rem 0; }
-    .carrito-item button { background: none; border: none; color: #d9534f; font-size: 1.2rem; cursor: pointer; padding: 0; }
+    #carrito h2 { margin-top: 0; border-left: none; padding-left: 0; }
+    .carrito-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--borde); padding: 0.4rem 0; }
+    .carrito-item button { background: none; border: none; color: #D65C88; font-size: 1.2rem; cursor: pointer; padding: 0; }
 
-    #confirmar { margin-top: 1rem; width: 100%; background: #007bff; color: white; border: none; padding: 0.6rem; font-weight: 700; border-radius: 4px; cursor: pointer; }
-    #cerrar-carrito { position: absolute; top: 6px; right: 10px; font-size: 1.4rem; background: none; border: none; color: #d9534f; cursor: pointer; }
+    #confirmar {
+      margin-top: 1rem; width: 100%; background: var(--rosa-oscuro); color: white; border: none;
+      padding: 0.7rem; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: 'Work Sans', sans-serif;
+    }
+    #confirmar:hover { background: #5F2340; }
+    #cerrar-carrito { position: absolute; top: 6px; right: 10px; font-size: 1.4rem; background: none; border: none; color: var(--texto-secundario); cursor: pointer; }
 
-    .float-button { position: fixed; right: 15px; width: 50px; height: 50px; padding: 10px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.2s ease; z-index: 998; }
-    .carrito-float { top: 50%; background: white; border: 2px solid #007b7f; }
-    .whatsapp-float { top: calc(50% - 60px); background: #25d366; border: 2px solid #25d366; }
-    .instagram-float { top: calc(50% + 60px); background: white; border: 2px solid #E1306C; }
-    .carrito-float svg { width: 24px; height: 24px; }
-    #contador-carrito { position: absolute; top: -4px; right: -4px; background: red; color: white; font-size: 0.75rem; padding: 2px 6px; border-radius: 999px; font-weight: bold; }
+    .float-button {
+      position: fixed; right: 15px; width: 50px; height: 50px; padding: 10px; border-radius: 50%;
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 4px 10px rgba(122, 46, 82, 0.15); transition: transform 0.2s ease; z-index: 998;
+    }
+    .carrito-float { top: 50%; background: var(--superficie); border: 1px solid var(--rosa-acento); color: var(--rosa-acento); }
+    .whatsapp-float { top: calc(50% - 60px); background: #25d366; border: 1px solid #25d366; }
+    .instagram-float { top: calc(50% + 60px); background: var(--superficie); border: 1px solid #E1306C; }
+    .carrito-float svg { width: 22px; height: 22px; }
+    #contador-carrito { position: absolute; top: -4px; right: -4px; background: var(--rosa-acento-hover); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 999px; font-weight: 600; }
 
-    #ir-arriba { position: fixed; bottom: 20px; right: 20px; background: #f7b0f7; color: white; font-size: 1.4rem; padding: 10px 14px; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 999; display: none; }
+    #ir-arriba {
+      position: fixed; bottom: 20px; right: 20px; background: var(--rosa-acento); color: white;
+      font-size: 1.3rem; padding: 10px 14px; border-radius: 50%; cursor: pointer;
+      box-shadow: 0 4px 10px rgba(122, 46, 82, 0.2); z-index: 999; display: none;
+    }
 
     @keyframes vibrar { 0% { transform: translate(0); } 25% { transform: translate(-2px, 2px); } 50% { transform: translate(2px, -2px); } 75% { transform: translate(-2px, 2px); } 100% { transform: translate(0); } }
     .vibrar { animation: vibrar 0.3s ease; }
 
-    .etiquetas { display:flex; gap:6px; margin:0.4rem 0 }
-    .etiqueta{ padding:4px 8px; border-radius:999px; font-size:0.75rem; font-weight:700; color:white }
-    .etiqueta.nuevo{ background:#28a745 }
-    .etiqueta.masvendido{ background:#dc3545 }
-    .etiqueta.recomendado{ background:#d4af37; color:#111 }
+    .etiquetas { display:flex; gap:6px; margin:0.4rem 0; flex-wrap: wrap; justify-content: center; }
+    .etiqueta{ padding:4px 10px; border-radius:999px; font-size:0.7rem; font-weight:600; font-family: 'Work Sans', sans-serif; }
+    .etiqueta.nuevo{ background: var(--menta); color: var(--menta-oscuro); }
+    .etiqueta.masvendido{ background: var(--durazno); color: var(--durazno-oscuro); }
+    .etiqueta.recomendado{ background: var(--lavanda); color: var(--lavanda-oscuro); }
 
     @media (max-width: 768px) {
-      header img { max-width: 180px; }
+      header img { max-width: 160px; }
       .producto { width: 45%; }
-      #carrito { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 80vh; border-radius: 12px 12px 0 0; transform: translateY(100%); transition: transform 300ms ease; padding-bottom: 30px; }
+      #carrito { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 80vh; border-radius: 16px 16px 0 0; transform: translateY(100%); transition: transform 300ms ease; padding-bottom: 30px; }
       #carrito.mostrar { transform: translateY(0%); display:block }
     }
 
-    #splash { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; background: white; z-index: 99999; flex-direction: column; gap:12px; }
-    #barra-progreso-container{ width:80%; max-width:360px; background:#eee; height:10px; border-radius:999px; overflow:hidden }
-    #barra-progreso{ height:100%; width:0%; background:#007bff; transition: width 200ms linear }
+    #splash { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; background: var(--fondo); z-index: 99999; flex-direction: column; gap:12px; font-family: 'Quicksand', sans-serif; color: var(--rosa-oscuro); font-weight: 600; }
+    #barra-progreso-container{ width:80%; max-width:360px; background: var(--rosa-pastel-suave); height:8px; border-radius:999px; overflow:hidden }
+    #barra-progreso{ height:100%; width:0%; background: var(--rosa-acento); transition: width 200ms linear }
 
     /* ✅ popup oculto al inicio */
     #promo-popup { display:none; }
@@ -121,7 +228,7 @@
 .modal-overlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.65);
+  background:rgba(58, 50, 71, 0.55);
   display:none;
   justify-content:center;
   align-items:center;
@@ -129,29 +236,34 @@
 }
 
 .modal-checkout{
-  background:white;
+  background: var(--superficie);
   width:95%;
   max-width:420px;
   max-height:90vh;
-  border-radius:12px;
+  border-radius:16px;
   display:flex;
   flex-direction:column;
   overflow:hidden;
+  font-family: 'Work Sans', sans-serif;
 }
 
 /* HEADER */
 
 .modal-header{
   padding:16px;
-  border-bottom:1px solid #eee;
+  border-bottom:1px solid var(--borde);
   display:flex;
   justify-content:space-between;
   align-items:center;
+  background: var(--rosa-pastel-suave);
 }
 
 .modal-header h2{
   margin:0;
-  font-size:1.2rem;
+  font-size:1.15rem;
+  border-left: none;
+  padding: 0;
+  color: var(--rosa-oscuro);
 }
 
 .modal-cerrar{
@@ -159,6 +271,7 @@
   background:none;
   font-size:1.4rem;
   cursor:pointer;
+  color: var(--texto-secundario);
 }
 
 /* BODY */
@@ -174,7 +287,7 @@
 .checkout-items{
   max-height:220px;
   overflow-y:auto;
-  border-bottom:1px solid #eee;
+  border-bottom:1px solid var(--borde);
   margin-bottom:15px;
   padding-bottom:10px;
 }
@@ -187,20 +300,24 @@
 /* FORM */
 
 .checkout-form label{
-  font-weight:bold;
+  font-weight:600;
   font-size:0.85rem;
   margin-top:10px;
   display:block;
+  color: var(--texto);
 }
 
 .checkout-form input{
   width:100%;
-  padding:8px;
-  border:1px solid #ccc;
-  border-radius:6px;
+  padding:9px;
+  border:1px solid var(--borde);
+  border-radius:8px;
   margin-top:4px;
   margin-bottom:10px;
+  font-family: 'Work Sans', sans-serif;
+  color: var(--texto);
 }
+.checkout-form input:focus { outline: none; border-color: var(--rosa-acento); }
 
 .cupon-feedback{
   font-size:0.85rem;
@@ -211,11 +328,11 @@
 
 .modal-footer{
   padding:14px;
-  border-top:1px solid #eee;
+  border-top:1px solid var(--borde);
   display:flex;
   flex-direction:column;
   gap:8px;
-  background:#fafafa;
+  background: var(--fondo);
 }
 
 /* BOTONES */
@@ -223,15 +340,17 @@
 .boton{
   border:none;
   padding:10px;
-  border-radius:6px;
-  font-weight:bold;
+  border-radius:8px;
+  font-weight:600;
   cursor:pointer;
+  font-family: 'Work Sans', sans-serif;
 }
 
 .boton-secundario{
-  background:#007b7f;
-  color:white;
+  background: var(--menta);
+  color: var(--menta-oscuro);
 }
+.boton-secundario:hover { background: #A8DDC9; }
 
 .boton-whatsapp{
   background:#25d366;
@@ -239,8 +358,9 @@
 }
 
 .boton-gris{
-  background:#ddd;
-  color:#333;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  color: var(--texto);
 }
 /* TOTAL GRANDE CHECKOUT */
 
@@ -248,15 +368,15 @@
   display:flex;
   justify-content:space-between;
   align-items:center;
-  font-size:1.2rem;
-  font-weight:bold;
+  font-size:1.1rem;
+  font-weight:600;
   margin-bottom:10px;
   padding-bottom:8px;
-  border-bottom:1px solid #eee;
+  border-bottom:1px solid var(--borde);
 }
 
 .checkout-total strong{
-  color:#007b7f;
+  color: var(--rosa-acento-hover);
   font-size:1.4rem;
 }
 
@@ -268,7 +388,7 @@
     width:100%;
     height:95vh;
     max-height:none;
-    border-radius:14px 14px 0 0;
+    border-radius:16px 16px 0 0;
   }
 /* ANIMACION MODAL */
 
@@ -304,7 +424,7 @@
     <img src="https://raw.githubusercontent.com/SmileMarket/Pruebas/refs/heads/main/img/Logo.jpg" alt="Logo SmileMarket" />
     
     <!-- ✅ Saludo personalizado -->
-    <div id="saludo-usuario" style="margin-top:6px; font-weight:bold; color:#007b7f;"></div>
+    <div id="saludo-usuario" style="margin-top:6px; font-weight:600; color:var(--rosa-oscuro);"></div>
 
     <div id="buscador-container">
       <input type="text" id="buscador" placeholder="Buscar productos..." autocomplete="off" />
@@ -338,7 +458,7 @@
 
     <div class="modal-body">
 
-     <div id="numero-pedido" style="font-weight:bold; margin-bottom:10px; color:#007b7f;"></div>
+     <div id="numero-pedido" style="font-weight:600; margin-bottom:10px; color:var(--rosa-oscuro);"></div>
 <div id="resumen-contenido" style="margin-bottom:1rem;"></div>
 
       <div class="checkout-form">
@@ -379,11 +499,11 @@
 
 </div>
 
-  <div id="info-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:10000; justify-content:center; align-items:center;">
-    <div style="background:white; padding:20px; border-radius:6px; max-width:400px; width:90%; position:relative;">
-      <button onclick="cerrarModalInfo()" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-      <h3 id="modal-titulo"></h3>
-      <p id="modal-descripcion" style="margin-top: 1rem;"></p>
+  <div id="info-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(58, 50, 71, 0.55); z-index:10000; justify-content:center; align-items:center;">
+    <div style="background:var(--superficie); padding:20px; border-radius:14px; max-width:400px; width:90%; position:relative; font-family: 'Work Sans', sans-serif;">
+      <button onclick="cerrarModalInfo()" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.5rem; cursor:pointer; color: var(--texto-secundario);">&times;</button>
+      <h3 id="modal-titulo" style="font-family: 'Quicksand', sans-serif; color: var(--rosa-oscuro); margin-top: 0;"></h3>
+      <p id="modal-descripcion" style="margin-top: 1rem; color: var(--texto);"></p>
     </div>
   </div>
 
@@ -407,11 +527,11 @@
   <!-- ✅ Popup Promocional -->
   <div id="promo-popup" 
     style="position:fixed; top:0; left:0; width:100%; height:100%; 
-    background-color:rgba(0,0,0,0.7); z-index:10000; justify-content:center; align-items:center;">
+    background-color:rgba(58, 50, 71, 0.6); z-index:10000; justify-content:center; align-items:center;">
 
-    <div style="position:relative; max-width:400px; width:90%; background:white; border-radius:12px; overflow:hidden;">
+    <div style="position:relative; max-width:400px; width:90%; background:var(--superficie); border-radius:16px; overflow:hidden;">
       <button onclick="cerrarPromoPopup()" 
-        style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.8rem; cursor:pointer; z-index:10;">
+        style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.8rem; cursor:pointer; z-index:10; color:white; text-shadow: 0 1px 3px rgba(0,0,0,0.4);">
         &times;
       </button>
       <img id="promo-imagen" src="img/Promo.jpg" 
@@ -439,4 +559,3 @@
 
 </body>
 </html>
-
