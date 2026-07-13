@@ -289,6 +289,16 @@ function guardarPedidoEnPlanilla(datosPedido) {
   });
 }
 
+// --- Utilidad: convertir nombre de categoría en un id válido para anclas ---
+function slugify(texto) {
+  return (texto || '')
+    .toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // saca acentos
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', async () => {
   iniciarSplash();
@@ -325,6 +335,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   categoriasOrdenadas.forEach(categoria => {
     const grupo = document.createElement('div');
     grupo.className = 'grupo-categoria';
+    grupo.id = 'cat-' + slugify(categoria);
 
     const titulo = document.createElement('h2');
     titulo.textContent = categoria;
@@ -380,6 +391,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     grupo.appendChild(contenedorCategoria);
     contenedor.appendChild(grupo);
   });
+
+  // --- Menú de navegación por categorías (desktop + mobile) ---
+  const navDesktop = document.getElementById('nav-categorias-desktop');
+  const navMobile = document.getElementById('nav-categorias-mobile');
+
+  if (navDesktop && navMobile) {
+    categoriasOrdenadas.forEach(categoria => {
+      const slug = 'cat-' + slugify(categoria);
+
+      const linkDesktop = document.createElement('a');
+      linkDesktop.href = '#' + slug;
+      linkDesktop.textContent = categoria;
+      linkDesktop.dataset.target = slug;
+      navDesktop.appendChild(linkDesktop);
+
+      const linkMobile = document.createElement('a');
+      linkMobile.href = '#' + slug;
+      linkMobile.textContent = categoria;
+      linkMobile.dataset.target = slug;
+      navMobile.appendChild(linkMobile);
+    });
+
+    // Resalta la categoría activa mientras se hace scroll
+    const activarLinkCategoria = (id) => {
+      document.querySelectorAll('.nav-categorias-desktop a, .nav-categorias-mobile a').forEach(a => {
+        a.classList.toggle('activa', a.dataset.target === id);
+      });
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) activarLinkCategoria(entry.target.id);
+      });
+    }, { root: null, rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+    document.querySelectorAll('.grupo-categoria').forEach(g => observer.observe(g));
+  }
 
   actualizarCarrito();
 
