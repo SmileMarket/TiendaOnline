@@ -12,6 +12,7 @@
     html { scroll-behavior: smooth; }
 
     :root {
+      --header-height: 170px;
       --rosa-pastel: #F6C9DE;
       --rosa-pastel-suave: #FBE3EF;
       --rosa-acento: #E8749E;
@@ -103,19 +104,56 @@
     }
 
     .productos { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
-    .grupo-categoria { scroll-margin-top: 130px; }
+    .grupo-categoria { scroll-margin-top: calc(var(--header-height) + 20px); }
+
+    /* TOP 10 MÁS VENDIDOS */
+    .top-ventas-section { margin-bottom: 0.5rem; }
+    .top-ventas-lista {
+      display: flex;
+      gap: 1rem;
+      overflow-x: auto;
+      padding: 4px 4px 14px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .top-ventas-lista::-webkit-scrollbar { height: 6px; }
+    .top-ventas-lista::-webkit-scrollbar-thumb { background: var(--rosa-pastel); border-radius: 999px; }
+    .producto-top {
+      flex: 0 0 170px;
+      scroll-snap-align: start;
+      position: relative;
+      border-color: var(--rosa-pastel) !important;
+    }
+    .producto-top .producto-imagen-container img { height: 130px !important; }
+    .ranking-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: var(--rosa-oscuro);
+      color: white;
+      font-weight: 700;
+      font-size: 0.85rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
 
     /* MENÚ DE CATEGORÍAS - desktop: fijo al costado izquierdo */
     .nav-categorias-desktop {
       position: fixed;
       left: 24px;
-      top: 150px;
+      top: calc(var(--header-height) + 20px);
       width: 175px;
       display: flex;
       flex-direction: column;
       gap: 3px;
       z-index: 900;
-      max-height: 70vh;
+      max-height: calc(100vh - var(--header-height) - 40px);
       overflow-y: auto;
     }
     .nav-categorias-desktop a {
@@ -550,6 +588,11 @@
   <nav id="nav-categorias-mobile" class="nav-categorias-mobile" aria-label="Categorías"></nav>
 
   <div class="container">
+    <div class="top-ventas-section">
+      <h2>🔥 Top 10 más vendidos</h2>
+      <div id="top-ventas-lista" class="top-ventas-lista"></div>
+    </div>
+
     <h2>Productos</h2>
     <div id="productos" class="productos"></div>
   </div>
@@ -644,7 +687,7 @@
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=4"></script>
+<script src="main.js?v=6"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

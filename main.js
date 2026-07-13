@@ -299,6 +299,88 @@ function slugify(texto) {
     .replace(/(^-|-$)/g, '');
 }
 
+// --- Mide la altura real del header y la deja disponible como variable CSS ---
+// (el header puede cambiar de tamaño según el saludo, el logo, etc.)
+function actualizarAlturaHeader() {
+  const header = document.getElementById('main-header');
+  if (!header) return;
+  document.documentElement.style.setProperty('--header-height', header.offsetHeight + 'px');
+}
+
+// --- TOP 10 MÁS VENDIDOS (ranking manual, curado por Maxi) ---
+// El orden de esta lista define el ranking. Los datos (imagen, precio, stock)
+// se toman en vivo de la planilla de Google Sheets, buscando por nombre.
+const TOP_VENTAS = [
+  'Kit de cirugía E',
+  'Pinza Wynman',
+  'Sin aletas',
+  'B4 B',
+  'Llave para Ajuste de Puntas',
+  'Punta P1',
+  'B4 A',
+  'Punta SB1',
+  'Kit espatulas + casette',
+  'Con aletas'
+];
+
+function renderizarTopVentas() {
+  const contenedor = document.getElementById('top-ventas-lista');
+  const seccion = document.querySelector('.top-ventas-section');
+  if (!contenedor) return;
+  contenedor.innerHTML = '';
+
+  let encontrados = 0;
+
+  TOP_VENTAS.forEach((nombreBuscado, index) => {
+    const buscado = nombreBuscado.trim().toLowerCase();
+    let producto = productos.find(p => (p.nombre || '').trim().toLowerCase() === buscado);
+    if (!producto) {
+      // Si no hay coincidencia exacta, probamos una coincidencia parcial
+      producto = productos.find(p => (p.nombre || '').toLowerCase().includes(buscado));
+    }
+
+    if (!producto) {
+      console.warn('Top ventas: no se encontró "' + nombreBuscado + '" en la planilla (revisá que el nombre coincida exactamente con la columna "nombre").');
+      return;
+    }
+
+    encontrados++;
+
+    const div = document.createElement('div');
+    div.className = 'producto producto-top';
+    div.dataset.nombre = producto.nombre;
+    div.dataset.precio = producto.precio;
+    div.dataset.descripcion = producto.descripcion;
+    div.dataset.categoria = producto.categoria;
+
+    const imagenHTML = producto.imagen ? `
+      <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+        <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:130px; object-fit:contain; background:white;" />
+        ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
+      </div>` : '';
+
+    div.innerHTML = `
+      <div class="ranking-badge">#${index + 1}</div>
+      ${imagenHTML}
+      <h3>${producto.nombre}</h3>
+      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+      <div class="control-cantidad">
+        <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
+        <input class="cantidad-input" type="number" value="1" min="1" readonly />
+        <button class="mas" onclick="cambiarCantidad(this, 1)" ${producto.stock <= 0 ? 'disabled' : ''}>+</button>
+      </div>
+      <button class="boton" onclick="agregarAlCarrito(this)" ${producto.stock <= 0 ? 'disabled style="background:#ccc;cursor:not-allowed;"' : ''}>
+        ${producto.stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
+      </button>
+    `;
+    contenedor.appendChild(div);
+  });
+
+  // Si por algún motivo no se encontró ningún producto, ocultamos la sección
+  // para no mostrar un espacio vacío.
+  if (seccion) seccion.style.display = encontrados > 0 ? '' : 'none';
+}
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', async () => {
   iniciarSplash();
@@ -307,9 +389,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarProductosDesdeGoogleSheet();
   await cargarCuponesDesdeGoogleSheet();
 
+  renderizarTopVentas();
+
   finalizarSplash();
 
   mostrarSaludo(); // ✅ saludo en header
+
+  // Medir la altura real del header (cambia según el saludo, el logo, etc.)
+  actualizarAlturaHeader();
+  const headerEl = document.getElementById('main-header');
+  if (headerEl && window.ResizeObserver) {
+    new ResizeObserver(actualizarAlturaHeader).observe(headerEl);
+  } else {
+    window.addEventListener('resize', actualizarAlturaHeader);
+  }
 
   // Autocompletar campo nombre en el modal
   const inputNombre = document.getElementById('nombre-cliente');
