@@ -544,10 +544,6 @@ document.getElementById('resumen-modal').style.display = 'none';
       if (!document.getElementById('buscador').contains(ev.target) && !s.contains(ev.target)) s.style.display = 'none';
     });
   }
-
-  // ✅ Mostrar popup siempre al cargar
-  promoSegunDia();
-  setTimeout(mostrarPromoPopup, 1500);
 });
 
 function cambiarCantidad(boton, delta) {
@@ -569,32 +565,6 @@ window.mostrarModalInfo = mostrarModalInfo;
 window.cerrarModalInfo = cerrarModalInfo;
 
 setInterval(guardarCarritoEnLocalStorage, 3000);
-
-// --- Popup Promocional ---
-function mostrarPromoPopup() {
-  const popup = document.getElementById('promo-popup');
-  if (popup) {
-    // Fuerza el display flex aunque haya inline en el HTML
-    popup.style.setProperty('display', 'flex', 'important');
-  }
-}
-
-function cerrarPromoPopup() {
-  const popup = document.getElementById('promo-popup');
-  if (popup) {
-    popup.style.display = 'none';
-  }
-}
-
-// --- Promos fijas ---
-function promoSegunDia() {
-  const promoImg = document.getElementById("promo-imagen");
-  if (promoImg) {
-    promoImg.src = "img/Promo.jpg";
-    promoImg.alt = "Promoción SmileMarket";
-  }
-}
-
 
 // -------------------------------
 // PRODUCTOS RELACIONADOS
