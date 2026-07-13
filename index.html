@@ -184,10 +184,12 @@
     .float-button {
       position: fixed; right: 15px; width: 50px; height: 50px; padding: 10px; border-radius: 50%;
       display: flex; justify-content: center; align-items: center;
-      box-shadow: 0 4px 10px rgba(122, 46, 82, 0.15); transition: transform 0.2s ease; z-index: 998;
+      box-shadow: 0 4px 10px rgba(122, 46, 82, 0.15); transition: transform 0.2s ease, box-shadow 0.2s ease; z-index: 998;
     }
+    .float-button:hover { transform: scale(1.08); box-shadow: 0 6px 16px rgba(122, 46, 82, 0.22); }
     .carrito-float { top: 50%; background: var(--superficie); border: 1px solid var(--rosa-acento); color: var(--rosa-acento); }
     .whatsapp-float { top: calc(50% - 60px); background: #25d366; border: 1px solid #25d366; }
+    .whatsapp-float svg { width: 26px; height: 26px; fill: white; }
     .instagram-float { top: calc(50% + 60px); background: var(--superficie); border: 1px solid #E1306C; }
     .carrito-float svg { width: 22px; height: 22px; }
     #contador-carrito { position: absolute; top: -4px; right: -4px; background: var(--rosa-acento-hover); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 999px; font-weight: 600; }
@@ -217,9 +219,6 @@
     #splash { position: fixed; inset:0; display:flex; align-items:center; justify-content:center; background: var(--fondo); z-index: 99999; flex-direction: column; gap:12px; font-family: 'Quicksand', sans-serif; color: var(--rosa-oscuro); font-weight: 600; }
     #barra-progreso-container{ width:80%; max-width:360px; background: var(--rosa-pastel-suave); height:8px; border-radius:999px; overflow:hidden }
     #barra-progreso{ height:100%; width:0%; background: var(--rosa-acento); transition: width 200ms linear }
-
-    /* ✅ popup oculto al inicio */
-    #promo-popup { display:none; }
 
 /* ============================= */
 /* MODAL CHECKOUT PRO */
@@ -507,7 +506,9 @@
     </div>
   </div>
 
-  <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" class="float-button whatsapp-float" target="_blank">💬</a>
+  <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" class="float-button whatsapp-float" target="_blank" aria-label="Escribinos por WhatsApp">
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.376 3 4 8.373 4 15c0 2.36.688 4.56 1.876 6.412L4 29l7.788-2.04A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm6.994 16.994c-.3.84-1.49 1.55-2.44 1.75-.65.14-1.5.25-4.36-.94-3.66-1.51-6.02-5.22-6.2-5.46-.18-.24-1.48-1.97-1.48-3.76 0-1.79.93-2.67 1.27-3.03.34-.36.74-.45 1-.45.24 0 .48 0 .69.01.22.01.52-.08.81.62.3.72 1.02 2.5 1.11 2.68.09.18.15.4.03.64-.12.24-.18.4-.36.61-.18.21-.38.47-.55.63-.18.18-.37.37-.16.73.21.36.94 1.55 2.02 2.51 1.39 1.24 2.56 1.63 2.92 1.81.36.18.57.15.78-.09.21-.24.9-1.05 1.14-1.41.24-.36.48-.3.81-.18.33.12 2.1.99 2.46 1.17.36.18.6.27.69.42.09.15.09.87-.21 1.71z"/></svg>
+  </a>
 
   <a href="#carrito" class="float-button carrito-float" id="carrito-icono">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shopping-cart">
@@ -524,22 +525,7 @@
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-  <!-- ✅ Popup Promocional -->
-  <div id="promo-popup" 
-    style="position:fixed; top:0; left:0; width:100%; height:100%; 
-    background-color:rgba(58, 50, 71, 0.6); z-index:10000; justify-content:center; align-items:center;">
-
-    <div style="position:relative; max-width:400px; width:90%; background:var(--superficie); border-radius:16px; overflow:hidden;">
-      <button onclick="cerrarPromoPopup()" 
-        style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.8rem; cursor:pointer; z-index:10; color:white; text-shadow: 0 1px 3px rgba(0,0,0,0.4);">
-        &times;
-      </button>
-      <img id="promo-imagen" src="img/Promo.jpg" 
-        alt="Promoción SmileMarket" style="width:100%; display:block;" />
-    </div>
-  </div>
-
-<script src="main.js?v=2"></script>
+<script src="main.js?v=3"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
