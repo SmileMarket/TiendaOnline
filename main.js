@@ -92,6 +92,57 @@ async function cargarCuponesDesdeGoogleSheet() {
   });
 }
 
+// --- Sincroniza el carrito guardado contra los precios y el stock actuales de la planilla ---
+// Se corre cada vez que se cargan los productos.
+// - Si un precio cambió, lo actualiza.
+// - Si un producto ya no existe en la planilla, lo saca del carrito.
+// - Si un producto se quedó sin stock, lo saca del carrito.
+// - Si pidieron más cantidad de la que hay disponible, la ajusta al máximo posible.
+function sincronizarPreciosCarrito() {
+  if (!carrito || carrito.length === 0) {
+    return { huboCambios: false, eliminadosNoExiste: [], eliminadosSinStock: [], ajustados: [] };
+  }
+
+  let huboCambios = false;
+  const eliminadosNoExiste = [];
+  const eliminadosSinStock = [];
+  const ajustados = [];
+
+  for (let i = carrito.length - 1; i >= 0; i--) {
+    const item = carrito[i];
+    const productoActual = productos.find(p => p.nombre === item.nombre);
+
+    if (!productoActual) {
+      eliminadosNoExiste.push(item.nombre);
+      carrito.splice(i, 1);
+      huboCambios = true;
+      continue;
+    }
+
+    if (productoActual.precio !== item.precio) {
+      item.precio = productoActual.precio;
+      huboCambios = true;
+    }
+
+    if (productoActual.stock <= 0) {
+      eliminadosSinStock.push(item.nombre);
+      carrito.splice(i, 1);
+      huboCambios = true;
+      continue;
+    }
+
+    if (item.cantidad > productoActual.stock) {
+      ajustados.push({ nombre: item.nombre, de: item.cantidad, a: productoActual.stock });
+      item.cantidad = productoActual.stock;
+      huboCambios = true;
+    }
+  }
+
+  if (huboCambios) guardarCarritoEnLocalStorage();
+
+  return { huboCambios, eliminadosNoExiste, eliminadosSinStock, ajustados };
+}
+
 function agregarAlCarrito(boton) {
   const producto = boton.closest('.producto');
   const nombre = producto.dataset.nombre;
@@ -148,13 +199,15 @@ function actualizarCarrito() {
   totalGlobal = total;
 }
 
-function mostrarPopup() {
+function mostrarPopup(mensaje) {
   const popup = document.getElementById('popup');
   if (popup) {
+    if (mensaje) popup.textContent = mensaje;
     popup.style.display = 'block';
     setTimeout(() => {
       popup.style.display = 'none';
-    }, 1000);
+      popup.textContent = 'Producto agregado al carrito';
+    }, 1800);
   }
 }
 
@@ -402,6 +455,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarProductosDesdeGoogleSheet();
   await cargarCuponesDesdeGoogleSheet();
 
+  const resultadoSyncCarrito = sincronizarPreciosCarrito();
+
   renderizarTopVentas();
 
   finalizarSplash();
@@ -536,6 +591,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   actualizarCarrito();
+
+  if (resultadoSyncCarrito && resultadoSyncCarrito.huboCambios) {
+    if (resultadoSyncCarrito.eliminadosNoExiste.length > 0) {
+      console.warn('Se quitaron del carrito (ya no existen en la planilla):', resultadoSyncCarrito.eliminadosNoExiste.join(', '));
+    }
+    if (resultadoSyncCarrito.eliminadosSinStock.length > 0) {
+      console.warn('Se quitaron del carrito (sin stock):', resultadoSyncCarrito.eliminadosSinStock.join(', '));
+    }
+    if (resultadoSyncCarrito.ajustados.length > 0) {
+      resultadoSyncCarrito.ajustados.forEach(a => {
+        console.warn(`Se ajustó la cantidad de "${a.nombre}": de ${a.de} a ${a.a} (stock disponible)`);
+      });
+    }
+
+    const huboEliminados = resultadoSyncCarrito.eliminadosNoExiste.length > 0 || resultadoSyncCarrito.eliminadosSinStock.length > 0;
+    const huboAjustes = resultadoSyncCarrito.ajustados.length > 0;
+
+    let mensaje = 'Actualizamos tu carrito con los precios actuales 🔄';
+    if (huboEliminados && huboAjustes) {
+      mensaje = 'Actualizamos tu carrito: precios, stock y cantidades revisados 🔄';
+    } else if (huboEliminados) {
+      mensaje = 'Sacamos de tu carrito lo que ya no tiene stock 🔄';
+    } else if (huboAjustes) {
+      mensaje = 'Ajustamos algunas cantidades de tu carrito por stock disponible 🔄';
+    }
+
+    mostrarPopup(mensaje);
+  }
 
   const carritoIcono = document.getElementById('carrito-icono');
   const carritoPanel = document.getElementById('carrito');
