@@ -6,6 +6,7 @@ let cupones = [];
 let cuponAplicado = null;
 let totalGlobal = 0;
 let descuentoGlobal = 0;
+let mostrandoSoloFavoritos = false;
 
 // --- Persistencia de carrito en localStorage ---
 function guardarCarritoEnLocalStorage() {
@@ -90,6 +91,146 @@ async function cargarCuponesDesdeGoogleSheet() {
       descuento: parseFloat(fila.descuento) || 0
     };
   });
+}
+
+// =====================================================
+// FAVORITOS
+// =====================================================
+
+function obtenerFavoritos() {
+  try {
+    const raw = localStorage.getItem('smilemarket_favoritos');
+    const lista = raw ? JSON.parse(raw) : [];
+    return Array.isArray(lista) ? lista : [];
+  } catch (e) { return []; }
+}
+
+function guardarFavoritos(lista) {
+  try {
+    localStorage.setItem('smilemarket_favoritos', JSON.stringify(lista));
+  } catch (e) { console.warn('No se pudieron guardar los favoritos', e); }
+}
+
+function esFavorito(nombre) {
+  return obtenerFavoritos().includes(nombre);
+}
+
+// Genera el botón de corazón para insertar dentro de la tarjeta de producto
+function favoritoBtnHTML(nombre) {
+  const activo = esFavorito(nombre);
+  const nombreEscapado = (nombre || '').replace(/'/g, "\\'");
+  return `<button type="button" class="favorito-btn${activo ? ' favorito-activo' : ''}" onclick="event.stopPropagation(); toggleFavorito(this, '${nombreEscapado}')" aria-label="Guardar en favoritos">${activo ? '♥' : '♡'}</button>`;
+}
+
+function toggleFavorito(boton, nombre) {
+  let favoritos = obtenerFavoritos();
+  const yaEsFavorito = favoritos.includes(nombre);
+
+  favoritos = yaEsFavorito ? favoritos.filter(n => n !== nombre) : [...favoritos, nombre];
+  guardarFavoritos(favoritos);
+
+  if (boton) {
+    boton.textContent = yaEsFavorito ? '♡' : '♥';
+    boton.classList.toggle('favorito-activo', !yaEsFavorito);
+  }
+
+  if (mostrandoSoloFavoritos) aplicarFiltroFavoritos();
+}
+
+function toggleVistaFavoritos() {
+  const favoritos = obtenerFavoritos();
+
+  if (!mostrandoSoloFavoritos && favoritos.length === 0) {
+    mostrarPopup('Todavía no tenés favoritos guardados ❤️');
+    return;
+  }
+
+  mostrandoSoloFavoritos = !mostrandoSoloFavoritos;
+
+  const btn = document.getElementById('btn-ver-favoritos');
+  if (btn) {
+    btn.classList.toggle('activo', mostrandoSoloFavoritos);
+    btn.textContent = mostrandoSoloFavoritos ? '✕ Salir de favoritos' : '♡ Favoritos';
+  }
+
+  aplicarFiltroFavoritos();
+}
+
+function aplicarFiltroFavoritos() {
+  if (!mostrandoSoloFavoritos) {
+    filtrarPorTexto(document.getElementById('buscador')?.value || '');
+    return;
+  }
+
+  const favoritos = obtenerFavoritos();
+
+  document.querySelectorAll('.grupo-categoria').forEach(grupo => {
+    let coincidencias = 0;
+    grupo.querySelectorAll('.producto').forEach(prod => {
+      const esFav = favoritos.includes(prod.dataset.nombre);
+      prod.style.display = esFav ? 'flex' : 'none';
+      if (esFav) coincidencias++;
+    });
+    grupo.style.display = coincidencias > 0 ? 'block' : 'none';
+    const titulo = grupo.querySelector('.titulo-categoria');
+    if (titulo) titulo.style.display = 'block';
+  });
+}
+
+// =====================================================
+// REPETIR ÚLTIMO PEDIDO
+// =====================================================
+
+function obtenerUltimoPedido() {
+  try {
+    const raw = localStorage.getItem('smilemarket_ultimo_pedido');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function guardarUltimoPedido() {
+  try {
+    const snapshot = carrito.map(i => ({ nombre: i.nombre, cantidad: i.cantidad }));
+    localStorage.setItem('smilemarket_ultimo_pedido', JSON.stringify(snapshot));
+  } catch (e) { console.warn('No se pudo guardar el último pedido', e); }
+}
+
+function repetirUltimoPedido() {
+  const ultimoPedido = obtenerUltimoPedido();
+  if (!ultimoPedido || ultimoPedido.length === 0) return;
+
+  let agregados = 0;
+  const noDisponibles = [];
+
+  ultimoPedido.forEach(item => {
+    const producto = productos.find(p => p.nombre === item.nombre);
+    if (!producto || producto.stock <= 0) {
+      noDisponibles.push(item.nombre);
+      return;
+    }
+
+    const cantidadFinal = Math.min(item.cantidad, producto.stock);
+    const existente = carrito.find(c => c.nombre === producto.nombre);
+    if (existente) {
+      existente.cantidad += cantidadFinal;
+    } else {
+      carrito.push({ nombre: producto.nombre, precio: producto.precio, cantidad: cantidadFinal });
+    }
+    agregados++;
+  });
+
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+  animarCarrito();
+
+  if (agregados > 0 && noDisponibles.length === 0) {
+    mostrarPopup('¡Agregamos tu último pedido al carrito! 🔁');
+  } else if (agregados > 0 && noDisponibles.length > 0) {
+    mostrarPopup('Agregamos casi todo tu último pedido (algo ya no está disponible) 🔁');
+    console.warn('No disponibles al repetir el pedido:', noDisponibles.join(', '));
+  } else {
+    mostrarPopup('Los productos de tu último pedido ya no están disponibles 😕');
+  }
 }
 
 // --- Sincroniza el carrito guardado contra los precios y el stock actuales de la planilla ---
@@ -422,6 +563,7 @@ function renderizarTopVentas() {
     const imagenHTML = producto.imagen ? `
       <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
         <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:130px; object-fit:contain; background:white;" />
+        ${favoritoBtnHTML(producto.nombre)}
         ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
       </div>` : '';
 
@@ -462,6 +604,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   finalizarSplash();
 
   mostrarSaludo(); // ✅ saludo en header
+
+  // Mostrar el botón de "repetir último pedido" solo si hay uno guardado
+  const btnRepetirPedido = document.getElementById('btn-repetir-pedido');
+  if (btnRepetirPedido) {
+    const ultimoPedidoGuardado = obtenerUltimoPedido();
+    btnRepetirPedido.style.display = (ultimoPedidoGuardado && ultimoPedidoGuardado.length > 0) ? 'inline-block' : 'none';
+  }
 
   // Medir la altura real del header (cambia según el saludo, el logo, etc.)
   actualizarAlturaHeader();
@@ -526,6 +675,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imagenHTML = producto.imagen ? `
         <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
           <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain; background:white;" />
+          ${favoritoBtnHTML(producto.nombre)}
           ${producto.stock <= 0
             ? '<div class="sin-stock-overlay">SIN STOCK</div>'
             : '<div class="info-overlay">+ info</div>'}
@@ -756,6 +906,9 @@ guardarPedidoEnPlanilla({
   total: total
 });
 
+// ✅ Guardamos este pedido como "último pedido" para poder repetirlo con un click después
+guardarUltimoPedido();
+
 // ✅ Enviar a WhatsApp
 const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
 window.open(url, '_blank');
@@ -772,10 +925,17 @@ document.getElementById('resumen-modal').style.display = 'none';
   document.getElementById('btn-buscar-lista')?.addEventListener('click', procesarListaCatedra);
   document.getElementById('btn-agregar-lista-carrito')?.addEventListener('click', agregarListaCatedraAlCarrito);
   document.getElementById('btn-editar-lista')?.addEventListener('click', volverAEditarListaCatedra);
+  document.getElementById('btn-ver-favoritos')?.addEventListener('click', toggleVistaFavoritos);
+  document.getElementById('btn-repetir-pedido')?.addEventListener('click', repetirUltimoPedido);
 
   const buscador = document.getElementById('buscador');
   if (buscador) {
     buscador.addEventListener('input', (e) => {
+      if (mostrandoSoloFavoritos) {
+        mostrandoSoloFavoritos = false;
+        const btnFav = document.getElementById('btn-ver-favoritos');
+        if (btnFav) { btnFav.classList.remove('activo'); btnFav.textContent = '♡ Favoritos'; }
+      }
       const texto = buscador.value;
       mostrarSugerencias(texto);
       filtrarPorTexto(texto);
@@ -805,6 +965,7 @@ window.eliminarDelCarrito = eliminarDelCarrito;
 window.cambiarCantidad = cambiarCantidad;
 window.mostrarModalInfo = mostrarModalInfo;
 window.cerrarModalInfo = cerrarModalInfo;
+window.toggleFavorito = toggleFavorito;
 
 setInterval(guardarCarritoEnLocalStorage, 3000);
 

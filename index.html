@@ -68,20 +68,31 @@
     }
     #buscador:focus { outline: none; border-color: var(--rosa-acento); }
 
-    .boton-lista-catedra {
-      display: block;
-      margin: 12px auto 0;
+    .acciones-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    .boton-header-accion {
       background: none;
       border: 1px solid var(--rosa-acento);
       color: var(--rosa-oscuro);
       font-weight: 600;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-family: 'Work Sans', sans-serif;
-      padding: 7px 16px;
+      padding: 7px 14px;
       border-radius: 999px;
       cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
     }
-    .boton-lista-catedra:hover { background: var(--rosa-pastel-suave); }    #sugerencias {
+    .boton-header-accion:hover { background: var(--rosa-pastel-suave); }
+    .boton-header-menta { border-color: var(--menta-oscuro); color: var(--menta-oscuro); }
+    .boton-header-menta:hover { background: var(--menta); }
+    .boton-header-favoritos.activo { background: var(--rosa-acento); color: white; }
+
+    #sugerencias {
       position: absolute;
       top: calc(100% + 6px);
       left: 50%;
@@ -270,6 +281,28 @@
       background: #E24B4A; color: white; padding: 4px 10px; border-radius: 999px;
       position: absolute; top: 10px; left: 10px; font-size: 0.75rem; font-weight: 600; z-index: 3;
     }
+    .favorito-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      color: var(--rosa-acento);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: transform 0.15s ease;
+    }
+    .favorito-btn:hover { transform: scale(1.12); }
+    .favorito-btn.favorito-activo { color: #E24B7A; }
 
     #popup {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -686,7 +719,11 @@
       <input type="text" id="buscador" placeholder="Buscar productos..." autocomplete="off" />
       <div id="sugerencias" aria-hidden="true"></div>
     </div>
-    <button id="btn-cargar-lista" class="boton-lista-catedra">📋 Cargar lista de la cátedra</button>
+    <div class="acciones-header">
+      <button id="btn-cargar-lista" class="boton-header-accion">📋 Lista de la cátedra</button>
+      <button id="btn-repetir-pedido" class="boton-header-accion boton-header-menta" style="display:none;">🔁 Repetir mi último pedido</button>
+      <button id="btn-ver-favoritos" class="boton-header-accion boton-header-favoritos">♡ Favoritos</button>
+    </div>
   </header>
 
   <nav id="nav-categorias-desktop" class="nav-categorias-desktop" aria-label="Categorías"></nav>
@@ -834,7 +871,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=10"></script>
+<script src="main.js?v=11"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
