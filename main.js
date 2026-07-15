@@ -672,6 +672,11 @@ document.getElementById('resumen-modal').style.display = 'none';
     document.getElementById('resumen-modal').style.display = 'none';
   });
 
+  document.getElementById('btn-cargar-lista')?.addEventListener('click', abrirListaCatedra);
+  document.getElementById('btn-buscar-lista')?.addEventListener('click', procesarListaCatedra);
+  document.getElementById('btn-agregar-lista-carrito')?.addEventListener('click', agregarListaCatedraAlCarrito);
+  document.getElementById('btn-editar-lista')?.addEventListener('click', volverAEditarListaCatedra);
+
   const buscador = document.getElementById('buscador');
   if (buscador) {
     buscador.addEventListener('input', (e) => {
@@ -767,6 +772,212 @@ function agregarRelacionado(nombre, precio){
   actualizarCarrito();
   mostrarProductosRelacionados();
 }
+
+// =====================================================
+// CARGAR LISTA DE LA CÁTEDRA
+// =====================================================
+
+// --- Normaliza texto para poder compararlo sin importar tildes, mayúsculas o puntuación ---
+function normalizarTexto(texto) {
+  return (texto || '')
+    .toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// --- Similitud por palabras en común entre dos textos ya normalizados (0 a 1) ---
+function similitudPalabras(a, b) {
+  const palabrasA = new Set(a.split(' ').filter(Boolean));
+  const palabrasB = new Set(b.split(' ').filter(Boolean));
+  if (palabrasA.size === 0 || palabrasB.size === 0) return 0;
+  let interseccion = 0;
+  palabrasA.forEach(p => { if (palabrasB.has(p)) interseccion++; });
+  const union = new Set([...palabrasA, ...palabrasB]).size;
+  return interseccion / union;
+}
+
+// --- Busca el producto que mejor matchea una línea de texto de una lista de cátedra ---
+// Devuelve { producto } si hay un match confiable, o { sugerencias: [...] } si no.
+function buscarProductoParaLista(lineaTexto) {
+  const norm = normalizarTexto(lineaTexto);
+  if (!norm) return null;
+
+  // 1) Match exacto
+  const exacto = productos.find(p => normalizarTexto(p.nombre) === norm);
+  if (exacto) return { producto: exacto };
+
+  // 2) Contención: el nombre del producto está contenido en el texto, o viceversa
+  //    (ej: "Clamp B4 A" contiene "B4 A"). Priorizamos el nombre más largo que matchee,
+  //    para evitar que un nombre muy corto matchee de más.
+  const candidatosContencion = productos
+    .filter(p => {
+      const nombreNorm = normalizarTexto(p.nombre);
+      return nombreNorm.length >= 3 && (norm.includes(nombreNorm) || nombreNorm.includes(norm));
+    })
+    .sort((a, b) => normalizarTexto(b.nombre).length - normalizarTexto(a.nombre).length);
+
+  if (candidatosContencion.length > 0) return { producto: candidatosContencion[0] };
+
+  // 3) Similitud aproximada por palabras en común (respaldo para tipeos o diferencias menores)
+  const puntuados = productos
+    .map(p => ({ producto: p, score: similitudPalabras(norm, normalizarTexto(p.nombre)) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (puntuados.length > 0 && puntuados[0].score >= 0.6) {
+    return { producto: puntuados[0].producto };
+  }
+
+  // No hay match confiable: devolvemos hasta 3 sugerencias para elegir a mano
+  return { sugerencias: puntuados.slice(0, 3).map(x => x.producto) };
+}
+
+let listaCatedraItems = [];
+let listaCatedraContadorId = 0;
+
+function abrirListaCatedra() {
+  document.getElementById('lista-catedra-texto').value = '';
+  listaCatedraItems = [];
+  document.getElementById('lista-catedra-paso1').style.display = 'block';
+  document.getElementById('lista-catedra-resultado').style.display = 'none';
+  document.getElementById('lista-catedra-modal').style.display = 'flex';
+}
+
+function cerrarListaCatedra() {
+  document.getElementById('lista-catedra-modal').style.display = 'none';
+}
+
+function volverAEditarListaCatedra() {
+  document.getElementById('lista-catedra-paso1').style.display = 'block';
+  document.getElementById('lista-catedra-resultado').style.display = 'none';
+}
+
+function procesarListaCatedra() {
+  const texto = document.getElementById('lista-catedra-texto').value;
+  const lineas = texto.split('\n').map(l => l.trim()).filter(l => l !== '');
+
+  if (lineas.length === 0) {
+    alert('Pegá o escribí al menos un producto.');
+    return;
+  }
+
+  listaCatedraItems = lineas.map(linea => {
+    const resultado = buscarProductoParaLista(linea);
+    listaCatedraContadorId++;
+    if (resultado && resultado.producto) {
+      return { id: listaCatedraContadorId, tipo: 'match', producto: resultado.producto, cantidad: 1, textoOriginal: linea };
+    }
+    return {
+      id: listaCatedraContadorId,
+      tipo: 'noencontrado',
+      textoOriginal: linea,
+      sugerencias: (resultado && resultado.sugerencias) || []
+    };
+  });
+
+  document.getElementById('lista-catedra-paso1').style.display = 'none';
+  document.getElementById('lista-catedra-resultado').style.display = 'block';
+  renderizarListaCatedra();
+}
+
+function renderizarListaCatedra() {
+  const contenedor = document.getElementById('lista-catedra-items');
+  contenedor.innerHTML = '';
+  let total = 0;
+
+  listaCatedraItems.forEach(item => {
+    const div = document.createElement('div');
+
+    if (item.tipo === 'match') {
+      total += item.producto.precio * item.cantidad;
+      div.className = 'lista-item';
+      div.innerHTML = `
+        <div class="lista-item-nombre">${item.producto.nombre}</div>
+        <div class="lista-item-controles">
+          <button type="button" onclick="cambiarCantidadListaCatedra(${item.id}, -1)">−</button>
+          <span class="lista-item-cantidad">${item.cantidad}</span>
+          <button type="button" onclick="cambiarCantidadListaCatedra(${item.id}, 1)">+</button>
+        </div>
+        <div class="lista-item-precio">$${(item.producto.precio * item.cantidad).toLocaleString()}</div>
+        <button type="button" class="lista-item-quitar" onclick="quitarDeListaCatedra(${item.id})" title="Quitar">&times;</button>
+      `;
+    } else {
+      div.className = 'lista-item-noencontrado';
+      const sugerenciasHTML = item.sugerencias.length > 0
+        ? `<div class="lista-sugerencias">
+            ${item.sugerencias.map(s => `<button type="button" class="lista-sugerencia-btn" onclick="elegirSugerenciaLista(${item.id}, '${s.nombre.replace(/'/g, "\\'")}')">${s.nombre}</button>`).join('')}
+           </div>`
+        : `<div style="font-size:0.8rem; color:var(--texto-secundario); margin-bottom:6px;">No encontramos sugerencias parecidas.</div>`;
+
+      div.innerHTML = `
+        <div class="lista-item-noencontrado-texto">
+          ⚠️ No se encontró: "<strong>${item.textoOriginal}</strong>" — ¿quisiste decir?
+        </div>
+        ${sugerenciasHTML}
+        <button type="button" class="lista-item-quitar-texto" onclick="quitarDeListaCatedra(${item.id})">Quitar de la lista</button>
+      `;
+    }
+
+    contenedor.appendChild(div);
+  });
+
+  document.getElementById('lista-catedra-total-monto').textContent = '$' + total.toLocaleString();
+}
+
+function cambiarCantidadListaCatedra(id, delta) {
+  const item = listaCatedraItems.find(i => i.id === id);
+  if (!item) return;
+  item.cantidad += delta;
+  if (item.cantidad < 1) item.cantidad = 1;
+  renderizarListaCatedra();
+}
+
+function quitarDeListaCatedra(id) {
+  listaCatedraItems = listaCatedraItems.filter(i => i.id !== id);
+  renderizarListaCatedra();
+}
+
+function elegirSugerenciaLista(id, nombreProducto) {
+  const item = listaCatedraItems.find(i => i.id === id);
+  if (!item) return;
+  const producto = productos.find(p => p.nombre === nombreProducto);
+  if (!producto) return;
+  item.tipo = 'match';
+  item.producto = producto;
+  item.cantidad = 1;
+  renderizarListaCatedra();
+}
+
+function agregarListaCatedraAlCarrito() {
+  const itemsAAgregar = listaCatedraItems.filter(i => i.tipo === 'match');
+
+  if (itemsAAgregar.length === 0) {
+    alert('No hay productos para agregar. Revisá la lista.');
+    return;
+  }
+
+  itemsAAgregar.forEach(item => {
+    const existente = carrito.find(c => c.nombre === item.producto.nombre);
+    if (existente) {
+      existente.cantidad += item.cantidad;
+    } else {
+      carrito.push({ nombre: item.producto.nombre, precio: item.producto.precio, cantidad: item.cantidad });
+    }
+  });
+
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+  animarCarrito();
+  mostrarPopup();
+  cerrarListaCatedra();
+}
+
+window.cambiarCantidadListaCatedra = cambiarCantidadListaCatedra;
+window.quitarDeListaCatedra = quitarDeListaCatedra;
+window.elegirSugerenciaLista = elegirSugerenciaLista;
 function generarNumeroPedido() {
   const ahora = new Date();
 

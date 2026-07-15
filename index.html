@@ -67,7 +67,21 @@
       color: var(--texto);
     }
     #buscador:focus { outline: none; border-color: var(--rosa-acento); }
-    #sugerencias {
+
+    .boton-lista-catedra {
+      display: block;
+      margin: 12px auto 0;
+      background: none;
+      border: 1px solid var(--rosa-acento);
+      color: var(--rosa-oscuro);
+      font-weight: 600;
+      font-size: 0.8rem;
+      font-family: 'Work Sans', sans-serif;
+      padding: 7px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .boton-lista-catedra:hover { background: var(--rosa-pastel-suave); }    #sugerencias {
       position: absolute;
       top: calc(100% + 6px);
       left: 50%;
@@ -532,6 +546,95 @@
 }
 .relacionado-item button:hover{ background: var(--rosa-acento-hover); }
 
+/* LISTA DE CÁTEDRA - filas de resultado */
+
+.lista-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  padding:10px 0;
+  border-bottom:1px solid var(--borde);
+}
+.lista-item-nombre{
+  flex:1;
+  font-size:0.88rem;
+  font-weight:600;
+  color:var(--texto);
+}
+.lista-item-controles{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.lista-item-controles button{
+  width:26px; height:26px;
+  border:none;
+  background:var(--fondo);
+  border:1px solid var(--borde);
+  border-radius:6px;
+  cursor:pointer;
+  font-weight:700;
+  color:var(--texto);
+}
+.lista-item-cantidad{
+  min-width:18px;
+  text-align:center;
+  font-weight:600;
+  font-size:0.88rem;
+}
+.lista-item-precio{
+  min-width:75px;
+  text-align:right;
+  font-size:0.85rem;
+  font-weight:600;
+  color: var(--rosa-acento-hover);
+}
+.lista-item-quitar{
+  background:none;
+  border:none;
+  color:#D65C88;
+  font-size:1.2rem;
+  cursor:pointer;
+  padding:0 2px;
+}
+
+.lista-item-noencontrado{
+  padding:10px 0;
+  border-bottom:1px solid var(--borde);
+}
+.lista-item-noencontrado-texto{
+  font-size:0.85rem;
+  color:var(--texto-secundario);
+  margin-bottom:8px;
+}
+.lista-sugerencias{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:6px;
+}
+.lista-sugerencia-btn{
+  font-size:0.78rem;
+  padding:5px 10px;
+  border-radius:999px;
+  border:1px solid var(--rosa-acento);
+  background:white;
+  color:var(--rosa-acento-hover);
+  cursor:pointer;
+  font-family:'Work Sans', sans-serif;
+}
+.lista-sugerencia-btn:hover{ background:var(--rosa-pastel-suave); }
+.lista-item-quitar-texto{
+  background:none;
+  border:none;
+  color:var(--texto-secundario);
+  font-size:0.78rem;
+  text-decoration:underline;
+  cursor:pointer;
+  padding:0;
+}
+
 /* MOBILE */
 
 @media (max-width:600px){
@@ -582,6 +685,7 @@
       <input type="text" id="buscador" placeholder="Buscar productos..." autocomplete="off" />
       <div id="sugerencias" aria-hidden="true"></div>
     </div>
+    <button id="btn-cargar-lista" class="boton-lista-catedra">📋 Cargar lista de la cátedra</button>
   </header>
 
   <nav id="nav-categorias-desktop" class="nav-categorias-desktop" aria-label="Categorías"></nav>
@@ -668,6 +772,47 @@
     </div>
   </div>
 
+  <div id="lista-catedra-modal" class="modal-overlay">
+    <div class="modal-checkout" style="max-width:480px;">
+
+      <div class="modal-header">
+        <h2>Cargar lista de la cátedra</h2>
+        <button onclick="cerrarListaCatedra()" class="modal-cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+
+        <div id="lista-catedra-paso1">
+          <label style="font-weight:600; font-size:0.85rem; display:block; margin-bottom:8px; color: var(--texto);">
+            Pegá o escribí la lista, un producto por línea:
+          </label>
+          <textarea id="lista-catedra-texto" rows="8" placeholder="Ej:
+Clamp B4 A
+Punta P1
+Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde); border-radius:8px; font-family:'Work Sans',sans-serif; font-size:0.9rem; color:var(--texto); resize:vertical;"></textarea>
+          <button id="btn-buscar-lista" class="boton" style="margin-top:12px;">Buscar productos</button>
+        </div>
+
+        <div id="lista-catedra-resultado" style="display:none;">
+          <div id="lista-catedra-items"></div>
+
+          <div id="lista-catedra-total" class="checkout-total" style="margin-top:10px;">
+            <span>Total</span>
+            <strong id="lista-catedra-total-monto">$0</strong>
+          </div>
+
+          <button id="btn-agregar-lista-carrito" class="boton boton-secundario" style="margin-top:10px;">
+            Agregar todo al carrito
+          </button>
+          <button id="btn-editar-lista" class="boton boton-gris" style="margin-top:8px;">
+            Volver a editar la lista
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <a href="https://wa.me/5491130335334?text=¡Hola!%20Tengo%20una%20consulta" class="float-button whatsapp-float" target="_blank" aria-label="Escribinos por WhatsApp">
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><path d="M16.004 3C9.376 3 4 8.373 4 15c0 2.36.688 4.56 1.876 6.412L4 29l7.788-2.04A11.94 11.94 0 0 0 16.004 27C22.63 27 28 21.627 28 15S22.63 3 16.004 3zm6.994 16.994c-.3.84-1.49 1.55-2.44 1.75-.65.14-1.5.25-4.36-.94-3.66-1.51-6.02-5.22-6.2-5.46-.18-.24-1.48-1.97-1.48-3.76 0-1.79.93-2.67 1.27-3.03.34-.36.74-.45 1-.45.24 0 .48 0 .69.01.22.01.52-.08.81.62.3.72 1.02 2.5 1.11 2.68.09.18.15.4.03.64-.12.24-.18.4-.36.61-.18.21-.38.47-.55.63-.18.18-.37.37-.16.73.21.36.94 1.55 2.02 2.51 1.39 1.24 2.56 1.63 2.92 1.81.36.18.57.15.78-.09.21-.24.9-1.05 1.14-1.41.24-.36.48-.3.81-.18.33.12 2.1.99 2.46 1.17.36.18.6.27.69.42.09.15.09.87-.21 1.71z"/></svg>
   </a>
@@ -687,7 +832,7 @@
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=6"></script>
+<script src="main.js?v=7"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
