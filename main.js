@@ -175,9 +175,22 @@ function cambiarCantidadCarritoInput(index, value) {
   actualizarCarrito();
 }
 
-function mostrarModalInfo(nombre, descripcion) {
+function mostrarModalInfo(nombre, descripcion, imagen) {
   document.getElementById('modal-titulo').textContent = nombre;
   document.getElementById('modal-descripcion').textContent = descripcion;
+
+  const imgEl = document.getElementById('modal-imagen');
+  if (imgEl) {
+    if (imagen) {
+      imgEl.src = imagen;
+      imgEl.alt = nombre;
+      imgEl.style.display = 'block';
+    } else {
+      imgEl.style.display = 'none';
+      imgEl.src = '';
+    }
+  }
+
   document.getElementById('info-modal').style.display = 'flex';
 }
 
@@ -354,7 +367,7 @@ function renderizarTopVentas() {
     div.dataset.categoria = producto.categoria;
 
     const imagenHTML = producto.imagen ? `
-      <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+      <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
         <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:130px; object-fit:contain; background:white;" />
         ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
       </div>` : '';
@@ -456,7 +469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         : '';
 
       const imagenHTML = producto.imagen ? `
-        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`)">
+        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
           <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain; background:white;" />
           ${producto.stock <= 0
             ? '<div class="sin-stock-overlay">SIN STOCK</div>'
