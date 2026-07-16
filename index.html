@@ -811,6 +811,21 @@
     </div>
   </div>
 
+  <div id="favoritos-modal" class="modal-overlay">
+    <div class="modal-checkout" style="max-width:640px;">
+      <div class="modal-header">
+        <h2>❤️ Mis favoritos</h2>
+        <button onclick="cerrarFavoritosModal()" class="modal-cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="favoritos-modal-lista" class="productos" style="justify-content:flex-start;"></div>
+        <div id="favoritos-modal-vacio" style="display:none; text-align:center; color:var(--texto-secundario); padding:24px 10px; font-size:0.9rem; line-height:1.5;">
+          Todavía no guardaste favoritos ❤️<br>Tocá el corazón en cualquier producto para guardarlo acá.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="lista-catedra-modal" class="modal-overlay">
     <div class="modal-checkout" style="max-width:480px;">
 
@@ -871,7 +886,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=11"></script>
+<script src="main.js?v=13"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

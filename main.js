@@ -6,7 +6,6 @@ let cupones = [];
 let cuponAplicado = null;
 let totalGlobal = 0;
 let descuentoGlobal = 0;
-let mostrandoSoloFavoritos = false;
 
 // --- Persistencia de carrito en localStorage ---
 function guardarCarritoEnLocalStorage() {
@@ -134,47 +133,72 @@ function toggleFavorito(boton, nombre) {
     boton.classList.toggle('favorito-activo', !yaEsFavorito);
   }
 
-  if (mostrandoSoloFavoritos) aplicarFiltroFavoritos();
+  // Si el modal de favoritos está abierto, lo refrescamos para que se note el cambio al toque
+  const modal = document.getElementById('favoritos-modal');
+  if (modal && modal.style.display === 'flex') {
+    abrirFavoritosModal();
+  }
 }
 
-function toggleVistaFavoritos() {
-  const favoritos = obtenerFavoritos();
+// --- Arma una tarjeta de producto igual a la del catálogo, para usar dentro del modal de favoritos ---
+function crearTarjetaFavorito(producto) {
+  const div = document.createElement('div');
+  div.className = 'producto';
+  div.dataset.nombre = producto.nombre;
+  div.dataset.precio = producto.precio;
+  div.dataset.descripcion = producto.descripcion;
+  div.dataset.categoria = producto.categoria;
 
-  if (!mostrandoSoloFavoritos && favoritos.length === 0) {
-    mostrarPopup('Todavía no tenés favoritos guardados ❤️');
-    return;
-  }
+  const imagenHTML = producto.imagen ? `
+    <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
+      <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:140px; object-fit:contain; background:white;" />
+      ${favoritoBtnHTML(producto.nombre)}
+      ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
+    </div>` : '';
 
-  mostrandoSoloFavoritos = !mostrandoSoloFavoritos;
-
-  const btn = document.getElementById('btn-ver-favoritos');
-  if (btn) {
-    btn.classList.toggle('activo', mostrandoSoloFavoritos);
-    btn.textContent = mostrandoSoloFavoritos ? '✕ Salir de favoritos' : '♡ Favoritos';
-  }
-
-  aplicarFiltroFavoritos();
+  div.innerHTML = `
+    ${imagenHTML}
+    <h3>${producto.nombre}</h3>
+    <p class="categoria-texto">${producto.categoria}</p>
+    <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+    <div class="control-cantidad">
+      <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
+      <input class="cantidad-input" type="number" value="1" min="1" readonly />
+      <button class="mas" onclick="cambiarCantidad(this, 1)" ${producto.stock <= 0 ? 'disabled' : ''}>+</button>
+    </div>
+    <button class="boton" onclick="agregarAlCarrito(this)" ${producto.stock <= 0 ? 'disabled style="background:#ccc;cursor:not-allowed;"' : ''}>
+      ${producto.stock <= 0 ? 'Sin stock' : 'Agregar al carrito'}
+    </button>
+  `;
+  return div;
 }
 
-function aplicarFiltroFavoritos() {
-  if (!mostrandoSoloFavoritos) {
-    filtrarPorTexto(document.getElementById('buscador')?.value || '');
-    return;
-  }
-
+function abrirFavoritosModal() {
   const favoritos = obtenerFavoritos();
+  const contenedor = document.getElementById('favoritos-modal-lista');
+  const vacio = document.getElementById('favoritos-modal-vacio');
+  if (!contenedor) return;
 
-  document.querySelectorAll('.grupo-categoria').forEach(grupo => {
-    let coincidencias = 0;
-    grupo.querySelectorAll('.producto').forEach(prod => {
-      const esFav = favoritos.includes(prod.dataset.nombre);
-      prod.style.display = esFav ? 'flex' : 'none';
-      if (esFav) coincidencias++;
+  contenedor.innerHTML = '';
+
+  const productosFavoritos = favoritos
+    .map(nombre => productos.find(p => p.nombre === nombre))
+    .filter(Boolean); // saca los que ya no existen en la planilla
+
+  if (productosFavoritos.length === 0) {
+    vacio.style.display = 'block';
+  } else {
+    vacio.style.display = 'none';
+    productosFavoritos.forEach(producto => {
+      contenedor.appendChild(crearTarjetaFavorito(producto));
     });
-    grupo.style.display = coincidencias > 0 ? 'block' : 'none';
-    const titulo = grupo.querySelector('.titulo-categoria');
-    if (titulo) titulo.style.display = 'block';
-  });
+  }
+
+  document.getElementById('favoritos-modal').style.display = 'flex';
+}
+
+function cerrarFavoritosModal() {
+  document.getElementById('favoritos-modal').style.display = 'none';
 }
 
 // =====================================================
@@ -195,6 +219,19 @@ function guardarUltimoPedido() {
   } catch (e) { console.warn('No se pudo guardar el último pedido', e); }
 }
 
+// --- Vacía el carrito después de confirmar un pedido ---
+function vaciarCarrito() {
+  carrito.length = 0;
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+
+  // Cerramos el panel del carrito si quedó abierto, y mostramos el botón de "repetir pedido"
+  document.getElementById('carrito')?.classList.remove('mostrar');
+
+  const btnRepetirPedido = document.getElementById('btn-repetir-pedido');
+  if (btnRepetirPedido) btnRepetirPedido.style.display = 'inline-block';
+}
+
 function repetirUltimoPedido() {
   const ultimoPedido = obtenerUltimoPedido();
   if (!ultimoPedido || ultimoPedido.length === 0) return;
@@ -212,7 +249,9 @@ function repetirUltimoPedido() {
     const cantidadFinal = Math.min(item.cantidad, producto.stock);
     const existente = carrito.find(c => c.nombre === producto.nombre);
     if (existente) {
-      existente.cantidad += cantidadFinal;
+      // Fijamos la cantidad del último pedido (no sumamos), así tocar el botón
+      // varias veces no va acumulando cantidades de más.
+      existente.cantidad = cantidadFinal;
     } else {
       carrito.push({ nombre: producto.nombre, precio: producto.precio, cantidad: cantidadFinal });
     }
@@ -222,6 +261,9 @@ function repetirUltimoPedido() {
   guardarCarritoEnLocalStorage();
   actualizarCarrito();
   animarCarrito();
+
+  // Abrimos el panel del carrito para que vea qué se cargó y pueda ajustarlo si quiere
+  document.getElementById('carrito')?.classList.add('mostrar');
 
   if (agregados > 0 && noDisponibles.length === 0) {
     mostrarPopup('¡Agregamos tu último pedido al carrito! 🔁');
@@ -913,6 +955,9 @@ guardarUltimoPedido();
 const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
 window.open(url, '_blank');
 
+// ✅ Vaciar el carrito: el pedido ya se confirmó y quedó guardado como "último pedido"
+vaciarCarrito();
+
 // ✅ Cerrar modal
 document.getElementById('resumen-modal').style.display = 'none';
   });
@@ -925,17 +970,12 @@ document.getElementById('resumen-modal').style.display = 'none';
   document.getElementById('btn-buscar-lista')?.addEventListener('click', procesarListaCatedra);
   document.getElementById('btn-agregar-lista-carrito')?.addEventListener('click', agregarListaCatedraAlCarrito);
   document.getElementById('btn-editar-lista')?.addEventListener('click', volverAEditarListaCatedra);
-  document.getElementById('btn-ver-favoritos')?.addEventListener('click', toggleVistaFavoritos);
+  document.getElementById('btn-ver-favoritos')?.addEventListener('click', abrirFavoritosModal);
   document.getElementById('btn-repetir-pedido')?.addEventListener('click', repetirUltimoPedido);
 
   const buscador = document.getElementById('buscador');
   if (buscador) {
     buscador.addEventListener('input', (e) => {
-      if (mostrandoSoloFavoritos) {
-        mostrandoSoloFavoritos = false;
-        const btnFav = document.getElementById('btn-ver-favoritos');
-        if (btnFav) { btnFav.classList.remove('activo'); btnFav.textContent = '♡ Favoritos'; }
-      }
       const texto = buscador.value;
       mostrarSugerencias(texto);
       filtrarPorTexto(texto);
