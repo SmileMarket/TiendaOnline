@@ -1016,7 +1016,7 @@ guardarPedidoEnPlanilla({
   cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
   descuento: descuentoGlobal,
   total: total,
-  formaPago: formaPagoSeleccionada
+  formaPago: formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo'
 });
 
 // ✅ Guardamos este pedido como "último pedido" para poder repetirlo con un click después
