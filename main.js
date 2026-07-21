@@ -856,8 +856,64 @@ function calcularResumen() {
 }
 
   const numeroPedido = generarNumeroPedido();
-document.getElementById('confirmar')?.addEventListener('click', () => {
+// =====================================================
+// FORMA DE PAGO (segundo paso del checkout)
+// =====================================================
 
+let formaPagoSeleccionada = null;
+
+function mostrarPasoPago() {
+  document.getElementById('paso-resumen').style.display = 'none';
+  document.getElementById('paso-pago').style.display = 'block';
+  document.getElementById('footer-paso-resumen').style.display = 'none';
+  document.getElementById('footer-paso-pago').style.display = 'flex';
+  document.getElementById('titulo-modal-resumen').textContent = 'Forma de pago';
+}
+
+function mostrarPasoResumen() {
+  document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-resumen').style.display = 'block';
+  document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-resumen').style.display = 'flex';
+  document.getElementById('titulo-modal-resumen').textContent = 'Resumen de tu pedido';
+}
+
+function resetearPasoPago() {
+  formaPagoSeleccionada = null;
+  document.getElementById('btn-pago-transferencia')?.classList.remove('seleccionado');
+  document.getElementById('btn-pago-efectivo')?.classList.remove('seleccionado');
+  const detalleTransf = document.getElementById('detalle-transferencia');
+  const detalleEfec = document.getElementById('detalle-efectivo');
+  if (detalleTransf) detalleTransf.style.display = 'none';
+  if (detalleEfec) detalleEfec.style.display = 'none';
+  const btnEnviar = document.getElementById('enviar-whatsapp');
+  if (btnEnviar) btnEnviar.disabled = true;
+}
+
+function seleccionarFormaPago(forma) {
+  formaPagoSeleccionada = forma;
+
+  document.getElementById('btn-pago-transferencia')?.classList.toggle('seleccionado', forma === 'transferencia');
+  document.getElementById('btn-pago-efectivo')?.classList.toggle('seleccionado', forma === 'efectivo');
+
+  const detalleTransf = document.getElementById('detalle-transferencia');
+  const detalleEfec = document.getElementById('detalle-efectivo');
+  if (detalleTransf) detalleTransf.style.display = forma === 'transferencia' ? 'block' : 'none';
+  if (detalleEfec) detalleEfec.style.display = forma === 'efectivo' ? 'block' : 'none';
+
+  const btnEnviar = document.getElementById('enviar-whatsapp');
+  if (btnEnviar) btnEnviar.disabled = false;
+}
+
+function cerrarResumenModal() {
+  document.getElementById('resumen-modal').style.display = 'none';
+  mostrarPasoResumen();
+  resetearPasoPago();
+}
+
+
+
+document.getElementById('confirmar')?.addEventListener('click', () => {
   if (carrito.length === 0) {
     alert('Tu carrito está vacío.');
     return;
@@ -871,6 +927,9 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
   descuentoGlobal = 0;
   document.getElementById('cupon-feedback').textContent = '';
   document.getElementById('resumen-modal').style.display = 'flex';
+
+  mostrarPasoResumen();
+  resetearPasoPago();
 
   calcularResumen();
   mostrarProductosRelacionados();
@@ -911,6 +970,11 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
       return;
     }
 
+    if (!formaPagoSeleccionada) {
+      alert("Elegí una forma de pago (transferencia o efectivo) antes de enviar el pedido.");
+      return;
+    }
+
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
 
 // ✅ Validación
@@ -937,6 +1001,12 @@ carrito.forEach(item => {
 mensaje = mensaje.trim();
 mensaje += `\nTotal: $${total.toLocaleString()}`;
 
+// ✅ Agregar la forma de pago y su condición, bien visible al final del mensaje
+const textoFormaPago = formaPagoSeleccionada === 'transferencia'
+  ? 'Transferencia ⚠️ (envío el comprobante en este mismo chat)'
+  : 'Efectivo (pedido válido por 5 días)';
+mensaje += `\n\nForma de pago: ${textoFormaPago}`;
+
 // ✅ NUEVO: guardar el pedido en la planilla "Pedidos Web" ANTES de abrir WhatsApp
 // (así queda registrado aunque el cliente no llegue a enviar el mensaje)
 guardarPedidoEnPlanilla({
@@ -945,7 +1015,8 @@ guardarPedidoEnPlanilla({
   carrito: carrito,
   cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
   descuento: descuentoGlobal,
-  total: total
+  total: total,
+  formaPago: formaPagoSeleccionada
 });
 
 // ✅ Guardamos este pedido como "último pedido" para poder repetirlo con un click después
@@ -959,12 +1030,17 @@ window.open(url, '_blank');
 vaciarCarrito();
 
 // ✅ Cerrar modal
-document.getElementById('resumen-modal').style.display = 'none';
+cerrarResumenModal();
   });
 
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
-    document.getElementById('resumen-modal').style.display = 'none';
+    cerrarResumenModal();
   });
+
+  document.getElementById('btn-continuar-pago')?.addEventListener('click', mostrarPasoPago);
+  document.getElementById('btn-volver-resumen')?.addEventListener('click', mostrarPasoResumen);
+  document.getElementById('btn-pago-transferencia')?.addEventListener('click', () => seleccionarFormaPago('transferencia'));
+  document.getElementById('btn-pago-efectivo')?.addEventListener('click', () => seleccionarFormaPago('efectivo'));
 
   document.getElementById('btn-cargar-lista')?.addEventListener('click', abrirListaCatedra);
   document.getElementById('btn-buscar-lista')?.addEventListener('click', procesarListaCatedra);

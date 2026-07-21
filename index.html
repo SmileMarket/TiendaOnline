@@ -468,6 +468,51 @@
 }
 .checkout-form input:focus { outline: none; border-color: var(--rosa-acento); }
 
+/* FORMA DE PAGO */
+
+.forma-pago-opciones{
+  display:flex;
+  gap:10px;
+}
+.forma-pago-btn{
+  flex:1;
+  padding:12px 8px;
+  border-radius:10px;
+  border:2px solid var(--borde);
+  background:white;
+  font-weight:600;
+  font-size:0.88rem;
+  cursor:pointer;
+  color:var(--texto);
+  font-family:'Work Sans', sans-serif;
+  transition: all 0.15s ease;
+}
+.forma-pago-btn:hover{ border-color: var(--rosa-acento); }
+.forma-pago-btn.seleccionado{
+  border-color: var(--rosa-acento);
+  background: var(--rosa-pastel-suave);
+  color: var(--rosa-oscuro);
+}
+.detalle-pago{
+  margin-top:14px;
+  background: var(--fondo);
+  border:1px solid var(--borde);
+  border-radius:10px;
+  padding:12px;
+  font-size:0.85rem;
+  color:var(--texto);
+  line-height:1.5;
+}
+#footer-paso-resumen, #footer-paso-pago{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+.boton:disabled{
+  opacity:0.5;
+  cursor:not-allowed;
+}
+
 .cupon-feedback{
   font-size:0.85rem;
   margin-top:4px;
@@ -754,49 +799,81 @@
   <div class="modal-checkout">
 
     <div class="modal-header">
-      <h2>Resumen de tu pedido</h2>
-      <button onclick="document.getElementById('resumen-modal').style.display='none'" class="modal-cerrar">✕</button>
+      <h2 id="titulo-modal-resumen">Resumen de tu pedido</h2>
+      <button onclick="cerrarResumenModal()" class="modal-cerrar">✕</button>
     </div>
 
     <div class="modal-body">
 
-     <div id="numero-pedido" style="font-weight:600; margin-bottom:10px; color:var(--rosa-oscuro);"></div>
-<div id="resumen-contenido" style="margin-bottom:1rem;"></div>
-<div id="productos-relacionados"></div>
+      <div id="paso-resumen">
+        <div id="numero-pedido" style="font-weight:600; margin-bottom:10px; color:var(--rosa-oscuro);"></div>
+        <div id="resumen-contenido" style="margin-bottom:1rem;"></div>
+        <div id="productos-relacionados"></div>
 
-      <div class="checkout-form">
+        <div class="checkout-form">
+          <label>Tu nombre</label>
+          <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre">
 
-        <label>Tu nombre</label>
-        <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre">
+          <label>Código de descuento</label>
+          <input type="text" id="cupon" placeholder="Ingresá tu cupón">
 
-        <label>Código de descuento</label>
-        <input type="text" id="cupon" placeholder="Ingresá tu cupón">
+          <button id="aplicar-cupon" class="boton boton-secundario">
+            Aplicar código
+          </button>
 
-        <button id="aplicar-cupon" class="boton boton-secundario">
-          Aplicar código
-        </button>
+          <div id="cupon-feedback" class="cupon-feedback"></div>
+        </div>
+      </div>
 
-        <div id="cupon-feedback" class="cupon-feedback"></div>
+      <div id="paso-pago" style="display:none;">
+        <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:10px; color:var(--texto);">
+          ¿Cómo vas a abonar?
+        </label>
 
+        <div class="forma-pago-opciones">
+          <button type="button" id="btn-pago-transferencia" class="forma-pago-btn">🏦 Transferencia</button>
+          <button type="button" id="btn-pago-efectivo" class="forma-pago-btn">💵 Efectivo</button>
+        </div>
+
+        <div id="detalle-transferencia" class="detalle-pago" style="display:none;">
+          <strong>Datos para transferir:</strong><br>
+          Alias: <strong>SmileM</strong><br>
+          Titular: <strong>Diana Vallejos</strong>
+          <p style="margin:10px 0 0; font-size:0.82rem; color:var(--rosa-oscuro); font-weight:600;">
+            ⚠️ Para que tu pedido sea válido, mandanos el comprobante de la transferencia por este mismo WhatsApp.
+          </p>
+        </div>
+
+        <div id="detalle-efectivo" class="detalle-pago" style="display:none;">
+          <p style="margin:0; font-size:0.85rem; color:var(--texto);">
+            Tu pedido queda <strong>confirmado</strong> y tiene una validez de <strong>5 días</strong>.
+            Pasado ese plazo sin retirarlo/abonarlo, se anula automáticamente.
+          </p>
+        </div>
       </div>
 
     </div>
-<div class="modal-footer">
 
-  <div class="checkout-total">
-    <span>Total</span>
-    <strong id="checkout-total">$0</strong>
-  </div>
+    <div class="modal-footer">
 
-  <button id="seguir-comprando" class="boton boton-gris">
-    Seguir comprando
-  </button>
+      <div class="checkout-total">
+        <span>Total</span>
+        <strong id="checkout-total">$0</strong>
+      </div>
 
-  <button id="enviar-whatsapp" class="boton boton-whatsapp">
-    Enviar pedido por WhatsApp
-  </button>
+      <div id="footer-paso-resumen">
+        <button id="seguir-comprando" class="boton boton-gris">Seguir comprando</button>
+        <button id="btn-continuar-pago" class="boton boton-secundario">Continuar →</button>
+      </div>
 
-</div>
+      <div id="footer-paso-pago" style="display:none;">
+        <button id="btn-volver-resumen" class="boton boton-gris">← Volver</button>
+        <button id="enviar-whatsapp" class="boton boton-whatsapp" disabled>
+          Enviar pedido por WhatsApp
+        </button>
+      </div>
+
+    </div>
 
   </div>
 
@@ -886,7 +963,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=13"></script>
+<script src="main.js?v=14"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
@@ -900,7 +977,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
       document.getElementById('carrito')?.classList.remove('mostrar');
     });
     document.getElementById('seguir-comprando')?.addEventListener('click', () => {
-      document.getElementById('resumen-modal').style.display = 'none';
+      cerrarResumenModal();
     });
   </script>
 
