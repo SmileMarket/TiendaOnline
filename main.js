@@ -67,6 +67,9 @@ async function cargarProductosDesdeGoogleSheet() {
       precio: parseFloat(producto.precio) || 0,
       descripcion: producto.descripcion || '',
       imagen: producto.imagen || '',
+      imagenesExtra: producto.imagenesextra
+        ? producto.imagenesextra.split('|').map(s => s.trim()).filter(Boolean)
+        : [],
       stock: parseInt(producto.stock) || 0,
       nuevo: producto.nuevo === 'TRUE',
       masvendido: producto.masvendido === 'TRUE',
@@ -149,8 +152,10 @@ function crearTarjetaFavorito(producto) {
   div.dataset.descripcion = producto.descripcion;
   div.dataset.categoria = producto.categoria;
 
+  const galeria = [producto.imagen, ...(producto.imagenesExtra || [])].filter(Boolean);
+
   const imagenHTML = producto.imagen ? `
-    <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
+    <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
       <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:140px; object-fit:contain; background:white;" />
       ${favoritoBtnHTML(producto.nombre)}
       ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
@@ -411,23 +416,95 @@ function cambiarCantidadCarritoInput(index, value) {
   actualizarCarrito();
 }
 
-function mostrarModalInfo(nombre, descripcion, imagen) {
+let galeriaActual = [];
+let galeriaIndiceActual = 0;
+
+// Punto de entrada desde las tarjetas de producto: lee los datos desde el propio elemento
+function abrirGaleria(contenedor) {
+  const nombre = contenedor.dataset.nombre || '';
+  const descripcion = contenedor.dataset.descripcion || '';
+  let galeria = [];
+  try {
+    galeria = JSON.parse(contenedor.dataset.galeria || '[]');
+  } catch (e) { galeria = []; }
+
+  mostrarModalInfo(nombre, descripcion, galeria);
+}
+
+function mostrarModalInfo(nombre, descripcion, galeria) {
   document.getElementById('modal-titulo').textContent = nombre;
   document.getElementById('modal-descripcion').textContent = descripcion;
 
-  const imgEl = document.getElementById('modal-imagen');
-  if (imgEl) {
-    if (imagen) {
-      imgEl.src = imagen;
-      imgEl.alt = nombre;
-      imgEl.style.display = 'block';
-    } else {
-      imgEl.style.display = 'none';
-      imgEl.src = '';
-    }
+  // Compatibilidad: si alguien todavía llama a esto pasando una sola URL (string), la envolvemos en array
+  if (typeof galeria === 'string') {
+    galeria = galeria ? [galeria] : [];
   }
+  galeriaActual = Array.isArray(galeria) ? galeria.filter(Boolean) : [];
+  galeriaIndiceActual = 0;
+
+  renderizarGaleria();
 
   document.getElementById('info-modal').style.display = 'flex';
+}
+
+function renderizarGaleria() {
+  const imgEl = document.getElementById('modal-imagen');
+  const puntos = document.getElementById('modal-galeria-puntos');
+  const flechaIzq = document.getElementById('modal-galeria-izq');
+  const flechaDer = document.getElementById('modal-galeria-der');
+  if (!imgEl) return;
+
+  if (galeriaActual.length === 0) {
+    imgEl.style.display = 'none';
+    imgEl.src = '';
+    if (puntos) puntos.style.display = 'none';
+    if (flechaIzq) flechaIzq.style.display = 'none';
+    if (flechaDer) flechaDer.style.display = 'none';
+    return;
+  }
+
+  imgEl.src = galeriaActual[galeriaIndiceActual];
+  imgEl.style.display = 'block';
+
+  const hayVarias = galeriaActual.length > 1;
+  if (flechaIzq) flechaIzq.style.display = hayVarias ? 'flex' : 'none';
+  if (flechaDer) flechaDer.style.display = hayVarias ? 'flex' : 'none';
+
+  if (puntos) {
+    puntos.style.display = hayVarias ? 'flex' : 'none';
+    puntos.innerHTML = galeriaActual.map((_, i) =>
+      `<span class="galeria-punto${i === galeriaIndiceActual ? ' activo' : ''}" onclick="irAFotoGaleria(${i})"></span>`
+    ).join('');
+  }
+}
+
+function cambiarFotoGaleria(delta) {
+  if (galeriaActual.length === 0) return;
+  galeriaIndiceActual = (galeriaIndiceActual + delta + galeriaActual.length) % galeriaActual.length;
+  renderizarGaleria();
+}
+
+function irAFotoGaleria(indice) {
+  galeriaIndiceActual = indice;
+  renderizarGaleria();
+}
+
+// --- Swipe táctil para pasar de foto en mobile ---
+function inicializarSwipeGaleria() {
+  const contenedor = document.getElementById('modal-galeria-container');
+  if (!contenedor) return;
+  let touchStartX = 0;
+
+  contenedor.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  contenedor.addEventListener('touchend', (e) => {
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(deltaX) > 40) {
+      cambiarFotoGaleria(deltaX > 0 ? -1 : 1);
+    }
+  }, { passive: true });
 }
 
 function cerrarModalInfo() {
@@ -643,8 +720,10 @@ function renderizarTopVentas() {
     div.dataset.descripcion = producto.descripcion;
     div.dataset.categoria = producto.categoria;
 
+    const galeria = [producto.imagen, ...(producto.imagenesExtra || [])].filter(Boolean);
+
     const imagenHTML = producto.imagen ? `
-      <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
+      <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
         <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:130px; object-fit:contain; background:white;" />
         ${favoritoBtnHTML(producto.nombre)}
         ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
@@ -749,6 +828,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   mostrarSaludo(); // ✅ saludo en header
 
+  inicializarSwipeGaleria();
+
   // Mostrar el botón de "repetir último pedido" solo si hay uno guardado
   const btnRepetirPedido = document.getElementById('btn-repetir-pedido');
   if (btnRepetirPedido) {
@@ -822,8 +903,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? `<div class="etiquetas">${etiquetas.map(t => `<span class="etiqueta ${t}">${t==='nuevo'? '🆕 Nuevo' : t==='masvendido' ? '🔥 Muy vendido' : '⭐ Recomendado' }</span>`).join('')}</div>`
         : '';
 
+      const galeria = [producto.imagen, ...(producto.imagenesExtra || [])].filter(Boolean);
+
       const imagenHTML = producto.imagen ? `
-        <div class="producto-imagen-container" onclick="mostrarModalInfo('${producto.nombre}', \`${producto.descripcion || 'Sin descripción disponible'}\`, \`${producto.imagen}\`)">
+        <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
           <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain; background:white;" />
           ${favoritoBtnHTML(producto.nombre)}
           ${producto.stock <= 0
@@ -1156,6 +1239,9 @@ window.eliminarDelCarrito = eliminarDelCarrito;
 window.cambiarCantidad = cambiarCantidad;
 window.mostrarModalInfo = mostrarModalInfo;
 window.cerrarModalInfo = cerrarModalInfo;
+window.abrirGaleria = abrirGaleria;
+window.cambiarFotoGaleria = cambiarFotoGaleria;
+window.irAFotoGaleria = irAFotoGaleria;
 window.toggleFavorito = toggleFavorito;
 
 setInterval(guardarCarritoEnLocalStorage, 3000);
