@@ -466,8 +466,36 @@ function guardarCelularCliente(celular) {
 
 function obtenerCelularCliente() {
   try {
-    return localStorage.getItem('smilemarket_celular') || '+54 ';
-  } catch (e) { return '+54 '; }
+    return localStorage.getItem('smilemarket_celular') || '+549';
+  } catch (e) { return '+549'; }
+}
+
+// --- Evita que el prefijo +549 se pueda borrar del campo celular ---
+function bloquearPrefijoCelular() {
+  const prefijo = '+549';
+  const input = document.getElementById('celular-cliente');
+  if (!input) return;
+
+  const normalizar = () => {
+    let soloDigitos = input.value.replace(/[^\d]/g, ''); // saca todo lo que no sea número (espacios, guiones, el +, etc.)
+    if (soloDigitos.startsWith('549')) soloDigitos = soloDigitos.slice(3);
+    else if (soloDigitos.startsWith('54')) soloDigitos = soloDigitos.slice(2);
+    input.value = prefijo + soloDigitos;
+  };
+
+  input.addEventListener('input', normalizar);
+
+  // Si el cursor queda dentro del prefijo (por click o flechas), lo mandamos justo después
+  input.addEventListener('click', () => {
+    if (input.selectionStart < prefijo.length) {
+      input.setSelectionRange(input.value.length, input.value.length);
+    }
+  });
+  input.addEventListener('keyup', () => {
+    if (input.selectionStart < prefijo.length) {
+      input.setSelectionRange(prefijo.length, prefijo.length);
+    }
+  });
 }
 
 function mostrarSaludo() {
@@ -746,6 +774,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const inputCelular = document.getElementById('celular-cliente');
   if (inputCelular) {
     inputCelular.value = obtenerCelularCliente();
+    bloquearPrefijoCelular();
   }
 
   const contenedor = document.getElementById('productos');
@@ -995,7 +1024,7 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     }
 
     const celularCliente = document.getElementById('celular-cliente')?.value.trim();
-    if (!celularCliente || celularCliente === '+54') {
+    if (!celularCliente || celularCliente === '+549') {
       alert("Por favor, ingresá tu celular antes de enviar el pedido.");
       return;
     }
@@ -1069,7 +1098,21 @@ cerrarResumenModal();
     cerrarResumenModal();
   });
 
-  document.getElementById('btn-continuar-pago')?.addEventListener('click', mostrarPasoPago);
+  document.getElementById('btn-continuar-pago')?.addEventListener('click', () => {
+    const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
+    const celularCliente = document.getElementById('celular-cliente')?.value.trim();
+
+    if (!nombreCliente) {
+      alert('Por favor, ingresá tu nombre antes de continuar.');
+      return;
+    }
+    if (!celularCliente || celularCliente === '+549') {
+      alert('Por favor, ingresá tu celular antes de continuar.');
+      return;
+    }
+
+    mostrarPasoPago();
+  });
   document.getElementById('btn-volver-resumen')?.addEventListener('click', mostrarPasoResumen);
   document.getElementById('btn-pago-transferencia')?.addEventListener('click', () => seleccionarFormaPago('transferencia'));
   document.getElementById('btn-pago-efectivo')?.addEventListener('click', () => seleccionarFormaPago('efectivo'));

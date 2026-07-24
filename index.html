@@ -337,10 +337,10 @@
       box-shadow: 0 4px 10px rgba(122, 46, 82, 0.15); transition: transform 0.2s ease, box-shadow 0.2s ease; z-index: 998;
     }
     .float-button:hover { transform: scale(1.08); box-shadow: 0 6px 16px rgba(122, 46, 82, 0.22); }
-    .carrito-float { top: 50%; background: var(--superficie); border: 1px solid var(--rosa-acento); color: var(--rosa-acento); }
-    .whatsapp-float { top: calc(50% - 60px); background: #25d366; border: 1px solid #25d366; }
+    .carrito-float { bottom: 205px; background: var(--superficie); border: 1px solid var(--rosa-acento); color: var(--rosa-acento); }
+    .whatsapp-float { bottom: 145px; background: #25d366; border: 1px solid #25d366; }
     .whatsapp-float svg { width: 26px; height: 26px; fill: white; }
-    .instagram-float { top: calc(50% + 60px); background: var(--superficie); border: 1px solid #E1306C; }
+    .instagram-float { bottom: 85px; background: var(--superficie); border: 1px solid #E1306C; }
     .carrito-float svg { width: 22px; height: 22px; }
     #contador-carrito { position: absolute; top: -4px; right: -4px; background: var(--rosa-acento-hover); color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 999px; font-weight: 600; }
 
@@ -811,11 +811,11 @@
         <div id="productos-relacionados"></div>
 
         <div class="checkout-form">
-          <label>Tu nombre</label>
-          <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre">
+          <label>Tu nombre *</label>
+          <input type="text" id="nombre-cliente" placeholder="Ingresá tu nombre" required>
 
-          <label>Tu celular</label>
-          <input type="tel" id="celular-cliente" placeholder="+54 9 11 1234-5678">
+          <label>Tu celular *</label>
+          <input type="tel" id="celular-cliente" placeholder="+549 11 1234-5678" required>
 
           <label>Código de descuento</label>
           <input type="text" id="cupon" placeholder="Ingresá tu cupón">
@@ -966,7 +966,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=17"></script>
+<script src="main.js?v=18"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
