@@ -457,6 +457,19 @@ function obtenerNombreCliente() {
   } catch (e) { return ''; }
 }
 
+// --- Personalización con celular ---
+function guardarCelularCliente(celular) {
+  try {
+    localStorage.setItem('smilemarket_celular', celular);
+  } catch (e) { console.warn('No se pudo guardar el celular en localStorage', e); }
+}
+
+function obtenerCelularCliente() {
+  try {
+    return localStorage.getItem('smilemarket_celular') || '+54 ';
+  } catch (e) { return '+54 '; }
+}
+
 function mostrarSaludo() {
   const nombre = obtenerNombreCliente();
   const saludoDiv = document.getElementById('saludo-usuario');
@@ -631,6 +644,67 @@ function renderizarTopVentas() {
   if (seccion) seccion.style.display = encontrados > 0 ? '' : 'none';
 }
 
+// =====================================================
+// FORMA DE PAGO (segundo paso del checkout)
+// =====================================================
+
+let formaPagoSeleccionada = null;
+
+function mostrarPasoPago() {
+  document.getElementById('paso-resumen').style.display = 'none';
+  document.getElementById('paso-pago').style.display = 'block';
+  document.getElementById('footer-paso-resumen').style.display = 'none';
+  document.getElementById('footer-paso-pago').style.display = 'flex';
+  document.getElementById('titulo-modal-resumen').textContent = 'Forma de pago';
+}
+
+function mostrarPasoResumen() {
+  document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-resumen').style.display = 'block';
+  document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-resumen').style.display = 'flex';
+  document.getElementById('titulo-modal-resumen').textContent = 'Resumen de tu pedido';
+}
+
+function resetearPasoPago() {
+  formaPagoSeleccionada = null;
+  document.getElementById('btn-pago-transferencia')?.classList.remove('seleccionado');
+  document.getElementById('btn-pago-efectivo')?.classList.remove('seleccionado');
+  const detalleTransf = document.getElementById('detalle-transferencia');
+  const detalleEfec = document.getElementById('detalle-efectivo');
+  if (detalleTransf) detalleTransf.style.display = 'none';
+  if (detalleEfec) detalleEfec.style.display = 'none';
+  const btnEnviar = document.getElementById('enviar-whatsapp');
+  if (btnEnviar) btnEnviar.disabled = true;
+}
+
+function seleccionarFormaPago(forma) {
+  formaPagoSeleccionada = forma;
+
+  document.getElementById('btn-pago-transferencia')?.classList.toggle('seleccionado', forma === 'transferencia');
+  document.getElementById('btn-pago-efectivo')?.classList.toggle('seleccionado', forma === 'efectivo');
+
+  const detalleTransf = document.getElementById('detalle-transferencia');
+  const detalleEfec = document.getElementById('detalle-efectivo');
+  if (detalleTransf) detalleTransf.style.display = forma === 'transferencia' ? 'block' : 'none';
+  if (detalleEfec) detalleEfec.style.display = forma === 'efectivo' ? 'block' : 'none';
+
+  const btnEnviar = document.getElementById('enviar-whatsapp');
+  if (btnEnviar) btnEnviar.disabled = false;
+}
+
+function cerrarResumenModal() {
+  document.getElementById('resumen-modal').style.display = 'none';
+  mostrarPasoResumen();
+  resetearPasoPago();
+}
+
+window.mostrarPasoPago = mostrarPasoPago;
+window.mostrarPasoResumen = mostrarPasoResumen;
+window.resetearPasoPago = resetearPasoPago;
+window.seleccionarFormaPago = seleccionarFormaPago;
+window.cerrarResumenModal = cerrarResumenModal;
+
 // Inicialización
 document.addEventListener('DOMContentLoaded', async () => {
   iniciarSplash();
@@ -663,10 +737,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('resize', actualizarAlturaHeader);
   }
 
-  // Autocompletar campo nombre en el modal
+  // Autocompletar campo nombre y celular en el modal
   const inputNombre = document.getElementById('nombre-cliente');
   if (inputNombre) {
     inputNombre.value = obtenerNombreCliente();
+  }
+
+  const inputCelular = document.getElementById('celular-cliente');
+  if (inputCelular) {
+    inputCelular.value = obtenerCelularCliente();
   }
 
   const contenedor = document.getElementById('productos');
@@ -856,61 +935,6 @@ function calcularResumen() {
 }
 
   const numeroPedido = generarNumeroPedido();
-// =====================================================
-// FORMA DE PAGO (segundo paso del checkout)
-// =====================================================
-
-let formaPagoSeleccionada = null;
-
-function mostrarPasoPago() {
-  document.getElementById('paso-resumen').style.display = 'none';
-  document.getElementById('paso-pago').style.display = 'block';
-  document.getElementById('footer-paso-resumen').style.display = 'none';
-  document.getElementById('footer-paso-pago').style.display = 'flex';
-  document.getElementById('titulo-modal-resumen').textContent = 'Forma de pago';
-}
-
-function mostrarPasoResumen() {
-  document.getElementById('paso-pago').style.display = 'none';
-  document.getElementById('paso-resumen').style.display = 'block';
-  document.getElementById('footer-paso-pago').style.display = 'none';
-  document.getElementById('footer-paso-resumen').style.display = 'flex';
-  document.getElementById('titulo-modal-resumen').textContent = 'Resumen de tu pedido';
-}
-
-function resetearPasoPago() {
-  formaPagoSeleccionada = null;
-  document.getElementById('btn-pago-transferencia')?.classList.remove('seleccionado');
-  document.getElementById('btn-pago-efectivo')?.classList.remove('seleccionado');
-  const detalleTransf = document.getElementById('detalle-transferencia');
-  const detalleEfec = document.getElementById('detalle-efectivo');
-  if (detalleTransf) detalleTransf.style.display = 'none';
-  if (detalleEfec) detalleEfec.style.display = 'none';
-  const btnEnviar = document.getElementById('enviar-whatsapp');
-  if (btnEnviar) btnEnviar.disabled = true;
-}
-
-function seleccionarFormaPago(forma) {
-  formaPagoSeleccionada = forma;
-
-  document.getElementById('btn-pago-transferencia')?.classList.toggle('seleccionado', forma === 'transferencia');
-  document.getElementById('btn-pago-efectivo')?.classList.toggle('seleccionado', forma === 'efectivo');
-
-  const detalleTransf = document.getElementById('detalle-transferencia');
-  const detalleEfec = document.getElementById('detalle-efectivo');
-  if (detalleTransf) detalleTransf.style.display = forma === 'transferencia' ? 'block' : 'none';
-  if (detalleEfec) detalleEfec.style.display = forma === 'efectivo' ? 'block' : 'none';
-
-  const btnEnviar = document.getElementById('enviar-whatsapp');
-  if (btnEnviar) btnEnviar.disabled = false;
-}
-
-function cerrarResumenModal() {
-  document.getElementById('resumen-modal').style.display = 'none';
-  mostrarPasoResumen();
-  resetearPasoPago();
-}
-
 
 
 document.getElementById('confirmar')?.addEventListener('click', () => {
@@ -970,12 +994,19 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
       return;
     }
 
+    const celularCliente = document.getElementById('celular-cliente')?.value.trim();
+    if (!celularCliente || celularCliente === '+54') {
+      alert("Por favor, ingresá tu celular antes de enviar el pedido.");
+      return;
+    }
+
     if (!formaPagoSeleccionada) {
       alert("Elegí una forma de pago (transferencia o efectivo) antes de enviar el pedido.");
       return;
     }
 
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
+    guardarCelularCliente(celularCliente); // ✅ guardamos el celular
 
 // ✅ Validación
 if (!carrito || carrito.length === 0) {
@@ -1012,6 +1043,7 @@ mensaje += `\n\nForma de pago: ${textoFormaPago}`;
 guardarPedidoEnPlanilla({
   numeroPedido: window.numeroPedidoActual,
   cliente: nombreCliente,
+  celular: celularCliente,
   carrito: carrito,
   cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
   descuento: descuentoGlobal,
