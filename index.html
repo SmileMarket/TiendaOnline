@@ -304,6 +304,28 @@
     .favorito-btn:hover { transform: scale(1.12); }
     .favorito-btn.favorito-activo { color: #E24B7A; }
 
+    .compartir-btn {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+      color: #25d366;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 4;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      transition: transform 0.15s ease;
+    }
+    .compartir-btn:hover { transform: scale(1.12); }
+
     .galeria-puntos {
       display: flex;
       justify-content: center;
@@ -871,6 +893,26 @@
         </div>
       </div>
 
+      <div id="paso-confirmacion" style="display:none; text-align:center; padding:6px 0;">
+        <div style="font-size:2.8rem; margin-bottom:6px;">✅</div>
+        <h3 style="font-family:'Quicksand', sans-serif; color:var(--rosa-oscuro); margin:0 0 8px;">
+          ¡Tu pedido <span id="confirmacion-numero-pedido"></span> fue enviado!
+        </h3>
+        <p style="color:var(--texto); font-size:0.9rem; margin-bottom:18px;">
+          En breve te contactamos por WhatsApp para coordinar la entrega.<br>¡Gracias por elegirnos! 💛
+        </p>
+
+        <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:12px; padding:16px;">
+          <p style="margin:0 0 10px; font-size:0.85rem; color:var(--texto);">
+            📸 ¿Ya nos seguís en Instagram? Ahí subimos promos y novedades antes que nadie.
+          </p>
+          <a href="https://www.instagram.com/smilemarket.ar" target="_blank"
+             style="display:inline-block; text-decoration:none; color:white; font-weight:600; font-size:0.85rem; padding:9px 20px; border-radius:8px; background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);">
+            Seguir en Instagram
+          </a>
+        </div>
+      </div>
+
     </div>
 
     <div class="modal-footer">
@@ -890,6 +932,10 @@
         <button id="enviar-whatsapp" class="boton boton-whatsapp" disabled>
           Enviar pedido por WhatsApp
         </button>
+      </div>
+
+      <div id="footer-paso-confirmacion" style="display:none;">
+        <button id="btn-cerrar-confirmacion" class="boton boton-secundario">Cerrar</button>
       </div>
 
     </div>
@@ -989,7 +1035,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=19"></script>
+<script src="main.js?v=20"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

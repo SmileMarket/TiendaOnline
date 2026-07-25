@@ -124,6 +124,19 @@ function favoritoBtnHTML(nombre) {
   return `<button type="button" class="favorito-btn${activo ? ' favorito-activo' : ''}" onclick="event.stopPropagation(); toggleFavorito(this, '${nombreEscapado}')" aria-label="Guardar en favoritos">${activo ? '♥' : '♡'}</button>`;
 }
 
+// Genera el botón de "compartir por WhatsApp" para insertar dentro de la tarjeta de producto
+function compartirBtnHTML(nombre, precio) {
+  const nombreEscapado = (nombre || '').replace(/'/g, "\\'");
+  return `<button type="button" class="compartir-btn" onclick="event.stopPropagation(); compartirProducto('${nombreEscapado}', ${precio})" aria-label="Compartir por WhatsApp">↗</button>`;
+}
+
+function compartirProducto(nombre, precio) {
+  const precioTexto = Number(precio).toLocaleString('es-AR');
+  const mensaje = `¡Mirá esto que encontré en SmileMarket! 🦷\n\n${nombre} - $${precioTexto}\n\nhttps://smilemarket.github.io/TiendaOnline/`;
+  const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+}
+
 function toggleFavorito(boton, nombre) {
   let favoritos = obtenerFavoritos();
   const yaEsFavorito = favoritos.includes(nombre);
@@ -158,6 +171,7 @@ function crearTarjetaFavorito(producto) {
     <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
       <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:140px; object-fit:contain; background:white;" />
       ${favoritoBtnHTML(producto.nombre)}
+      ${compartirBtnHTML(producto.nombre, producto.precio)}
       ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
     </div>` : '';
 
@@ -726,6 +740,7 @@ function renderizarTopVentas() {
       <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
         <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:130px; object-fit:contain; background:white;" />
         ${favoritoBtnHTML(producto.nombre)}
+        ${compartirBtnHTML(producto.nombre, producto.precio)}
         ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
       </div>` : '';
 
@@ -767,10 +782,30 @@ function mostrarPasoPago() {
 
 function mostrarPasoResumen() {
   document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-confirmacion').style.display = 'none';
   document.getElementById('paso-resumen').style.display = 'block';
   document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-confirmacion').style.display = 'none';
   document.getElementById('footer-paso-resumen').style.display = 'flex';
   document.getElementById('titulo-modal-resumen').textContent = 'Resumen de tu pedido';
+  const totalWrapper = document.querySelector('.checkout-total');
+  if (totalWrapper) totalWrapper.style.display = 'flex';
+}
+
+function mostrarPasoConfirmacion(numeroPedido) {
+  document.getElementById('paso-resumen').style.display = 'none';
+  document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-confirmacion').style.display = 'block';
+
+  document.getElementById('footer-paso-resumen').style.display = 'none';
+  document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-confirmacion').style.display = 'flex';
+
+  document.getElementById('titulo-modal-resumen').textContent = '¡Pedido confirmado!';
+  document.getElementById('confirmacion-numero-pedido').textContent = '#' + numeroPedido;
+
+  const totalWrapper = document.querySelector('.checkout-total');
+  if (totalWrapper) totalWrapper.style.display = 'none';
 }
 
 function resetearPasoPago() {
@@ -807,6 +842,7 @@ function cerrarResumenModal() {
 }
 
 window.mostrarPasoPago = mostrarPasoPago;
+window.mostrarPasoConfirmacion = mostrarPasoConfirmacion;
 window.mostrarPasoResumen = mostrarPasoResumen;
 window.resetearPasoPago = resetearPasoPago;
 window.seleccionarFormaPago = seleccionarFormaPago;
@@ -909,6 +945,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
           <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain; background:white;" />
           ${favoritoBtnHTML(producto.nombre)}
+          ${compartirBtnHTML(producto.nombre, producto.precio)}
           ${producto.stock <= 0
             ? '<div class="sin-stock-overlay">SIN STOCK</div>'
             : '<div class="info-overlay">+ info</div>'}
@@ -1173,8 +1210,8 @@ window.open(url, '_blank');
 // ✅ Vaciar el carrito: el pedido ya se confirmó y quedó guardado como "último pedido"
 vaciarCarrito();
 
-// ✅ Cerrar modal
-cerrarResumenModal();
+// ✅ Mostrar la pantalla de "¡Listo!" en vez de cerrar el modal de una
+mostrarPasoConfirmacion(window.numeroPedidoActual);
   });
 
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
@@ -1197,6 +1234,7 @@ cerrarResumenModal();
     mostrarPasoPago();
   });
   document.getElementById('btn-volver-resumen')?.addEventListener('click', mostrarPasoResumen);
+  document.getElementById('btn-cerrar-confirmacion')?.addEventListener('click', cerrarResumenModal);
   document.getElementById('btn-pago-transferencia')?.addEventListener('click', () => seleccionarFormaPago('transferencia'));
   document.getElementById('btn-pago-efectivo')?.addEventListener('click', () => seleccionarFormaPago('efectivo'));
 
