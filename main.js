@@ -238,6 +238,69 @@ function guardarUltimoPedido() {
   } catch (e) { console.warn('No se pudo guardar el último pedido', e); }
 }
 
+// --- Historial de pedidos (para que el cliente pueda revisar N° de pedido, fecha y total) ---
+function guardarEnHistorialPedidos(numeroPedido, total, formaPago) {
+  try {
+    const items = carrito.map(i => ({ nombre: i.nombre, cantidad: i.cantidad }));
+    const nuevoPedido = {
+      numeroPedido,
+      fecha: new Date().toLocaleString('es-AR'),
+      total,
+      formaPago,
+      items
+    };
+
+    const historial = obtenerHistorialPedidos();
+    historial.unshift(nuevoPedido); // el más nuevo primero
+    const historialRecortado = historial.slice(0, 20); // guardamos como máximo los últimos 20
+
+    localStorage.setItem('smilemarket_historial_pedidos', JSON.stringify(historialRecortado));
+  } catch (e) { console.warn('No se pudo guardar el historial de pedidos', e); }
+}
+
+function obtenerHistorialPedidos() {
+  try {
+    const raw = localStorage.getItem('smilemarket_historial_pedidos');
+    const lista = raw ? JSON.parse(raw) : [];
+    return Array.isArray(lista) ? lista : [];
+  } catch (e) { return []; }
+}
+
+function abrirHistorialPedidos() {
+  const contenedor = document.getElementById('historial-pedidos-lista');
+  const vacio = document.getElementById('historial-pedidos-vacio');
+  if (!contenedor) return;
+
+  const historial = obtenerHistorialPedidos();
+  contenedor.innerHTML = '';
+
+  if (historial.length === 0) {
+    vacio.style.display = 'block';
+  } else {
+    vacio.style.display = 'none';
+    historial.forEach(pedido => {
+      const div = document.createElement('div');
+      div.className = 'historial-pedido-item';
+      const itemsTexto = pedido.items.map(i => `${i.nombre} x${i.cantidad}`).join(', ');
+      div.innerHTML = `
+        <div class="historial-pedido-header">
+          <strong>Pedido #${pedido.numeroPedido}</strong>
+          <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
+        </div>
+        <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}</div>
+        <div class="historial-pedido-items">${itemsTexto}</div>
+      `;
+      contenedor.appendChild(div);
+    });
+  }
+
+  document.getElementById('historial-pedidos-modal').style.display = 'flex';
+}
+
+function cerrarHistorialPedidos() {
+  document.getElementById('historial-pedidos-modal').style.display = 'none';
+}
+
 // --- Vacía el carrito después de confirmar un pedido ---
 function vaciarCarrito() {
   carrito.length = 0;
@@ -562,9 +625,9 @@ function obtenerCelularCliente() {
 }
 
 // --- Evita que el prefijo +549 se pueda borrar del campo celular ---
-function bloquearPrefijoCelular() {
+function bloquearPrefijoCelular(inputId) {
   const prefijo = '+549';
-  const input = document.getElementById('celular-cliente');
+  const input = document.getElementById(inputId || 'celular-cliente');
   if (!input) return;
 
   const normalizar = () => {
@@ -656,18 +719,25 @@ function filtrarPorTexto(texto){
 }
 
 // ✅ NUEVO: envía el pedido a la planilla "Pedidos Web" (no bloquea el flujo si falla)
+// Guarda el pedido en la planilla y devuelve { ok: true/false } según si realmente se confirmó.
+// Antes esto era "dispara y olvidate" (fetch sin esperar respuesta) — ahora se espera
+// la confirmación real del servidor antes de dar el pedido por registrado.
 function guardarPedidoEnPlanilla(datosPedido) {
   if (!URL_PEDIDOS_WEB || URL_PEDIDOS_WEB.indexOf('PEGAR_AQUI') !== -1) {
     console.warn('Falta configurar URL_PEDIDOS_WEB en main.js');
-    return;
+    return Promise.resolve({ ok: false, motivo: 'sin-configurar' });
   }
-  fetch(URL_PEDIDOS_WEB, {
+  return fetch(URL_PEDIDOS_WEB, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
     body: JSON.stringify(datosPedido)
-  }).catch(err => {
-    console.warn('No se pudo guardar el pedido en la planilla (el pedido igual se envía por WhatsApp):', err);
-  });
+  })
+    .then(res => res.json())
+    .then(data => ({ ok: !!(data && data.resultado === 'ok'), respuesta: data }))
+    .catch(err => {
+      console.warn('No se pudo guardar el pedido en la planilla:', err);
+      return { ok: false, motivo: 'error-red', error: err };
+    });
 }
 
 // --- Utilidad: convertir nombre de categoría en un id válido para anclas ---
@@ -792,10 +862,12 @@ function mostrarPasoResumen() {
   if (totalWrapper) totalWrapper.style.display = 'flex';
 }
 
-function mostrarPasoConfirmacion(numeroPedido) {
+function mostrarPasoConfirmacion(numeroPedido, formaPago) {
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
   document.getElementById('paso-confirmacion').style.display = 'block';
+  document.getElementById('confirmacion-exito').style.display = 'block';
+  document.getElementById('confirmacion-error').style.display = 'none';
 
   document.getElementById('footer-paso-resumen').style.display = 'none';
   document.getElementById('footer-paso-pago').style.display = 'none';
@@ -806,6 +878,46 @@ function mostrarPasoConfirmacion(numeroPedido) {
 
   const totalWrapper = document.querySelector('.checkout-total');
   if (totalWrapper) totalWrapper.style.display = 'none';
+
+  const recordatorio = document.getElementById('confirmacion-transferencia-recordatorio');
+  const esTransferencia = formaPago === 'transferencia';
+  if (recordatorio) recordatorio.style.display = esTransferencia ? 'block' : 'none';
+
+  if (esTransferencia) {
+    const btnComprobante = document.getElementById('btn-enviar-comprobante');
+    if (btnComprobante) {
+      btnComprobante.onclick = () => {
+        const mensaje = `Hola! Te mando el comprobante de la transferencia de mi pedido #${numeroPedido} 📎`;
+        window.open(`https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`, '_blank');
+      };
+    }
+  }
+}
+
+// Pantalla que se muestra si el pedido NO se pudo registrar automáticamente en la planilla.
+// Ofrece un botón de respaldo para mandarlo igual por WhatsApp, así nunca se pierde.
+function mostrarPasoConfirmacionError(mensajeCompleto) {
+  document.getElementById('paso-resumen').style.display = 'none';
+  document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-confirmacion').style.display = 'block';
+  document.getElementById('confirmacion-exito').style.display = 'none';
+  document.getElementById('confirmacion-error').style.display = 'block';
+
+  document.getElementById('footer-paso-resumen').style.display = 'none';
+  document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-confirmacion').style.display = 'flex';
+
+  document.getElementById('titulo-modal-resumen').textContent = 'Hubo un problema';
+
+  const totalWrapper = document.querySelector('.checkout-total');
+  if (totalWrapper) totalWrapper.style.display = 'none';
+
+  const btnRespaldo = document.getElementById('btn-enviar-whatsapp-respaldo');
+  if (btnRespaldo) {
+    btnRespaldo.onclick = () => {
+      window.open(`https://wa.me/5491130335334?text=${encodeURIComponent(mensajeCompleto)}`, '_blank');
+    };
+  }
 }
 
 function resetearPasoPago() {
@@ -891,7 +1003,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const inputCelular = document.getElementById('celular-cliente');
   if (inputCelular) {
     inputCelular.value = obtenerCelularCliente();
-    bloquearPrefijoCelular();
+    bloquearPrefijoCelular('celular-cliente');
+  }
+
+  const inputCelularConfirmar = document.getElementById('celular-cliente-confirmar');
+  if (inputCelularConfirmar) {
+    // Si ya tenemos un celular guardado de una compra anterior, lo precargamos en los dos campos
+    const celularGuardado = obtenerCelularCliente();
+    if (celularGuardado && celularGuardado !== '+549') {
+      inputCelularConfirmar.value = celularGuardado;
+    }
+    bloquearPrefijoCelular('celular-cliente-confirmar');
   }
 
   const contenedor = document.getElementById('productos');
@@ -1136,82 +1258,87 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     mostrarProductosRelacionados();
   });
 
-  document.getElementById('enviar-whatsapp')?.addEventListener('click', () => {
+  document.getElementById('enviar-whatsapp')?.addEventListener('click', async () => {
     const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
     if (!nombreCliente) {
-      alert("Por favor, ingresá tu nombre antes de enviar el pedido.");
+      alert("Por favor, ingresá tu nombre antes de confirmar el pedido.");
       return;
     }
 
     const celularCliente = document.getElementById('celular-cliente')?.value.trim();
     if (!celularCliente || celularCliente === '+549') {
-      alert("Por favor, ingresá tu celular antes de enviar el pedido.");
+      alert("Por favor, ingresá tu celular antes de confirmar el pedido.");
+      return;
+    }
+
+    const celularConfirmarCheck = document.getElementById('celular-cliente-confirmar')?.value.trim();
+    if (celularCliente !== celularConfirmarCheck) {
+      alert("Los dos números de celular no coinciden. Volvé al paso anterior y revisalos.");
       return;
     }
 
     if (!formaPagoSeleccionada) {
-      alert("Elegí una forma de pago (transferencia o efectivo) antes de enviar el pedido.");
+      alert("Elegí una forma de pago (transferencia o efectivo) antes de confirmar el pedido.");
+      return;
+    }
+
+    if (!carrito || carrito.length === 0) {
+      alert('El carrito está vacío');
       return;
     }
 
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
     guardarCelularCliente(celularCliente); // ✅ guardamos el celular
 
-// ✅ Validación
-if (!carrito || carrito.length === 0) {
-  alert('El carrito está vacío');
-  return;
-}
+    // Armamos el mensaje completo igual que antes — ahora solo se usa como
+    // respaldo manual si el guardado automático en la planilla falla.
+    let mensaje = `Pedido #${window.numeroPedidoActual}\n\n`;
+    mensaje += `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n`;
+    mensaje += document.getElementById('enviar-whatsapp').dataset.mensaje;
 
-// ✅ Mensaje base
-let mensaje = `Pedido #${window.numeroPedidoActual}\n\n`;
+    let total = 0;
+    carrito.forEach(item => {
+      total += Number(item.precio) * Number(item.cantidad);
+    });
 
-mensaje += `Hola! mi nombre es ${nombreCliente}, quiero realizar una compra:\n\n`;
+    mensaje = mensaje.trim();
+    mensaje += `\nTotal: $${total.toLocaleString()}`;
 
-mensaje += document.getElementById('enviar-whatsapp').dataset.mensaje;
+    const textoFormaPago = formaPagoSeleccionada === 'transferencia'
+      ? 'Transferencia ⚠️ (envío el comprobante en este mismo chat)'
+      : 'Efectivo (pedido válido por 5 días)';
+    mensaje += `\n\nForma de pago: ${textoFormaPago}`;
 
-// ✅ Calcular total correctamente
-let total = 0;
+    // Deshabilitamos el botón mientras se procesa, para evitar doble-click
+    const btnConfirmar = document.getElementById('enviar-whatsapp');
+    const textoOriginalBoton = btnConfirmar ? btnConfirmar.textContent : '';
+    if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Confirmando...'; }
 
-carrito.forEach(item => {
-  total += Number(item.precio) * Number(item.cantidad);
-});
+    // ✅ Guardamos el pedido en la planilla "Pedidos Web" Y ESPERAMOS la confirmación real
+    const resultado = await guardarPedidoEnPlanilla({
+      numeroPedido: window.numeroPedidoActual,
+      cliente: nombreCliente,
+      celular: celularCliente,
+      carrito: carrito,
+      cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
+      descuento: descuentoGlobal,
+      total: total,
+      formaPago: formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo'
+    });
 
-// ✅ Agregar total
-mensaje = mensaje.trim();
-mensaje += `\nTotal: $${total.toLocaleString()}`;
+    if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginalBoton; }
 
-// ✅ Agregar la forma de pago y su condición, bien visible al final del mensaje
-const textoFormaPago = formaPagoSeleccionada === 'transferencia'
-  ? 'Transferencia ⚠️ (envío el comprobante en este mismo chat)'
-  : 'Efectivo (pedido válido por 5 días)';
-mensaje += `\n\nForma de pago: ${textoFormaPago}`;
-
-// ✅ NUEVO: guardar el pedido en la planilla "Pedidos Web" ANTES de abrir WhatsApp
-// (así queda registrado aunque el cliente no llegue a enviar el mensaje)
-guardarPedidoEnPlanilla({
-  numeroPedido: window.numeroPedidoActual,
-  cliente: nombreCliente,
-  celular: celularCliente,
-  carrito: carrito,
-  cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
-  descuento: descuentoGlobal,
-  total: total,
-  formaPago: formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo'
-});
-
-// ✅ Guardamos este pedido como "último pedido" para poder repetirlo con un click después
-guardarUltimoPedido();
-
-// ✅ Enviar a WhatsApp
-const url = `https://wa.me/5491130335334?text=${encodeURIComponent(mensaje)}`;
-window.open(url, '_blank');
-
-// ✅ Vaciar el carrito: el pedido ya se confirmó y quedó guardado como "último pedido"
-vaciarCarrito();
-
-// ✅ Mostrar la pantalla de "¡Listo!" en vez de cerrar el modal de una
-mostrarPasoConfirmacion(window.numeroPedidoActual);
+    if (resultado && resultado.ok) {
+      // ✅ Se guardó bien: guardamos el historial, vaciamos el carrito y mostramos "¡Listo!"
+      guardarUltimoPedido();
+      guardarEnHistorialPedidos(window.numeroPedidoActual, total, formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo');
+      vaciarCarrito();
+      mostrarPasoConfirmacion(window.numeroPedidoActual, formaPagoSeleccionada);
+    } else {
+      // ⚠️ Falló el guardado automático: no tocamos el carrito, y ofrecemos el respaldo por WhatsApp
+      console.warn('No se pudo registrar el pedido automáticamente:', resultado);
+      mostrarPasoConfirmacionError(mensaje);
+    }
   });
 
   document.getElementById('seguir-comprando')?.addEventListener('click', () => {
@@ -1221,6 +1348,7 @@ mostrarPasoConfirmacion(window.numeroPedidoActual);
   document.getElementById('btn-continuar-pago')?.addEventListener('click', () => {
     const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
     const celularCliente = document.getElementById('celular-cliente')?.value.trim();
+    const celularConfirmar = document.getElementById('celular-cliente-confirmar')?.value.trim();
 
     if (!nombreCliente) {
       alert('Por favor, ingresá tu nombre antes de continuar.');
@@ -1228,6 +1356,14 @@ mostrarPasoConfirmacion(window.numeroPedidoActual);
     }
     if (!celularCliente || celularCliente === '+549') {
       alert('Por favor, ingresá tu celular antes de continuar.');
+      return;
+    }
+    if (!celularConfirmar || celularConfirmar === '+549') {
+      alert('Por favor, confirmá tu celular en el segundo campo antes de continuar.');
+      return;
+    }
+    if (celularCliente !== celularConfirmar) {
+      alert('Los dos números de celular no coinciden. Revisá que estén bien escritos.');
       return;
     }
 
@@ -1243,6 +1379,7 @@ mostrarPasoConfirmacion(window.numeroPedidoActual);
   document.getElementById('btn-agregar-lista-carrito')?.addEventListener('click', agregarListaCatedraAlCarrito);
   document.getElementById('btn-editar-lista')?.addEventListener('click', volverAEditarListaCatedra);
   document.getElementById('btn-ver-favoritos')?.addEventListener('click', abrirFavoritosModal);
+  document.getElementById('btn-mis-pedidos')?.addEventListener('click', abrirHistorialPedidos);
   document.getElementById('btn-repetir-pedido')?.addEventListener('click', repetirUltimoPedido);
 
   const buscador = document.getElementById('buscador');

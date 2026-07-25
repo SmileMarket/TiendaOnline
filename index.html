@@ -326,6 +326,28 @@
     }
     .compartir-btn:hover { transform: scale(1.12); }
 
+    .historial-pedido-item {
+      padding: 12px 0;
+      border-bottom: 1px solid var(--borde);
+    }
+    .historial-pedido-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.92rem;
+      color: var(--rosa-oscuro);
+    }
+    .historial-pedido-fecha {
+      font-size: 0.78rem;
+      color: var(--texto-secundario);
+      margin-top: 2px;
+    }
+    .historial-pedido-items {
+      font-size: 0.82rem;
+      color: var(--texto);
+      margin-top: 6px;
+    }
+
     .galeria-puntos {
       display: flex;
       justify-content: center;
@@ -806,6 +828,7 @@
       <button id="btn-cargar-lista" class="boton-header-accion">📋 Lista de la cátedra</button>
       <button id="btn-repetir-pedido" class="boton-header-accion boton-header-menta" style="display:none;">🔁 Repetir mi último pedido</button>
       <button id="btn-ver-favoritos" class="boton-header-accion boton-header-favoritos">♡ Favoritos</button>
+      <button id="btn-mis-pedidos" class="boton-header-accion boton-header-menta">🧾 Mis pedidos</button>
     </div>
   </header>
 
@@ -855,6 +878,9 @@
           <label>Tu celular *</label>
           <input type="tel" id="celular-cliente" placeholder="+549 11 1234-5678" required>
 
+          <label>Confirmá tu celular *</label>
+          <input type="tel" id="celular-cliente-confirmar" placeholder="+549 11 1234-5678" required>
+
           <label>Código de descuento</label>
           <input type="text" id="cupon" placeholder="Ingresá tu cupón">
 
@@ -894,23 +920,49 @@
       </div>
 
       <div id="paso-confirmacion" style="display:none; text-align:center; padding:6px 0;">
-        <div style="font-size:2.8rem; margin-bottom:6px;">✅</div>
-        <h3 style="font-family:'Quicksand', sans-serif; color:var(--rosa-oscuro); margin:0 0 8px;">
-          ¡Tu pedido <span id="confirmacion-numero-pedido"></span> fue enviado!
-        </h3>
-        <p style="color:var(--texto); font-size:0.9rem; margin-bottom:18px;">
-          En breve te contactamos por WhatsApp para coordinar la entrega.<br>¡Gracias por elegirnos! 💛
-        </p>
 
-        <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:12px; padding:16px;">
-          <p style="margin:0 0 10px; font-size:0.85rem; color:var(--texto);">
-            📸 ¿Ya nos seguís en Instagram? Ahí subimos promos y novedades antes que nadie.
+        <div id="confirmacion-exito">
+          <div style="font-size:2.8rem; margin-bottom:6px;">✅</div>
+          <h3 style="font-family:'Quicksand', sans-serif; color:var(--rosa-oscuro); margin:0 0 8px;">
+            ¡Tu pedido <span id="confirmacion-numero-pedido"></span> fue confirmado!
+          </h3>
+          <p style="color:var(--texto); font-size:0.9rem; margin-bottom:16px;">
+            En breve te contactamos por WhatsApp para coordinar todo.<br>¡Gracias por elegirnos! 💛
           </p>
-          <a href="https://www.instagram.com/smilemarket.ar" target="_blank"
-             style="display:inline-block; text-decoration:none; color:white; font-weight:600; font-size:0.85rem; padding:9px 20px; border-radius:8px; background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);">
-            Seguir en Instagram
-          </a>
+
+          <div id="confirmacion-transferencia-recordatorio" style="display:none; background:var(--rosa-pastel-suave); border:1px solid var(--rosa-acento); border-radius:12px; padding:14px; margin-bottom:16px;">
+            <p style="margin:0 0 10px; font-size:0.85rem; color:var(--rosa-oscuro); font-weight:600;">
+              ⚠️ No te olvides de mandarnos el comprobante de la transferencia para validar tu pedido.
+            </p>
+            <button id="btn-enviar-comprobante" type="button" class="boton boton-whatsapp" style="width:auto; padding:8px 18px;">
+              📎 Enviar comprobante por WhatsApp
+            </button>
+          </div>
+
+          <div style="background:var(--fondo); border:1px solid var(--borde); border-radius:12px; padding:16px;">
+            <p style="margin:0 0 10px; font-size:0.85rem; color:var(--texto);">
+              📸 ¿Ya nos seguís en Instagram? Ahí subimos promos y novedades antes que nadie.
+            </p>
+            <a href="https://www.instagram.com/smilemarket.ar" target="_blank"
+               style="display:inline-block; text-decoration:none; color:white; font-weight:600; font-size:0.85rem; padding:9px 20px; border-radius:8px; background:linear-gradient(45deg,#f9ce34,#ee2a7b,#6228d7);">
+              Seguir en Instagram
+            </a>
+          </div>
         </div>
+
+        <div id="confirmacion-error" style="display:none;">
+          <div style="font-size:2.8rem; margin-bottom:6px;">⚠️</div>
+          <h3 style="font-family:'Quicksand', sans-serif; color:var(--rosa-oscuro); margin:0 0 8px;">
+            Tuvimos un problema para registrar tu pedido
+          </h3>
+          <p style="color:var(--texto); font-size:0.9rem; margin-bottom:18px;">
+            No te preocupes, tu carrito sigue guardado. Para asegurarnos de recibirlo igual, mandanoslo por WhatsApp:
+          </p>
+          <button id="btn-enviar-whatsapp-respaldo" type="button" class="boton boton-whatsapp" style="width:auto; padding:10px 22px;">
+            📲 Enviar pedido por WhatsApp
+          </button>
+        </div>
+
       </div>
 
     </div>
@@ -930,7 +982,7 @@
       <div id="footer-paso-pago" style="display:none;">
         <button id="btn-volver-resumen" class="boton boton-gris">← Volver</button>
         <button id="enviar-whatsapp" class="boton boton-whatsapp" disabled>
-          Enviar pedido por WhatsApp
+          Confirmar pedido
         </button>
       </div>
 
@@ -970,6 +1022,21 @@
         <div id="favoritos-modal-lista" class="productos" style="justify-content:flex-start;"></div>
         <div id="favoritos-modal-vacio" style="display:none; text-align:center; color:var(--texto-secundario); padding:24px 10px; font-size:0.9rem; line-height:1.5;">
           Todavía no guardaste favoritos ❤️<br>Tocá el corazón en cualquier producto para guardarlo acá.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="historial-pedidos-modal" class="modal-overlay">
+    <div class="modal-checkout" style="max-width:480px;">
+      <div class="modal-header">
+        <h2>🧾 Mis pedidos</h2>
+        <button onclick="cerrarHistorialPedidos()" class="modal-cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="historial-pedidos-lista"></div>
+        <div id="historial-pedidos-vacio" style="display:none; text-align:center; color:var(--texto-secundario); padding:24px 10px; font-size:0.9rem; line-height:1.5;">
+          Todavía no hiciste ningún pedido en la web.
         </div>
       </div>
     </div>
@@ -1035,7 +1102,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=20"></script>
+<script src="main.js?v=23"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
