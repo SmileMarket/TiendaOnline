@@ -281,14 +281,18 @@ function abrirHistorialPedidos() {
     historial.forEach(pedido => {
       const div = document.createElement('div');
       div.className = 'historial-pedido-item';
-      const itemsTexto = pedido.items.map(i => `${i.nombre} x${i.cantidad}`).join(', ');
+      const itemsHTML = pedido.items.map(i => `<div>${i.nombre} <strong>x${i.cantidad}</strong></div>`).join('');
+      const mensajeModificar = `Hola! Quiero agregar o modificar algo de mi pedido #${pedido.numeroPedido}`;
       div.innerHTML = `
         <div class="historial-pedido-header">
           <strong>Pedido #${pedido.numeroPedido}</strong>
           <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
         </div>
         <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}</div>
-        <div class="historial-pedido-items">${itemsTexto}</div>
+        <div class="historial-pedido-items">${itemsHTML}</div>
+        <button type="button" class="historial-pedido-modificar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeModificar)}', '_blank')">
+          ✏️ Modificar o agregar algo a este pedido
+        </button>
       `;
       contenedor.appendChild(div);
     });

@@ -347,6 +347,22 @@
       color: var(--texto);
       margin-top: 6px;
     }
+    .historial-pedido-items div {
+      padding: 2px 0;
+    }
+    .historial-pedido-modificar {
+      margin-top: 8px;
+      background: none;
+      border: 1px solid var(--rosa-acento);
+      color: var(--rosa-oscuro);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: 'Work Sans', sans-serif;
+    }
+    .historial-pedido-modificar:hover { background: var(--rosa-pastel-suave); }
 
     .galeria-puntos {
       display: flex;
@@ -825,7 +841,7 @@
       <div id="sugerencias" aria-hidden="true"></div>
     </div>
     <div class="acciones-header">
-      <button id="btn-cargar-lista" class="boton-header-accion">📋 Lista de la cátedra</button>
+      <button id="btn-cargar-lista" class="boton-header-accion">📋 Buscador Macro</button>
       <button id="btn-repetir-pedido" class="boton-header-accion boton-header-menta" style="display:none;">🔁 Repetir mi último pedido</button>
       <button id="btn-ver-favoritos" class="boton-header-accion boton-header-favoritos">♡ Favoritos</button>
       <button id="btn-mis-pedidos" class="boton-header-accion boton-header-menta">🧾 Mis pedidos</button>
@@ -1046,7 +1062,7 @@
     <div class="modal-checkout" style="max-width:480px;">
 
       <div class="modal-header">
-        <h2>Cargar lista de la cátedra</h2>
+        <h2>Buscador Macro</h2>
         <button onclick="cerrarListaCatedra()" class="modal-cerrar">✕</button>
       </div>
 
@@ -1102,7 +1118,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=23"></script>
+<script src="main.js?v=24"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
