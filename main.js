@@ -266,43 +266,99 @@ function obtenerHistorialPedidos() {
   } catch (e) { return []; }
 }
 
-function abrirHistorialPedidos() {
+async function abrirHistorialPedidos() {
   const contenedor = document.getElementById('historial-pedidos-lista');
   const vacio = document.getElementById('historial-pedidos-vacio');
   if (!contenedor) return;
 
   const historial = obtenerHistorialPedidos();
-  contenedor.innerHTML = '';
 
   if (historial.length === 0) {
+    contenedor.innerHTML = '';
     vacio.style.display = 'block';
-  } else {
-    vacio.style.display = 'none';
-    historial.forEach(pedido => {
-      const div = document.createElement('div');
-      div.className = 'historial-pedido-item';
-      const itemsHTML = pedido.items.map(i => `<div>${i.nombre} <strong>x${i.cantidad}</strong></div>`).join('');
-      const mensajeModificar = `Hola! Quiero agregar o modificar algo de mi pedido #${pedido.numeroPedido}`;
-      div.innerHTML = `
-        <div class="historial-pedido-header">
-          <strong>Pedido #${pedido.numeroPedido}</strong>
-          <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
-        </div>
-        <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}</div>
-        <div class="historial-pedido-items">${itemsHTML}</div>
-        <button type="button" class="historial-pedido-modificar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeModificar)}', '_blank')">
-          ✏️ Modificar o agregar algo a este pedido
-        </button>
-      `;
-      contenedor.appendChild(div);
-    });
+    document.getElementById('historial-pedidos-modal').style.display = 'flex';
+    return;
   }
 
+  vacio.style.display = 'none';
   document.getElementById('historial-pedidos-modal').style.display = 'flex';
+  contenedor.innerHTML = '<div style="text-align:center; color:var(--texto-secundario); font-size:0.85rem; padding:14px 0;">Consultando el estado de tus pedidos...</div>';
+
+  const numeros = historial.map(p => p.numeroPedido);
+  const estados = await consultarEstadoPedidos(numeros);
+
+  contenedor.innerHTML = '';
+
+  historial.forEach(pedido => {
+    const estado = estados ? estados[pedido.numeroPedido] : null;
+    const cerrado = !!(estado && estado.entregado);
+
+    const div = document.createElement('div');
+    div.className = 'historial-pedido-item';
+    const itemsHTML = pedido.items.map(i => `<div>${i.nombre} <strong>x${i.cantidad}</strong></div>`).join('');
+
+    let botonAccionHTML;
+    if (cerrado) {
+      botonAccionHTML = `<button type="button" class="historial-pedido-repetir" onclick='repetirPedidoDesdeHistorial(${JSON.stringify(pedido.items)})'>🔁 Repetir este pedido</button>`;
+    } else {
+      const mensajeModificar = `Hola! Quiero agregar o modificar algo de mi pedido #${pedido.numeroPedido}`;
+      botonAccionHTML = `<button type="button" class="historial-pedido-modificar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeModificar)}', '_blank')">✏️ Modificar o agregar algo a este pedido</button>`;
+    }
+
+    div.innerHTML = `
+      <div class="historial-pedido-header">
+        <strong>Pedido #${pedido.numeroPedido}</strong>
+        <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
+      </div>
+      <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}${cerrado ? ' · <span class="historial-pedido-badge">✅ Entregado</span>' : ''}</div>
+      <div class="historial-pedido-items">${itemsHTML}</div>
+      ${botonAccionHTML}
+    `;
+    contenedor.appendChild(div);
+  });
 }
 
 function cerrarHistorialPedidos() {
   document.getElementById('historial-pedidos-modal').style.display = 'none';
+}
+
+// --- Vuelve a agregar al carrito los productos de un pedido puntual del historial ---
+function repetirPedidoDesdeHistorial(items) {
+  if (!items || items.length === 0) return;
+
+  let agregados = 0;
+  const noDisponibles = [];
+
+  items.forEach(item => {
+    const producto = productos.find(p => p.nombre === item.nombre);
+    if (!producto || producto.stock <= 0) {
+      noDisponibles.push(item.nombre);
+      return;
+    }
+    const cantidadFinal = Math.min(item.cantidad, producto.stock);
+    const existente = carrito.find(c => c.nombre === producto.nombre);
+    if (existente) {
+      existente.cantidad = cantidadFinal;
+    } else {
+      carrito.push({ nombre: producto.nombre, precio: producto.precio, cantidad: cantidadFinal });
+    }
+    agregados++;
+  });
+
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+  animarCarrito();
+  document.getElementById('carrito')?.classList.add('mostrar');
+  cerrarHistorialPedidos();
+
+  if (agregados > 0 && noDisponibles.length === 0) {
+    mostrarPopup('¡Agregamos ese pedido a tu carrito! 🔁');
+  } else if (agregados > 0 && noDisponibles.length > 0) {
+    mostrarPopup('Agregamos casi todo (algo ya no está disponible) 🔁');
+    console.warn('No disponibles al repetir pedido del historial:', noDisponibles.join(', '));
+  } else {
+    mostrarPopup('Los productos de ese pedido ya no están disponibles 😕');
+  }
 }
 
 // --- Vacía el carrito después de confirmar un pedido ---
@@ -726,6 +782,22 @@ function filtrarPorTexto(texto){
 // Guarda el pedido en la planilla y devuelve { ok: true/false } según si realmente se confirmó.
 // Antes esto era "dispara y olvidate" (fetch sin esperar respuesta) — ahora se espera
 // la confirmación real del servidor antes de dar el pedido por registrado.
+// --- Consulta (solo lectura) si los pedidos ya están entregados/pagados/preparados ---
+// Devuelve un objeto { numeroPedido: {encontrado, entregado, pagado, preparado} } o null si falla.
+function consultarEstadoPedidos(numerosPedido) {
+  if (!URL_PEDIDOS_WEB || URL_PEDIDOS_WEB.indexOf('PEGAR_AQUI') !== -1 || !numerosPedido || numerosPedido.length === 0) {
+    return Promise.resolve(null);
+  }
+  const url = `${URL_PEDIDOS_WEB}?accion=estadoPedidos&pedidos=${encodeURIComponent(numerosPedido.join(','))}`;
+  return fetch(url)
+    .then(res => res.json())
+    .then(data => (data && data.resultado === 'ok') ? data.estados : null)
+    .catch(err => {
+      console.warn('No se pudo consultar el estado de los pedidos', err);
+      return null;
+    });
+}
+
 function guardarPedidoEnPlanilla(datosPedido) {
   if (!URL_PEDIDOS_WEB || URL_PEDIDOS_WEB.indexOf('PEGAR_AQUI') !== -1) {
     console.warn('Falta configurar URL_PEDIDOS_WEB en main.js');
@@ -1422,6 +1494,7 @@ window.abrirGaleria = abrirGaleria;
 window.cambiarFotoGaleria = cambiarFotoGaleria;
 window.irAFotoGaleria = irAFotoGaleria;
 window.toggleFavorito = toggleFavorito;
+window.repetirPedidoDesdeHistorial = repetirPedidoDesdeHistorial;
 
 setInterval(guardarCarritoEnLocalStorage, 3000);
 
