@@ -3,7 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SmileMarket</title>
+
+  <title>SmileMarket - Insumos odontológicos para estudiantes | Envío gratis</title>
+  <meta name="description" content="Instrumental y consumibles de odontología para estudiantes, con precios accesibles y envío gratis. Comprá online y coordiná todo por WhatsApp." />
+  <link rel="icon" type="image/png" href="img/Logo_transparente.png" />
+
+  <!-- Vista previa al compartir (WhatsApp, Instagram, etc.) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="SmileMarket - Insumos odontológicos para estudiantes" />
+  <meta property="og:description" content="Instrumental y consumibles de odontología para estudiantes, con precios accesibles y envío gratis." />
+  <meta property="og:image" content="https://smilemarket.github.io/TiendaOnline/img/Logo_transparente.png" />
+  <meta property="og:url" content="https://smilemarket.github.io/TiendaOnline/" />
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="SmileMarket - Insumos odontológicos para estudiantes" />
+  <meta name="twitter:description" content="Instrumental y consumibles de odontología para estudiantes, con precios accesibles y envío gratis." />
+  <meta name="twitter:image" content="https://smilemarket.github.io/TiendaOnline/img/Logo_transparente.png" />
+
+  <!-- ✅ Google Analytics 4 -->
+  <!-- IMPORTANTE: reemplazá "G-XXXXXXXXXX" (las 2 veces que aparece) por tu ID real de Analytics.
+       Instrucciones abajo del todo de este archivo, en el mensaje de la conversación. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" />
@@ -365,9 +392,12 @@
     .historial-pedido-modificar:hover { background: var(--rosa-pastel-suave); }
 
     .historial-pedido-badge {
-      color: var(--menta-oscuro);
       font-weight: 600;
     }
+    .historial-pedido-badge-entregado { color: var(--menta-oscuro); }
+    .historial-pedido-badge-proceso { color: var(--durazno-oscuro); }
+    .historial-pedido-badge-anulado { color: #C0392B; }
+
     .historial-pedido-repetir {
       margin-top: 8px;
       background: var(--menta);
@@ -381,6 +411,20 @@
       font-family: 'Work Sans', sans-serif;
     }
     .historial-pedido-repetir:hover { background: #A8DDC9; }
+
+    .historial-pedido-consultar {
+      margin-top: 8px;
+      background: #FBEAE8;
+      border: 1px solid #C0392B;
+      color: #C0392B;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      font-family: 'Work Sans', sans-serif;
+    }
+    .historial-pedido-consultar:hover { background: #F5D5D1; }
 
     .galeria-puntos {
       display: flex;
@@ -986,10 +1030,10 @@
 
         <div id="confirmacion-error" style="display:none;">
           <div style="font-size:2.8rem; margin-bottom:6px;">⚠️</div>
-          <h3 style="font-family:'Quicksand', sans-serif; color:var(--rosa-oscuro); margin:0 0 8px;">
+          <h3 id="confirmacion-error-titulo" style="font-family:'Quicksand', sans-serif; color:var(--rosa-oscuro); margin:0 0 8px;">
             Tuvimos un problema para registrar tu pedido
           </h3>
-          <p style="color:var(--texto); font-size:0.9rem; margin-bottom:18px;">
+          <p id="confirmacion-error-texto" style="color:var(--texto); font-size:0.9rem; margin-bottom:18px;">
             No te preocupes, tu carrito sigue guardado. Para asegurarnos de recibirlo igual, mandanoslo por WhatsApp:
           </p>
           <button id="btn-enviar-whatsapp-respaldo" type="button" class="boton boton-whatsapp" style="width:auto; padding:10px 22px;">
@@ -1136,7 +1180,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=25"></script>
+<script src="main.js?v=29"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

@@ -291,16 +291,37 @@ async function abrirHistorialPedidos() {
 
   historial.forEach(pedido => {
     const estado = estados ? estados[pedido.numeroPedido] : null;
-    const cerrado = !!(estado && estado.entregado);
+
+    // Importante: si "estados" es null es porque falló la consulta (ej. sin conexión),
+    // no porque el pedido no exista. En ese caso NO marcamos como anulado — lo tratamos
+    // como "en proceso" para no alarmar a nadie con un dato que en realidad no pudimos verificar.
+    let situacion;
+    if (!estados) {
+      situacion = 'en-proceso';
+    } else if (!estado || !estado.encontrado) {
+      situacion = 'anulado';
+    } else if (estado.entregado) {
+      situacion = 'entregado';
+    } else {
+      situacion = 'en-proceso';
+    }
 
     const div = document.createElement('div');
     div.className = 'historial-pedido-item';
     const itemsHTML = pedido.items.map(i => `<div>${i.nombre} <strong>x${i.cantidad}</strong></div>`).join('');
 
-    let botonAccionHTML;
-    if (cerrado) {
+    let badgeHTML = '';
+    let botonAccionHTML = '';
+
+    if (situacion === 'entregado') {
+      badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-entregado">✅ Entregado</span>';
       botonAccionHTML = `<button type="button" class="historial-pedido-repetir" onclick='repetirPedidoDesdeHistorial(${JSON.stringify(pedido.items)})'>🔁 Repetir este pedido</button>`;
+    } else if (situacion === 'anulado') {
+      badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-anulado">❌ Anulado</span>';
+      const mensajeConsulta = `Hola! Quiero consultar por mi pedido #${pedido.numeroPedido}, no lo encuentro activo en el sistema. ¿Podemos revisarlo?`;
+      botonAccionHTML = `<button type="button" class="historial-pedido-consultar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeConsulta)}', '_blank')">💬 Consultar sobre este pedido</button>`;
     } else {
+      badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-proceso">🔄 En proceso</span>';
       const mensajeModificar = `Hola! Quiero agregar o modificar algo de mi pedido #${pedido.numeroPedido}`;
       botonAccionHTML = `<button type="button" class="historial-pedido-modificar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeModificar)}', '_blank')">✏️ Modificar o agregar algo a este pedido</button>`;
     }
@@ -310,7 +331,7 @@ async function abrirHistorialPedidos() {
         <strong>Pedido #${pedido.numeroPedido}</strong>
         <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
       </div>
-      <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}${cerrado ? ' · <span class="historial-pedido-badge">✅ Entregado</span>' : ''}</div>
+      <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}${badgeHTML}</div>
       <div class="historial-pedido-items">${itemsHTML}</div>
       ${botonAccionHTML}
     `;
@@ -468,6 +489,15 @@ function sincronizarPreciosCarrito() {
   return { huboCambios, eliminadosNoExiste, eliminadosSinStock, ajustados };
 }
 
+// --- Envía un evento a Google Analytics, sin romper nada si Analytics no cargó (ej. adblockers) ---
+function trackEvento(nombre, params) {
+  try {
+    if (typeof gtag === 'function') {
+      gtag('event', nombre, params || {});
+    }
+  } catch (e) { /* nunca dejamos que un error de analytics rompa la compra */ }
+}
+
 function agregarAlCarrito(boton) {
   const producto = boton.closest('.producto');
   const nombre = producto.dataset.nombre;
@@ -485,6 +515,7 @@ function agregarAlCarrito(boton) {
   mostrarPopup();
   animarCarrito();
   actualizarCarrito();
+  trackEvento('add_to_cart', { currency: 'ARS', value: precio * cantidad, items: [{ item_name: nombre, quantity: cantidad, price: precio }] });
 }
 
 function eliminarDelCarrito(index) {
@@ -803,17 +834,34 @@ function guardarPedidoEnPlanilla(datosPedido) {
     console.warn('Falta configurar URL_PEDIDOS_WEB en main.js');
     return Promise.resolve({ ok: false, motivo: 'sin-configurar' });
   }
+
+  // Chequeo rápido: si el dispositivo ya sabe que no tiene conexión (modo avión, etc.),
+  // avisamos de una sin ni siquiera intentar la petición.
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return Promise.resolve({ ok: false, motivo: 'sin-conexion' });
+  }
+
+  // Le ponemos un límite de tiempo: si la conexión está "colgada" (ni falla ni responde),
+  // no dejamos al cliente esperando para siempre — a los 10s lo damos por fallido.
+  // Ojo: esto NO demora los pedidos normales — en cuanto llega la respuesta (típicamente
+  // en menos de 1 segundo con buena conexión), seguimos al toque sin esperar el límite.
+  const controlador = new AbortController();
+  const timeoutId = setTimeout(() => controlador.abort(), 10000);
+
   return fetch(URL_PEDIDOS_WEB, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(datosPedido)
+    body: JSON.stringify(datosPedido),
+    signal: controlador.signal
   })
     .then(res => res.json())
     .then(data => ({ ok: !!(data && data.resultado === 'ok'), respuesta: data }))
     .catch(err => {
+      const fueTimeout = err && err.name === 'AbortError';
       console.warn('No se pudo guardar el pedido en la planilla:', err);
-      return { ok: false, motivo: 'error-red', error: err };
-    });
+      return { ok: false, motivo: fueTimeout ? 'timeout' : 'error-red', error: err };
+    })
+    .finally(() => clearTimeout(timeoutId));
 }
 
 // --- Utilidad: convertir nombre de categoría en un id válido para anclas ---
@@ -972,7 +1020,7 @@ function mostrarPasoConfirmacion(numeroPedido, formaPago) {
 
 // Pantalla que se muestra si el pedido NO se pudo registrar automáticamente en la planilla.
 // Ofrece un botón de respaldo para mandarlo igual por WhatsApp, así nunca se pierde.
-function mostrarPasoConfirmacionError(mensajeCompleto) {
+function mostrarPasoConfirmacionError(mensajeCompleto, motivo) {
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
   document.getElementById('paso-confirmacion').style.display = 'block';
@@ -983,7 +1031,20 @@ function mostrarPasoConfirmacionError(mensajeCompleto) {
   document.getElementById('footer-paso-pago').style.display = 'none';
   document.getElementById('footer-paso-confirmacion').style.display = 'flex';
 
-  document.getElementById('titulo-modal-resumen').textContent = 'Hubo un problema';
+  const esSinConexion = motivo === 'sin-conexion' || motivo === 'timeout';
+
+  document.getElementById('titulo-modal-resumen').textContent = esSinConexion ? 'Sin conexión a internet' : 'Hubo un problema';
+
+  const tituloError = document.getElementById('confirmacion-error-titulo');
+  const textoError = document.getElementById('confirmacion-error-texto');
+  if (tituloError) {
+    tituloError.textContent = esSinConexion ? '📶 Parece que no tenés conexión' : 'Tuvimos un problema para registrar tu pedido';
+  }
+  if (textoError) {
+    textoError.textContent = esSinConexion
+      ? 'Tu carrito sigue guardado, no se perdió nada. Probá confirmar de nuevo cuando tengas señal, o mandanos el pedido por WhatsApp:'
+      : 'No te preocupes, tu carrito sigue guardado. Para asegurarnos de recibirlo igual, mandanoslo por WhatsApp:';
+  }
 
   const totalWrapper = document.querySelector('.checkout-total');
   if (totalWrapper) totalWrapper.style.display = 'none';
@@ -1021,6 +1082,8 @@ function seleccionarFormaPago(forma) {
 
   const btnEnviar = document.getElementById('enviar-whatsapp');
   if (btnEnviar) btnEnviar.disabled = false;
+
+  trackEvento('seleccionar_forma_pago', { forma_pago: forma });
 }
 
 function cerrarResumenModal() {
@@ -1304,6 +1367,9 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
 
   calcularResumen();
   mostrarProductosRelacionados();
+
+  const totalCarrito = carrito.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  trackEvento('begin_checkout', { currency: 'ARS', value: totalCarrito, items: carrito.map(i => ({ item_name: i.nombre, quantity: i.cantidad, price: i.precio })) });
 });
 
 
@@ -1405,7 +1471,16 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginalBoton; }
 
     if (resultado && resultado.ok) {
-      // ✅ Se guardó bien: guardamos el historial, vaciamos el carrito y mostramos "¡Listo!"
+      // ✅ Se guardó bien: trackeamos la compra ANTES de vaciar el carrito (para poder listar los items)
+      trackEvento('purchase', {
+        transaction_id: window.numeroPedidoActual,
+        currency: 'ARS',
+        value: total,
+        forma_pago: formaPagoSeleccionada,
+        items: carrito.map(i => ({ item_name: i.nombre, quantity: i.cantidad, price: i.precio }))
+      });
+
+      // guardamos el historial, vaciamos el carrito y mostramos "¡Listo!"
       guardarUltimoPedido();
       guardarEnHistorialPedidos(window.numeroPedidoActual, total, formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo');
       vaciarCarrito();
@@ -1413,7 +1488,8 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     } else {
       // ⚠️ Falló el guardado automático: no tocamos el carrito, y ofrecemos el respaldo por WhatsApp
       console.warn('No se pudo registrar el pedido automáticamente:', resultado);
-      mostrarPasoConfirmacionError(mensaje);
+      trackEvento('checkout_error', { motivo: (resultado && resultado.motivo) || 'desconocido' });
+      mostrarPasoConfirmacionError(mensaje, resultado && resultado.motivo);
     }
   });
 
