@@ -266,77 +266,122 @@ function obtenerHistorialPedidos() {
   } catch (e) { return []; }
 }
 
+// ✅ ACTUALIZADO: "Mis pedidos" ahora busca por celular (funciona desde
+// cualquier dispositivo), en vez de depender únicamente de la lista de
+// números de pedido guardada en el localStorage de este navegador.
 async function abrirHistorialPedidos() {
+  const modal = document.getElementById('historial-pedidos-modal');
+  const inputCelular = document.getElementById('historial-celular-input');
+  if (!modal || !inputCelular) return;
+
+  modal.style.display = 'flex';
+
+  // Autocompletar: si ya sabemos el celular de una compra anterior en este
+  // dispositivo, lo precargamos y buscamos directo, sin pedirle nada al cliente.
+  const celularGuardado = obtenerCelularCliente();
+  if (celularGuardado && celularGuardado !== '+549') {
+    inputCelular.value = celularGuardado;
+    bloquearPrefijoCelular('historial-celular-input');
+    await buscarMisPedidosPorCelular();
+  } else {
+    inputCelular.value = '+549';
+    bloquearPrefijoCelular('historial-celular-input');
+    document.getElementById('historial-pedidos-lista').innerHTML = '';
+    document.getElementById('historial-pedidos-vacio').style.display = 'block';
+    document.getElementById('historial-pedidos-vacio').innerHTML =
+      'Ingresá tu celular arriba y tocá "Buscar" para ver tus pedidos.';
+  }
+}
+
+// ✅ NUEVO: dispara la búsqueda por celular (botón "Buscar" del modal, o
+// automático al abrir el modal si ya teníamos el celular guardado).
+async function buscarMisPedidosPorCelular() {
+  const inputCelular = document.getElementById('historial-celular-input');
   const contenedor = document.getElementById('historial-pedidos-lista');
   const vacio = document.getElementById('historial-pedidos-vacio');
-  if (!contenedor) return;
+  if (!inputCelular || !contenedor || !vacio) return;
 
-  const historial = obtenerHistorialPedidos();
+  const celular = inputCelular.value.trim();
+  if (!celular || celular === '+549') {
+    alert('Ingresá tu celular para poder buscar tus pedidos.');
+    return;
+  }
 
-  if (historial.length === 0) {
+  // Guardamos el celular en este dispositivo para la próxima vez (mismo
+  // mecanismo que ya usa el checkout, así queda todo consistente).
+  guardarCelularCliente(celular);
+
+  vacio.style.display = 'none';
+  contenedor.innerHTML = '<div style="text-align:center; color:var(--texto-secundario); font-size:0.85rem; padding:14px 0;">Buscando tus pedidos...</div>';
+
+  const respuesta = await consultarPedidosPorCelular(celular);
+
+  if (!respuesta) {
+    // Sin conexión o falló la consulta: no decimos "no tenés pedidos", avisamos
+    // el problema real para no generar alarma con un dato que no pudimos verificar.
     contenedor.innerHTML = '';
     vacio.style.display = 'block';
-    document.getElementById('historial-pedidos-modal').style.display = 'flex';
+    vacio.innerHTML = 'No pudimos consultar tus pedidos ahora (revisá tu conexión) y volvé a tocar "Buscar".';
+    return;
+  }
+
+  const pedidos = respuesta.pedidos || [];
+
+  if (pedidos.length === 0) {
+    contenedor.innerHTML = '';
+    vacio.style.display = 'block';
+    vacio.innerHTML = 'No encontramos pedidos para ese celular.';
     return;
   }
 
   vacio.style.display = 'none';
-  document.getElementById('historial-pedidos-modal').style.display = 'flex';
-  contenedor.innerHTML = '<div style="text-align:center; color:var(--texto-secundario); font-size:0.85rem; padding:14px 0;">Consultando el estado de tus pedidos...</div>';
-
-  const numeros = historial.map(p => p.numeroPedido);
-  const estados = await consultarEstadoPedidos(numeros);
-
   contenedor.innerHTML = '';
 
-  historial.forEach(pedido => {
-    const estado = estados ? estados[pedido.numeroPedido] : null;
-
-    // Importante: si "estados" es null es porque falló la consulta (ej. sin conexión),
-    // no porque el pedido no exista. En ese caso NO marcamos como anulado — lo tratamos
-    // como "en proceso" para no alarmar a nadie con un dato que en realidad no pudimos verificar.
-    let situacion;
-    if (!estados) {
-      situacion = 'en-proceso';
-    } else if (!estado || !estado.encontrado) {
-      situacion = 'anulado';
-    } else if (estado.entregado) {
-      situacion = 'entregado';
-    } else {
-      situacion = 'en-proceso';
-    }
-
-    const div = document.createElement('div');
-    div.className = 'historial-pedido-item';
-    const itemsHTML = pedido.items.map(i => `<div>${i.nombre} <strong>x${i.cantidad}</strong></div>`).join('');
-
-    let badgeHTML = '';
-    let botonAccionHTML = '';
-
-    if (situacion === 'entregado') {
-      badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-entregado">✅ Entregado</span>';
-      botonAccionHTML = `<button type="button" class="historial-pedido-repetir" onclick='repetirPedidoDesdeHistorial(${JSON.stringify(pedido.items)})'>🔁 Repetir este pedido</button>`;
-    } else if (situacion === 'anulado') {
-      badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-anulado">❌ Anulado</span>';
-      const mensajeConsulta = `Hola! Quiero consultar por mi pedido #${pedido.numeroPedido}, no lo encuentro activo en el sistema. ¿Podemos revisarlo?`;
-      botonAccionHTML = `<button type="button" class="historial-pedido-consultar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeConsulta)}', '_blank')">💬 Consultar sobre este pedido</button>`;
-    } else {
-      badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-proceso">🔄 En proceso</span>';
-      const mensajeModificar = `Hola! Quiero agregar o modificar algo de mi pedido #${pedido.numeroPedido}`;
-      botonAccionHTML = `<button type="button" class="historial-pedido-modificar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeModificar)}', '_blank')">✏️ Modificar o agregar algo a este pedido</button>`;
-    }
-
-    div.innerHTML = `
-      <div class="historial-pedido-header">
-        <strong>Pedido #${pedido.numeroPedido}</strong>
-        <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
-      </div>
-      <div class="historial-pedido-fecha">${pedido.fecha} · ${pedido.formaPago || ''}${badgeHTML}</div>
-      <div class="historial-pedido-items">${itemsHTML}</div>
-      ${botonAccionHTML}
-    `;
-    contenedor.appendChild(div);
+  pedidos.forEach(pedido => {
+    contenedor.appendChild(renderTarjetaPedidoServidor(pedido));
   });
+}
+
+// Arma la tarjeta de un pedido a partir de lo que devuelve el backend
+// (pedidosPorCelular): { pedido, cliente, fecha, formaPago, estado, items, total }
+function renderTarjetaPedidoServidor(pedido) {
+  const div = document.createElement('div');
+  div.className = 'historial-pedido-item';
+
+  const fechaFormateada = pedido.fecha
+    ? new Date(pedido.fecha).toLocaleDateString('es-AR')
+    : '';
+
+  const itemsHTML = pedido.items
+    .map(i => `<div>${i.producto} <strong>x${i.cantidad}</strong></div>`)
+    .join('');
+
+  let badgeHTML = '';
+  let botonAccionHTML = '';
+
+  if (pedido.estado === 'entregado') {
+    badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-entregado">✅ Entregado</span>';
+    botonAccionHTML = `<button type="button" class="historial-pedido-repetir" onclick='repetirPedidoDesdeHistorial(${JSON.stringify(pedido.items)})'>🔁 Repetir este pedido</button>`;
+  } else if (pedido.estado === 'anulado') {
+    badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-anulado">❌ Anulado</span>';
+    const mensajeConsulta = `Hola! Quiero consultar por mi pedido #${pedido.pedido}, no lo encuentro activo en el sistema. ¿Podemos revisarlo?`;
+    botonAccionHTML = `<button type="button" class="historial-pedido-consultar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeConsulta)}', '_blank')">💬 Consultar sobre este pedido</button>`;
+  } else {
+    badgeHTML = ' · <span class="historial-pedido-badge historial-pedido-badge-proceso">🔄 En proceso</span>';
+    const mensajeModificar = `Hola! Quiero agregar o modificar algo de mi pedido #${pedido.pedido}`;
+    botonAccionHTML = `<button type="button" class="historial-pedido-modificar" onclick="window.open('https://wa.me/5491130335334?text=${encodeURIComponent(mensajeModificar)}', '_blank')">✏️ Modificar o agregar algo a este pedido</button>`;
+  }
+
+  div.innerHTML = `
+    <div class="historial-pedido-header">
+      <strong>Pedido #${pedido.pedido}</strong>
+      <span>$${Number(pedido.total).toLocaleString('es-AR')}</span>
+    </div>
+    <div class="historial-pedido-fecha">${fechaFormateada} · ${pedido.formaPago || ''}${badgeHTML}</div>
+    <div class="historial-pedido-items">${itemsHTML}</div>
+    ${botonAccionHTML}
+  `;
+  return div;
 }
 
 function cerrarHistorialPedidos() {
@@ -344,6 +389,8 @@ function cerrarHistorialPedidos() {
 }
 
 // --- Vuelve a agregar al carrito los productos de un pedido puntual del historial ---
+// Acepta items con la forma { producto, cantidad } (como devuelve el backend nuevo)
+// o { nombre, cantidad } (formato viejo del historial local), por las dudas.
 function repetirPedidoDesdeHistorial(items) {
   if (!items || items.length === 0) return;
 
@@ -351,9 +398,10 @@ function repetirPedidoDesdeHistorial(items) {
   const noDisponibles = [];
 
   items.forEach(item => {
-    const producto = productos.find(p => p.nombre === item.nombre);
+    const nombreItem = item.producto || item.nombre;
+    const producto = productos.find(p => p.nombre === nombreItem);
     if (!producto || producto.stock <= 0) {
-      noDisponibles.push(item.nombre);
+      noDisponibles.push(nombreItem);
       return;
     }
     const cantidadFinal = Math.min(item.cantidad, producto.stock);
@@ -825,6 +873,24 @@ function consultarEstadoPedidos(numerosPedido) {
     .then(data => (data && data.resultado === 'ok') ? data.estados : null)
     .catch(err => {
       console.warn('No se pudo consultar el estado de los pedidos', err);
+      return null;
+    });
+}
+
+// ✅ NUEVO: "Mis pedidos" unificado por celular — funciona desde cualquier
+// dispositivo, ya no depende de que el pedido haya quedado guardado en el
+// localStorage de ESTE navegador en particular.
+// Devuelve { ok, pedidos: [...] } o null si falló la consulta (sin conexión, etc.)
+function consultarPedidosPorCelular(celular) {
+  if (!URL_PEDIDOS_WEB || URL_PEDIDOS_WEB.indexOf('PEGAR_AQUI') !== -1 || !celular) {
+    return Promise.resolve(null);
+  }
+  const url = `${URL_PEDIDOS_WEB}?accion=pedidosPorCelular&celular=${encodeURIComponent(celular)}`;
+  return fetch(url)
+    .then(res => res.json())
+    .then(data => (data && data.ok) ? data : null)
+    .catch(err => {
+      console.warn('No se pudo consultar pedidosPorCelular', err);
       return null;
     });
 }
@@ -1532,6 +1598,9 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
   document.getElementById('btn-editar-lista')?.addEventListener('click', volverAEditarListaCatedra);
   document.getElementById('btn-ver-favoritos')?.addEventListener('click', abrirFavoritosModal);
   document.getElementById('btn-mis-pedidos')?.addEventListener('click', abrirHistorialPedidos);
+  document.getElementById('historial-celular-input')?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') buscarMisPedidosPorCelular();
+  });
   document.getElementById('btn-repetir-pedido')?.addEventListener('click', repetirUltimoPedido);
 
   const buscador = document.getElementById('buscador');
@@ -1571,6 +1640,7 @@ window.cambiarFotoGaleria = cambiarFotoGaleria;
 window.irAFotoGaleria = irAFotoGaleria;
 window.toggleFavorito = toggleFavorito;
 window.repetirPedidoDesdeHistorial = repetirPedidoDesdeHistorial;
+window.buscarMisPedidosPorCelular = buscarMisPedidosPorCelular;
 
 setInterval(guardarCarritoEnLocalStorage, 3000);
 

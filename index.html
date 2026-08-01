@@ -1112,6 +1112,15 @@
         <button onclick="cerrarHistorialPedidos()" class="modal-cerrar">✕</button>
       </div>
       <div class="modal-body">
+        <div id="historial-celular-bloque" style="margin-bottom:16px;">
+          <label for="historial-celular-input" style="font-size:0.85rem; color:var(--texto-secundario); display:block; margin-bottom:6px;">
+            Ingresá tu celular para ver tus pedidos (funciona desde cualquier dispositivo):
+          </label>
+          <div style="display:flex; gap:8px;">
+            <input type="tel" id="historial-celular-input" placeholder="+549 11 1234-5678" style="flex:1;">
+            <button type="button" id="historial-celular-buscar" onclick="buscarMisPedidosPorCelular()" style="white-space:nowrap; background:var(--rosa-acento); color:#fff; border:none; border-radius:8px; padding:0 16px; font-weight:600; cursor:pointer;">Buscar</button>
+          </div>
+        </div>
         <div id="historial-pedidos-lista"></div>
         <div id="historial-pedidos-vacio" style="display:none; text-align:center; color:var(--texto-secundario); padding:24px 10px; font-size:0.9rem; line-height:1.5;">
           Todavía no hiciste ningún pedido en la web.
@@ -1180,7 +1189,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=29"></script>
+<script src="main.js?v=30"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
