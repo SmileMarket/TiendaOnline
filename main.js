@@ -1080,6 +1080,15 @@ function renderizarTopVentas() {
 
 let formaPagoSeleccionada = null;
 
+// ✅ NUEVO: al cambiar de paso dentro del checkout, si el cuerpo del modal
+// había quedado scrolleado hacia abajo, lo llevamos arriba de todo. Sin esto,
+// pasar de "Elegí tu regalo" a "Forma de pago" podía verse cortado/raro si
+// el usuario estaba con el scroll bajado, dando la sensación de que no pasó nada.
+function resetScrollModal() {
+  const body = document.querySelector('.modal-body');
+  if (body) body.scrollTop = 0;
+}
+
 function mostrarPasoPago() {
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-regalo').style.display = 'none';
@@ -1088,6 +1097,7 @@ function mostrarPasoPago() {
   document.getElementById('footer-paso-regalo').style.display = 'none';
   document.getElementById('footer-paso-pago').style.display = 'flex';
   document.getElementById('titulo-modal-resumen').textContent = 'Forma de pago';
+  resetScrollModal();
 }
 
 function mostrarPasoResumen() {
@@ -1102,6 +1112,7 @@ function mostrarPasoResumen() {
   document.getElementById('titulo-modal-resumen').textContent = 'Resumen de tu pedido';
   const totalWrapper = document.querySelector('.checkout-total');
   if (totalWrapper) totalWrapper.style.display = 'flex';
+  resetScrollModal();
 }
 
 // ✅ NUEVO: pantalla intermedia "Elegí tu regalo", solo se muestra cuando el
@@ -1123,6 +1134,7 @@ function mostrarPasoRegalo() {
   if (totalWrapper) totalWrapper.style.display = 'none';
 
   renderOpcionesRegalo();
+  resetScrollModal();
 }
 
 function renderOpcionesRegalo() {
@@ -1163,6 +1175,7 @@ function elegirRegalo(nombreProducto) {
 
   carrito.push({
     nombre: '🎁 ' + producto.nombre + ' (regalo)',
+    nombreOriginal: producto.nombre, // ✅ para mandar a la planilla sin el emoji ni "(regalo)"
     precio: 0,
     cantidad: 1,
     esRegalo: true
@@ -1172,6 +1185,7 @@ function elegirRegalo(nombreProducto) {
   actualizarCarrito();
   calcularResumen();
 
+  mostrarPopup('🎁 ¡Agregamos tu regalo!');
   mostrarPasoPago();
 }
 
@@ -1180,6 +1194,7 @@ function volverAResumenDesdeRegalo() {
 }
 
 function mostrarPasoConfirmacion(numeroPedido, formaPago) {
+  resetScrollModal();
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
   document.getElementById('paso-regalo').style.display = 'none';
@@ -1216,6 +1231,7 @@ function mostrarPasoConfirmacion(numeroPedido, formaPago) {
 // Pantalla que se muestra si el pedido NO se pudo registrar automáticamente en la planilla.
 // Ofrece un botón de respaldo para mandarlo igual por WhatsApp, así nunca se pierde.
 function mostrarPasoConfirmacionError(mensajeCompleto, motivo) {
+  resetScrollModal();
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
   document.getElementById('paso-regalo').style.display = 'none';
@@ -1658,12 +1674,22 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     const textoOriginalBoton = btnConfirmar ? btnConfirmar.textContent : '';
     if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Confirmando...'; }
 
+    // ✅ NUEVO: lo que se ve en pantalla (con el emoji "🎁" y "(regalo)") queda
+    // lindo en la web, pero a la planilla "Pedidos Web" le mandamos el nombre
+    // del producto tal cual está en tu base (sin el agregado), así podés
+    // cruzarlo con stock/categorías sin problema. El precio $0 ya alcanza
+    // para identificar que fue un regalo.
+    const carritoParaPlanilla = carrito.map(item => ({
+      ...item,
+      nombre: item.esRegalo ? (item.nombreOriginal || item.nombre) : item.nombre
+    }));
+
     // ✅ Guardamos el pedido en la planilla "Pedidos Web" Y ESPERAMOS la confirmación real
     const resultado = await guardarPedidoEnPlanilla({
       numeroPedido: window.numeroPedidoActual,
       cliente: nombreCliente,
       celular: celularCliente,
-      carrito: carrito,
+      carrito: carritoParaPlanilla,
       cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
       descuento: descuentoGlobal,
       total: total,
