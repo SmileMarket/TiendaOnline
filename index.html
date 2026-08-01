@@ -970,6 +970,13 @@
         </div>
       </div>
 
+      <div id="paso-regalo" style="display:none;">
+        <p style="margin:0 0 14px; font-size:0.95rem; color:var(--texto); text-align:center;">
+          🎉 ¡Tu compra superó el monto para llevarte un regalo! Elegí uno:
+        </p>
+        <div id="regalo-opciones" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+
       <div id="paso-pago" style="display:none;">
         <label style="font-weight:600; font-size:0.9rem; display:block; margin-bottom:10px; color:var(--texto);">
           ¿Cómo vas a abonar?
@@ -1055,6 +1062,10 @@
       <div id="footer-paso-resumen">
         <button id="seguir-comprando" class="boton boton-gris">Seguir comprando</button>
         <button id="btn-continuar-pago" class="boton boton-secundario">Continuar →</button>
+      </div>
+
+      <div id="footer-paso-regalo" style="display:none;">
+        <button id="btn-volver-resumen-desde-regalo" class="boton boton-gris">← Volver</button>
       </div>
 
       <div id="footer-paso-pago" style="display:none;">
@@ -1189,7 +1200,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=30"></script>
+<script src="main.js?v=32"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

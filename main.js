@@ -1,5 +1,10 @@
 const URL_PEDIDOS_WEB = "https://script.google.com/macros/s/AKfycbwZufXHX4nwp0y0T1yhGjL3NKoDZtfCCBZ2bU8vBz9I2DC84WPaUEWtTHjLo3nX_815/exec";
 
+// ✅ NUEVO: monto mínimo de compra (en pesos, sobre el total con descuento ya
+// aplicado) a partir del cual se le ofrece un regalo gratis al cliente.
+// Cambiá este número cuando quieras ajustar el umbral.
+const UMBRAL_REGALO = 100000;
+
 const carrito = [];
 let productos = [];
 let cupones = [];
@@ -73,7 +78,12 @@ async function cargarProductosDesdeGoogleSheet() {
       stock: parseInt(producto.stock) || 0,
       nuevo: producto.nuevo === 'TRUE',
       masvendido: producto.masvendido === 'TRUE',
-      recomendado: producto.recomendado === 'TRUE'
+      recomendado: producto.recomendado === 'TRUE',
+      // ✅ NUEVO: marcá "TRUE" en la columna "esregalo" de la planilla para que
+      // ese producto aparezca como opción de regalo en compras que superen el
+      // monto mínimo (ver UMBRAL_REGALO más abajo). Lo ideal es tener 2-3
+      // marcados a la vez, para no saturar la pantalla de elección.
+      esRegalo: producto.esregalo === 'TRUE'
     };
   });
 }
@@ -121,7 +131,8 @@ function esFavorito(nombre) {
 function favoritoBtnHTML(nombre) {
   const activo = esFavorito(nombre);
   const nombreEscapado = (nombre || '').replace(/'/g, "\\'");
-  return `<button type="button" class="favorito-btn${activo ? ' favorito-activo' : ''}" onclick="event.stopPropagation(); toggleFavorito(this, '${nombreEscapado}')" aria-label="Guardar en favoritos">${activo ? '♥' : '♡'}</button>`;
+  const nombreAtributo = (nombre || '').replace(/"/g, '&quot;');
+  return `<button type="button" class="favorito-btn${activo ? ' favorito-activo' : ''}" data-nombre="${nombreAtributo}" onclick="event.stopPropagation(); toggleFavorito(this, '${nombreEscapado}')" aria-label="Guardar en favoritos">${activo ? '♥' : '♡'}</button>`;
 }
 
 // Genera el botón de "compartir por WhatsApp" para insertar dentro de la tarjeta de producto
@@ -144,9 +155,23 @@ function toggleFavorito(boton, nombre) {
   favoritos = yaEsFavorito ? favoritos.filter(n => n !== nombre) : [...favoritos, nombre];
   guardarFavoritos(favoritos);
 
-  if (boton) {
-    boton.textContent = yaEsFavorito ? '♡' : '♥';
-    boton.classList.toggle('favorito-activo', !yaEsFavorito);
+  // ✅ CORREGIDO: el mismo producto puede tener un botón de corazón en varios
+  // lugares a la vez (grilla principal, carrusel de Top 10, modal de favoritos).
+  // Antes solo actualizábamos el botón que se clickeó puntualmente, así que si
+  // desmarcabas un favorito DESDE el modal, el corazón de la grilla principal
+  // quedaba "colgado" marcado. Ahora actualizamos TODAS las instancias de ese
+  // mismo producto en la página, usando el atributo data-nombre para encontrarlas.
+  try {
+    document.querySelectorAll(`.favorito-btn[data-nombre="${CSS.escape(nombre)}"]`).forEach(btn => {
+      btn.textContent = yaEsFavorito ? '♡' : '♥';
+      btn.classList.toggle('favorito-activo', !yaEsFavorito);
+    });
+  } catch (e) {
+    // Fallback por si CSS.escape no está disponible: al menos actualizamos el botón clickeado
+    if (boton) {
+      boton.textContent = yaEsFavorito ? '♡' : '♥';
+      boton.classList.toggle('favorito-activo', !yaEsFavorito);
+    }
   }
 
   // Si el modal de favoritos está abierto, lo refrescamos para que se note el cambio al toque
@@ -573,6 +598,24 @@ function eliminarDelCarrito(index) {
 }
 
 function actualizarCarrito() {
+  // ✅ NUEVO: si hay un regalo elegido pero el resto del carrito (sin contar
+  // el regalo, que siempre vale $0) ya no llega al monto mínimo, se lo
+  // sacamos automáticamente y avisamos con un popup. Esto corre acá porque
+  // actualizarCarrito() se llama SIEMPRE que el carrito cambia (agregar,
+  // sacar, cambiar cantidad), así que es un único lugar centralizado.
+  const totalSinRegalo = carrito
+    .filter(item => !item.esRegalo)
+    .reduce((acc, item) => acc + (Number(item.precio) * Number(item.cantidad)), 0);
+
+  const teniaRegalo = carrito.some(item => item.esRegalo);
+  if (teniaRegalo && totalSinRegalo < UMBRAL_REGALO) {
+    for (let i = carrito.length - 1; i >= 0; i--) {
+      if (carrito[i].esRegalo) carrito.splice(i, 1);
+    }
+    guardarCarritoEnLocalStorage();
+    mostrarPopup('Se quitó tu regalo 🎁 porque el pedido bajó del monto mínimo');
+  }
+
   const carritoItems = document.getElementById('carrito-items');
   carritoItems.innerHTML = '';
   let total = 0;
@@ -581,16 +624,21 @@ function actualizarCarrito() {
   carrito.forEach((item, index) => {
     const itemDiv = document.createElement('div');
     itemDiv.className = 'carrito-item';
-    itemDiv.innerHTML = `
-  <div style="flex:1; min-width:140px;">
-    <div style="font-size:0.9rem;"><strong>${item.nombre}</strong></div>
-    <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+
+    const controlesCantidad = item.esRegalo
+      ? `<span style="font-size:0.8rem; color:var(--menta-oscuro); font-weight:600;">🎁 Regalo</span>`
+      : `<div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
       <button type="button" onclick="cambiarCantidadCarrito(${index}, -1)" style="width:32px; height:32px; border:none; background:#ddd; border-radius:6px; font-size:1.2rem; cursor:pointer;">−</button>
       <input type="number" value="${item.cantidad}" min="1" style="width:48px; height:32px; text-align:center; font-weight:bold; border:1px solid #ccc; border-radius:6px;" onchange="cambiarCantidadCarritoInput(${index}, this.value)" />
       <button type="button" onclick="cambiarCantidadCarrito(${index}, 1)" style="width:32px; height:32px; border:none; background:#ddd; border-radius:6px; font-size:1.2rem; cursor:pointer;">+</button>
-    </div>
+    </div>`;
+
+    itemDiv.innerHTML = `
+  <div style="flex:1; min-width:140px;">
+    <div style="font-size:0.9rem;"><strong>${item.nombre}</strong></div>
+    ${controlesCantidad}
   </div>
-  <div style="min-width:70px; text-align:right; font-size:0.9rem;">$${(item.precio * item.cantidad).toLocaleString()}</div>
+  <div style="min-width:70px; text-align:right; font-size:0.9rem;">${item.esRegalo ? 'Gratis' : '$' + (item.precio * item.cantidad).toLocaleString()}</div>
   <button type="button" onclick="eliminarDelCarrito(${index})" style="margin-left:6px; background:none; border:none; color:#d9534f; font-size:1.4rem; cursor:pointer;">&times;</button>
 `;
     carritoItems.appendChild(itemDiv);
@@ -1034,17 +1082,21 @@ let formaPagoSeleccionada = null;
 
 function mostrarPasoPago() {
   document.getElementById('paso-resumen').style.display = 'none';
+  document.getElementById('paso-regalo').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'block';
   document.getElementById('footer-paso-resumen').style.display = 'none';
+  document.getElementById('footer-paso-regalo').style.display = 'none';
   document.getElementById('footer-paso-pago').style.display = 'flex';
   document.getElementById('titulo-modal-resumen').textContent = 'Forma de pago';
 }
 
 function mostrarPasoResumen() {
   document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-regalo').style.display = 'none';
   document.getElementById('paso-confirmacion').style.display = 'none';
   document.getElementById('paso-resumen').style.display = 'block';
   document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-regalo').style.display = 'none';
   document.getElementById('footer-paso-confirmacion').style.display = 'none';
   document.getElementById('footer-paso-resumen').style.display = 'flex';
   document.getElementById('titulo-modal-resumen').textContent = 'Resumen de tu pedido';
@@ -1052,15 +1104,92 @@ function mostrarPasoResumen() {
   if (totalWrapper) totalWrapper.style.display = 'flex';
 }
 
+// ✅ NUEVO: pantalla intermedia "Elegí tu regalo", solo se muestra cuando el
+// total del carrito supera UMBRAL_REGALO y todavía no eligió ninguno.
+function mostrarPasoRegalo() {
+  document.getElementById('paso-resumen').style.display = 'none';
+  document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-confirmacion').style.display = 'none';
+  document.getElementById('paso-regalo').style.display = 'block';
+
+  document.getElementById('footer-paso-resumen').style.display = 'none';
+  document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-confirmacion').style.display = 'none';
+  document.getElementById('footer-paso-regalo').style.display = 'flex';
+
+  document.getElementById('titulo-modal-resumen').textContent = '🎁 Elegí tu regalo';
+
+  const totalWrapper = document.querySelector('.checkout-total');
+  if (totalWrapper) totalWrapper.style.display = 'none';
+
+  renderOpcionesRegalo();
+}
+
+function renderOpcionesRegalo() {
+  const contenedor = document.getElementById('regalo-opciones');
+  if (!contenedor) return;
+  contenedor.innerHTML = '';
+
+  const opciones = productos.filter(p => p.esRegalo && p.stock > 0);
+
+  if (opciones.length === 0) {
+    contenedor.innerHTML = '<p style="text-align:center; color:var(--texto-secundario); font-size:0.9rem;">No hay regalos disponibles en este momento, pero tu pedido sigue siendo válido igual.</p>';
+    return;
+  }
+
+  opciones.forEach(producto => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex; align-items:center; gap:12px; border:1px solid var(--borde); border-radius:12px; padding:10px 12px;';
+    div.innerHTML = `
+      <img src="${producto.imagen}" alt="${producto.nombre}" style="width:56px; height:56px; object-fit:cover; border-radius:8px;">
+      <div style="flex:1;">
+        <div style="font-size:0.9rem; font-weight:600;">${producto.nombre}</div>
+        <div style="font-size:0.78rem; color:var(--texto-secundario);">Valor: $${producto.precio.toLocaleString()}</div>
+      </div>
+      <button type="button" class="boton boton-secundario" style="width:auto; padding:8px 16px;" onclick="elegirRegalo('${producto.nombre.replace(/'/g, "\\'")}')">Elegir</button>
+    `;
+    contenedor.appendChild(div);
+  });
+}
+
+function elegirRegalo(nombreProducto) {
+  const producto = productos.find(p => p.nombre === nombreProducto);
+  if (!producto) return;
+
+  // Sacamos cualquier regalo elegido antes (por si vuelve a cambiar de opción)
+  for (let i = carrito.length - 1; i >= 0; i--) {
+    if (carrito[i].esRegalo) carrito.splice(i, 1);
+  }
+
+  carrito.push({
+    nombre: '🎁 ' + producto.nombre + ' (regalo)',
+    precio: 0,
+    cantidad: 1,
+    esRegalo: true
+  });
+
+  guardarCarritoEnLocalStorage();
+  actualizarCarrito();
+  calcularResumen();
+
+  mostrarPasoPago();
+}
+
+function volverAResumenDesdeRegalo() {
+  mostrarPasoResumen();
+}
+
 function mostrarPasoConfirmacion(numeroPedido, formaPago) {
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-regalo').style.display = 'none';
   document.getElementById('paso-confirmacion').style.display = 'block';
   document.getElementById('confirmacion-exito').style.display = 'block';
   document.getElementById('confirmacion-error').style.display = 'none';
 
   document.getElementById('footer-paso-resumen').style.display = 'none';
   document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-regalo').style.display = 'none';
   document.getElementById('footer-paso-confirmacion').style.display = 'flex';
 
   document.getElementById('titulo-modal-resumen').textContent = '¡Pedido confirmado!';
@@ -1089,12 +1218,14 @@ function mostrarPasoConfirmacion(numeroPedido, formaPago) {
 function mostrarPasoConfirmacionError(mensajeCompleto, motivo) {
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
+  document.getElementById('paso-regalo').style.display = 'none';
   document.getElementById('paso-confirmacion').style.display = 'block';
   document.getElementById('confirmacion-exito').style.display = 'none';
   document.getElementById('confirmacion-error').style.display = 'block';
 
   document.getElementById('footer-paso-resumen').style.display = 'none';
   document.getElementById('footer-paso-pago').style.display = 'none';
+  document.getElementById('footer-paso-regalo').style.display = 'none';
   document.getElementById('footer-paso-confirmacion').style.display = 'flex';
 
   const esSinConexion = motivo === 'sin-conexion' || motivo === 'timeout';
@@ -1384,6 +1515,11 @@ function calcularResumen() {
   let mensaje = '';
 
   carrito.forEach(item => {
+    if (item.esRegalo) {
+      resumen.innerHTML += `<div style="margin-bottom: 0.4rem; color:var(--menta-oscuro);">${item.nombre} - <strong>Gratis</strong> <a href="#" onclick="event.preventDefault(); mostrarPasoRegalo();" style="font-size:0.78rem; color:var(--rosa-acento);">(cambiar)</a></div>`;
+      mensaje += `• ${item.nombre} - Gratis (regalo)\n`;
+      return; // no suma nada a totalGlobal porque precio es 0
+    }
     const linea = `${item.nombre} x ${item.cantidad} - $${(item.precio * item.cantidad).toLocaleString()}`;
     resumen.innerHTML += `<div style="margin-bottom: 0.4rem;">${linea}</div>`;
     mensaje += `• ${linea}\n`;
@@ -1585,9 +1721,23 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
       return;
     }
 
+    // ✅ NUEVO: si el total (sin contar el regalo, que es $0) supera el
+    // umbral y todavía no eligió ningún regalo, mostramos el paso intermedio
+    // en vez de ir directo a "Forma de pago".
+    const yaTieneRegalo = carrito.some(item => item.esRegalo);
+    const totalSinRegalo = carrito
+      .filter(item => !item.esRegalo)
+      .reduce((acc, item) => acc + (Number(item.precio) * Number(item.cantidad)), 0);
+
+    if (!yaTieneRegalo && totalSinRegalo >= UMBRAL_REGALO) {
+      mostrarPasoRegalo();
+      return;
+    }
+
     mostrarPasoPago();
   });
   document.getElementById('btn-volver-resumen')?.addEventListener('click', mostrarPasoResumen);
+  document.getElementById('btn-volver-resumen-desde-regalo')?.addEventListener('click', volverAResumenDesdeRegalo);
   document.getElementById('btn-cerrar-confirmacion')?.addEventListener('click', cerrarResumenModal);
   document.getElementById('btn-pago-transferencia')?.addEventListener('click', () => seleccionarFormaPago('transferencia'));
   document.getElementById('btn-pago-efectivo')?.addEventListener('click', () => seleccionarFormaPago('efectivo'));
