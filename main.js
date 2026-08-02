@@ -430,45 +430,76 @@ function vaciarCarrito() {
   guardarCarritoEnLocalStorage();
   actualizarCarrito();
 
-  // Cerramos el panel del carrito si quedó abierto, y mostramos el botón de "repetir pedido"
+  // Cerramos el panel del carrito si quedó abierto
   document.getElementById('carrito')?.classList.remove('mostrar');
-
-  const btnRepetirPedido = document.getElementById('btn-repetir-pedido');
-  if (btnRepetirPedido) btnRepetirPedido.style.display = 'inline-block';
 }
 
-// ✅ ACTUALIZADO: en vez de repetir solo lo último que se guardó en el
-// localStorage de ESTE navegador (que podía no ser el pedido real más
-// reciente, por ejemplo si compró desde otro dispositivo o si ese pedido
-// se anuló después), ahora consulta por celular el pedido más reciente
-// real en el backend (mismo endpoint que usa "Mis pedidos"). Si no hay
-// conexión o no hay celular guardado todavía, cae al snapshot local como
-// respaldo, para no dejar el botón roto en ese caso.
-async function repetirUltimoPedido() {
-  const celular = obtenerCelularCliente();
+// ✅ ACTUALIZADO: ahora sigue el mismo patrón que "Mis pedidos" — se abre un
+// modal chico pidiendo el celular (autocompletado si ya lo tenés guardado en
+// este dispositivo, o vacío para que lo cargues si es la primera vez o
+// cambiaste de dispositivo), y recién con eso se busca el pedido más
+// reciente real en el backend. Así el cliente siempre sabe con qué celular
+// está consultando, en vez de que quede "adivinado" en segundo plano.
+function abrirRepetirPedidoModal() {
+  const modal = document.getElementById('repetir-pedido-modal');
+  const inputCelular = document.getElementById('repetir-celular-input');
+  const vacio = document.getElementById('repetir-pedido-vacio');
+  if (!modal || !inputCelular) return;
 
-  if (celular && celular !== '+549') {
-    const respuesta = await consultarPedidosPorCelular(celular);
+  vacio.style.display = 'none';
+  vacio.textContent = '';
+  modal.style.display = 'flex';
 
-    if (respuesta) {
-      const pedidos = respuesta.pedidos || [];
-      if (pedidos.length === 0) {
-        mostrarPopup('No encontramos pedidos anteriores para repetir 🤔');
-        return;
-      }
-      // Ya viene ordenado por fecha (el más reciente primero)
-      aplicarRepeticionDePedido(pedidos[0].items);
-      return;
-    }
-    // respuesta === null -> falló la consulta (sin conexión); seguimos al fallback local de abajo
+  const celularGuardado = obtenerCelularCliente();
+  if (celularGuardado && celularGuardado !== '+549') {
+    inputCelular.value = celularGuardado;
+    bloquearPrefijoCelular('repetir-celular-input');
+    // Ya lo conocemos en este dispositivo: buscamos y repetimos directo, sin pedirle nada más.
+    buscarYRepetirUltimoPedido();
+  } else {
+    inputCelular.value = '+549';
+    bloquearPrefijoCelular('repetir-celular-input');
   }
+}
 
-  const ultimoPedidoLocal = obtenerUltimoPedido();
-  if (!ultimoPedidoLocal || ultimoPedidoLocal.length === 0) {
-    mostrarPopup('No encontramos un pedido anterior para repetir 🤔');
+function cerrarRepetirPedidoModal() {
+  document.getElementById('repetir-pedido-modal').style.display = 'none';
+}
+
+async function buscarYRepetirUltimoPedido() {
+  const inputCelular = document.getElementById('repetir-celular-input');
+  const vacio = document.getElementById('repetir-pedido-vacio');
+  if (!inputCelular || !vacio) return;
+
+  const celular = inputCelular.value.trim();
+  if (!celular || celular === '+549') {
+    alert('Ingresá tu celular para poder buscar tu último pedido.');
     return;
   }
-  aplicarRepeticionDePedido(ultimoPedidoLocal);
+
+  // Lo guardamos en este dispositivo para la próxima vez (mismo mecanismo
+  // que ya usa el checkout y "Mis pedidos", todo consistente).
+  guardarCelularCliente(celular);
+
+  vacio.style.display = 'block';
+  vacio.textContent = 'Buscando tu último pedido...';
+
+  const respuesta = await consultarPedidosPorCelular(celular);
+
+  if (!respuesta) {
+    vacio.textContent = 'No pudimos consultar tus pedidos ahora (revisá tu conexión) y volvé a tocar "Repetir".';
+    return;
+  }
+
+  const pedidos = respuesta.pedidos || [];
+  if (pedidos.length === 0) {
+    vacio.textContent = 'No encontramos pedidos anteriores para ese celular.';
+    return;
+  }
+
+  // Ya viene ordenado por fecha (el más reciente primero)
+  aplicarRepeticionDePedido(pedidos[0].items);
+  cerrarRepetirPedidoModal();
 }
 
 // Toma un array de items ({producto, cantidad} o {nombre, cantidad}) y los
@@ -1347,17 +1378,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   inicializarSwipeGaleria();
 
-  // Mostrar el botón de "repetir último pedido" si hay celular guardado
-  // (para poder consultar el pedido real más reciente) o, como respaldo,
-  // si hay un snapshot local viejo guardado en este dispositivo.
-  const btnRepetirPedido = document.getElementById('btn-repetir-pedido');
-  if (btnRepetirPedido) {
-    const celularGuardado = obtenerCelularCliente();
-    const hayCelular = celularGuardado && celularGuardado !== '+549';
-    const ultimoPedidoGuardado = obtenerUltimoPedido();
-    const haySnapshotLocal = ultimoPedidoGuardado && ultimoPedidoGuardado.length > 0;
-    btnRepetirPedido.style.display = (hayCelular || haySnapshotLocal) ? 'inline-block' : 'none';
-  }
+  // ✅ "Repetir mi último pedido" ahora queda siempre visible (igual que
+  // "Mis pedidos"): el modal que abre es el que resuelve, con el celular,
+  // si hay o no un pedido para repetir.
 
   // Medir la altura real del header (cambia según el saludo, el logo, etc.)
   actualizarAlturaHeader();
@@ -1799,7 +1822,10 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
   document.getElementById('historial-celular-input')?.addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') buscarMisPedidosPorCelular();
   });
-  document.getElementById('btn-repetir-pedido')?.addEventListener('click', repetirUltimoPedido);
+  document.getElementById('btn-repetir-pedido')?.addEventListener('click', abrirRepetirPedidoModal);
+  document.getElementById('repetir-celular-input')?.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter') buscarYRepetirUltimoPedido();
+  });
 
   const buscador = document.getElementById('buscador');
   if (buscador) {

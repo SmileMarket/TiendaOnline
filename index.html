@@ -904,7 +904,7 @@
     </div>
     <div class="acciones-header">
       <button id="btn-cargar-lista" class="boton-header-accion">📋 Buscador Macro</button>
-      <button id="btn-repetir-pedido" class="boton-header-accion boton-header-menta" style="display:none;">🔁 Repetir mi último pedido</button>
+      <button id="btn-repetir-pedido" class="boton-header-accion boton-header-menta">🔁 Repetir mi último pedido</button>
       <button id="btn-ver-favoritos" class="boton-header-accion boton-header-favoritos">♡ Favoritos</button>
       <button id="btn-mis-pedidos" class="boton-header-accion boton-header-menta">🧾 Mis pedidos</button>
     </div>
@@ -1140,8 +1140,28 @@
     </div>
   </div>
 
+  <div id="repetir-pedido-modal" class="modal-overlay">
+    <div class="modal-checkout" style="max-width:420px;">
+      <div class="modal-header">
+        <h2>🔁 Repetir mi último pedido</h2>
+        <button onclick="cerrarRepetirPedidoModal()" class="modal-cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <label for="repetir-celular-input" style="font-size:0.85rem; color:var(--texto-secundario); display:block; margin-bottom:6px;">
+          Ingresá tu celular para buscar tu último pedido (funciona desde cualquier dispositivo):
+        </label>
+        <div style="display:flex; gap:8px;">
+          <input type="tel" id="repetir-celular-input" placeholder="+549 11 1234-5678" style="flex:1;">
+          <button type="button" id="repetir-celular-buscar" onclick="buscarYRepetirUltimoPedido()" style="white-space:nowrap; background:var(--rosa-acento); color:#fff; border:none; border-radius:8px; padding:0 16px; font-weight:600; cursor:pointer;">Repetir</button>
+        </div>
+        <div id="repetir-pedido-vacio" style="display:none; text-align:center; color:var(--texto-secundario); padding:20px 10px; font-size:0.88rem; line-height:1.5;"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="lista-catedra-modal" class="modal-overlay">
     <div class="modal-checkout" style="max-width:480px;">
+
 
       <div class="modal-header">
         <h2>Buscador Macro</h2>
@@ -1200,7 +1220,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=36"></script>
+<script src="main.js?v=37"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
