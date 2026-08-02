@@ -1166,27 +1166,38 @@ function renderOpcionesRegalo() {
 
 function elegirRegalo(nombreProducto) {
   const producto = productos.find(p => p.nombre === nombreProducto);
-  if (!producto) return;
-
-  // Sacamos cualquier regalo elegido antes (por si vuelve a cambiar de opción)
-  for (let i = carrito.length - 1; i >= 0; i--) {
-    if (carrito[i].esRegalo) carrito.splice(i, 1);
+  if (!producto) {
+    console.error('elegirRegalo: no se encontró el producto', nombreProducto);
+    return;
   }
 
-  carrito.push({
-    nombre: '🎁 ' + producto.nombre + ' (regalo)',
-    nombreOriginal: producto.nombre, // ✅ para mandar a la planilla sin el emoji ni "(regalo)"
-    precio: 0,
-    cantidad: 1,
-    esRegalo: true
-  });
+  // ✅ BLINDADO: pase lo que pase adentro (guardar, actualizar, calcular
+  // resumen), SIEMPRE terminamos yendo a "Forma de pago". Si algo tira un
+  // error, queda logueado en la consola para poder diagnosticarlo, pero
+  // ya no se queda "trabado" en la pantalla de elegir regalo.
+  try {
+    // Sacamos cualquier regalo elegido antes (por si vuelve a cambiar de opción)
+    for (let i = carrito.length - 1; i >= 0; i--) {
+      if (carrito[i].esRegalo) carrito.splice(i, 1);
+    }
 
-  guardarCarritoEnLocalStorage();
-  actualizarCarrito();
-  calcularResumen();
+    carrito.push({
+      nombre: '🎁 ' + producto.nombre + ' (regalo)',
+      nombreOriginal: producto.nombre, // ✅ para mandar a la planilla sin el emoji ni "(regalo)"
+      precio: 0,
+      cantidad: 1,
+      esRegalo: true
+    });
 
-  mostrarPopup('🎁 ¡Agregamos tu regalo!');
-  mostrarPasoPago();
+    guardarCarritoEnLocalStorage();
+    actualizarCarrito();
+    calcularResumen();
+    mostrarPopup('🎁 ¡Agregamos tu regalo!');
+  } catch (err) {
+    console.error('elegirRegalo: se produjo un error, pero igual avanzamos a Forma de pago', err);
+  } finally {
+    mostrarPasoPago();
+  }
 }
 
 function volverAResumenDesdeRegalo() {
