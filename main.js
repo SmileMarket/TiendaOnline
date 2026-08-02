@@ -508,10 +508,21 @@ async function buscarYRepetirUltimoPedido() {
 function aplicarRepeticionDePedido(items) {
   if (!items || items.length === 0) return;
 
+  // ✅ NUEVO: los ítems marcados "gratis" (el regalo de una compra anterior
+  // que superó el monto mínimo) NO se repiten — fueron un incentivo puntual
+  // de esa compra, no algo para volver a sumar cada vez que se repite el pedido.
+  const itemsComprables = items.filter(item => !item.gratis);
+  const huboRegaloExcluido = itemsComprables.length < items.length;
+
+  if (itemsComprables.length === 0) {
+    mostrarPopup('Ese pedido era solo el regalo, no hay nada más para repetir 🎁');
+    return;
+  }
+
   let agregados = 0;
   const noDisponibles = [];
 
-  items.forEach(item => {
+  itemsComprables.forEach(item => {
     const nombreItem = item.producto || item.nombre;
     const producto = productos.find(p => p.nombre === nombreItem);
     if (!producto || producto.stock <= 0) {
@@ -539,7 +550,9 @@ function aplicarRepeticionDePedido(items) {
   document.getElementById('carrito')?.classList.add('mostrar');
 
   if (agregados > 0 && noDisponibles.length === 0) {
-    mostrarPopup('¡Agregamos tu último pedido al carrito! 🔁');
+    mostrarPopup(huboRegaloExcluido
+      ? '¡Agregamos tu último pedido al carrito (menos el regalo)! 🔁'
+      : '¡Agregamos tu último pedido al carrito! 🔁');
   } else if (agregados > 0 && noDisponibles.length > 0) {
     mostrarPopup('Agregamos casi todo tu último pedido (algo ya no está disponible) 🔁');
     console.warn('No disponibles al repetir el pedido:', noDisponibles.join(', '));
