@@ -416,43 +416,12 @@ function cerrarHistorialPedidos() {
 // --- Vuelve a agregar al carrito los productos de un pedido puntual del historial ---
 // Acepta items con la forma { producto, cantidad } (como devuelve el backend nuevo)
 // o { nombre, cantidad } (formato viejo del historial local), por las dudas.
+// --- Vuelve a agregar al carrito los productos de un pedido puntual del historial ---
+// Reutiliza aplicarRepeticionDePedido (misma lógica que "Repetir mi último pedido"),
+// solo que acá además cerramos el modal de "Mis pedidos" al terminar.
 function repetirPedidoDesdeHistorial(items) {
-  if (!items || items.length === 0) return;
-
-  let agregados = 0;
-  const noDisponibles = [];
-
-  items.forEach(item => {
-    const nombreItem = item.producto || item.nombre;
-    const producto = productos.find(p => p.nombre === nombreItem);
-    if (!producto || producto.stock <= 0) {
-      noDisponibles.push(nombreItem);
-      return;
-    }
-    const cantidadFinal = Math.min(item.cantidad, producto.stock);
-    const existente = carrito.find(c => c.nombre === producto.nombre);
-    if (existente) {
-      existente.cantidad = cantidadFinal;
-    } else {
-      carrito.push({ nombre: producto.nombre, precio: producto.precio, cantidad: cantidadFinal });
-    }
-    agregados++;
-  });
-
-  guardarCarritoEnLocalStorage();
-  actualizarCarrito();
-  animarCarrito();
-  document.getElementById('carrito')?.classList.add('mostrar');
+  aplicarRepeticionDePedido(items);
   cerrarHistorialPedidos();
-
-  if (agregados > 0 && noDisponibles.length === 0) {
-    mostrarPopup('¡Agregamos ese pedido a tu carrito! 🔁');
-  } else if (agregados > 0 && noDisponibles.length > 0) {
-    mostrarPopup('Agregamos casi todo (algo ya no está disponible) 🔁');
-    console.warn('No disponibles al repetir pedido del historial:', noDisponibles.join(', '));
-  } else {
-    mostrarPopup('Los productos de ese pedido ya no están disponibles 😕');
-  }
 }
 
 // --- Vacía el carrito después de confirmar un pedido ---
@@ -468,24 +437,61 @@ function vaciarCarrito() {
   if (btnRepetirPedido) btnRepetirPedido.style.display = 'inline-block';
 }
 
-function repetirUltimoPedido() {
-  const ultimoPedido = obtenerUltimoPedido();
-  if (!ultimoPedido || ultimoPedido.length === 0) return;
+// ✅ ACTUALIZADO: en vez de repetir solo lo último que se guardó en el
+// localStorage de ESTE navegador (que podía no ser el pedido real más
+// reciente, por ejemplo si compró desde otro dispositivo o si ese pedido
+// se anuló después), ahora consulta por celular el pedido más reciente
+// real en el backend (mismo endpoint que usa "Mis pedidos"). Si no hay
+// conexión o no hay celular guardado todavía, cae al snapshot local como
+// respaldo, para no dejar el botón roto en ese caso.
+async function repetirUltimoPedido() {
+  const celular = obtenerCelularCliente();
+
+  if (celular && celular !== '+549') {
+    const respuesta = await consultarPedidosPorCelular(celular);
+
+    if (respuesta) {
+      const pedidos = respuesta.pedidos || [];
+      if (pedidos.length === 0) {
+        mostrarPopup('No encontramos pedidos anteriores para repetir 🤔');
+        return;
+      }
+      // Ya viene ordenado por fecha (el más reciente primero)
+      aplicarRepeticionDePedido(pedidos[0].items);
+      return;
+    }
+    // respuesta === null -> falló la consulta (sin conexión); seguimos al fallback local de abajo
+  }
+
+  const ultimoPedidoLocal = obtenerUltimoPedido();
+  if (!ultimoPedidoLocal || ultimoPedidoLocal.length === 0) {
+    mostrarPopup('No encontramos un pedido anterior para repetir 🤔');
+    return;
+  }
+  aplicarRepeticionDePedido(ultimoPedidoLocal);
+}
+
+// Toma un array de items ({producto, cantidad} o {nombre, cantidad}) y los
+// carga al carrito, respetando stock disponible. Compartida por "Repetir
+// último pedido" y "Repetir este pedido" (desde Mis pedidos).
+function aplicarRepeticionDePedido(items) {
+  if (!items || items.length === 0) return;
 
   let agregados = 0;
   const noDisponibles = [];
 
-  ultimoPedido.forEach(item => {
-    const producto = productos.find(p => p.nombre === item.nombre);
+  items.forEach(item => {
+    const nombreItem = item.producto || item.nombre;
+    const producto = productos.find(p => p.nombre === nombreItem);
     if (!producto || producto.stock <= 0) {
-      noDisponibles.push(item.nombre);
+      noDisponibles.push(nombreItem);
       return;
     }
 
     const cantidadFinal = Math.min(item.cantidad, producto.stock);
     const existente = carrito.find(c => c.nombre === producto.nombre);
     if (existente) {
-      // Fijamos la cantidad del último pedido (no sumamos), así tocar el botón
+      // Fijamos la cantidad del pedido repetido (no sumamos), así tocar el botón
       // varias veces no va acumulando cantidades de más.
       existente.cantidad = cantidadFinal;
     } else {
@@ -1341,11 +1347,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   inicializarSwipeGaleria();
 
-  // Mostrar el botón de "repetir último pedido" solo si hay uno guardado
+  // Mostrar el botón de "repetir último pedido" si hay celular guardado
+  // (para poder consultar el pedido real más reciente) o, como respaldo,
+  // si hay un snapshot local viejo guardado en este dispositivo.
   const btnRepetirPedido = document.getElementById('btn-repetir-pedido');
   if (btnRepetirPedido) {
+    const celularGuardado = obtenerCelularCliente();
+    const hayCelular = celularGuardado && celularGuardado !== '+549';
     const ultimoPedidoGuardado = obtenerUltimoPedido();
-    btnRepetirPedido.style.display = (ultimoPedidoGuardado && ultimoPedidoGuardado.length > 0) ? 'inline-block' : 'none';
+    const haySnapshotLocal = ultimoPedidoGuardado && ultimoPedidoGuardado.length > 0;
+    btnRepetirPedido.style.display = (hayCelular || haySnapshotLocal) ? 'inline-block' : 'none';
   }
 
   // Medir la altura real del header (cambia según el saludo, el logo, etc.)
