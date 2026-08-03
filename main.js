@@ -56,6 +56,23 @@ function finalizarSplash() {
   setTimeout(() => { splash.style.display = 'none'; barra.style.width = '0%'; }, 350);
 }
 
+// ✅ NUEVO: overlay reusable de "espere por favor" para cualquier acción que
+// tarde un ratito (confirmar pedido, buscar por celular, etc.). A diferencia
+// del splash (que es solo para la carga inicial de la página), este se puede
+// mostrar y ocultar las veces que haga falta durante el uso normal del sitio.
+function mostrarCargando(mensaje) {
+  const overlay = document.getElementById('overlay-cargando');
+  const texto = document.getElementById('overlay-cargando-texto');
+  if (!overlay) return;
+  if (texto) texto.textContent = mensaje || 'Espere por favor...';
+  overlay.style.display = 'flex';
+}
+
+function ocultarCargando() {
+  const overlay = document.getElementById('overlay-cargando');
+  if (overlay) overlay.style.display = 'none';
+}
+
 async function cargarProductosDesdeGoogleSheet() {
   const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=1670706691&single=true&output=csv';
   const response = await fetch(urlCSV);
@@ -338,8 +355,14 @@ async function buscarMisPedidosPorCelular() {
 
   vacio.style.display = 'none';
   contenedor.innerHTML = '<div style="text-align:center; color:var(--texto-secundario); font-size:0.85rem; padding:14px 0;">Buscando tus pedidos...</div>';
+  mostrarCargando('Buscando tus pedidos...');
 
-  const respuesta = await consultarPedidosPorCelular(celular);
+  let respuesta;
+  try {
+    respuesta = await consultarPedidosPorCelular(celular);
+  } finally {
+    ocultarCargando();
+  }
 
   if (!respuesta) {
     // Sin conexión o falló la consulta: no decimos "no tenés pedidos", avisamos
@@ -483,8 +506,14 @@ async function buscarYRepetirUltimoPedido() {
 
   vacio.style.display = 'block';
   vacio.textContent = 'Buscando tu último pedido...';
+  mostrarCargando('Buscando tu último pedido...');
 
-  const respuesta = await consultarPedidosPorCelular(celular);
+  let respuesta;
+  try {
+    respuesta = await consultarPedidosPorCelular(celular);
+  } finally {
+    ocultarCargando();
+  }
 
   if (!respuesta) {
     vacio.textContent = 'No pudimos consultar tus pedidos ahora (revisá tu conexión) y volvé a tocar "Repetir".';
@@ -1731,6 +1760,7 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     const btnConfirmar = document.getElementById('enviar-whatsapp');
     const textoOriginalBoton = btnConfirmar ? btnConfirmar.textContent : '';
     if (btnConfirmar) { btnConfirmar.disabled = true; btnConfirmar.textContent = 'Confirmando...'; }
+    mostrarCargando('Confirmando tu pedido...');
 
     // ✅ NUEVO: lo que se ve en pantalla (con el emoji "🎁" y "(regalo)") queda
     // lindo en la web, pero a la planilla "Pedidos Web" le mandamos el nombre
@@ -1755,6 +1785,7 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     });
 
     if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginalBoton; }
+    ocultarCargando();
 
     if (resultado && resultado.ok) {
       // ✅ Se guardó bien: trackeamos la compra ANTES de vaciar el carrito (para poder listar los items)
