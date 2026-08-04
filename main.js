@@ -665,7 +665,10 @@ function agregarAlCarrito(boton) {
 
   guardarCarritoEnLocalStorage();
   mostrarPopup();
-  animarCarrito();
+  // ✅ NUEVO: animación de "vuelo" de la imagen del producto hasta el carrito.
+  // Ella misma dispara el rebote del ícono (animarCarrito) al llegar.
+  const imgProducto = producto.querySelector('.producto-imagen-container img');
+  animarVueloAlCarrito(imgProducto);
   actualizarCarrito();
   trackEvento('add_to_cart', { currency: 'ARS', value: precio * cantidad, items: [{ item_name: nombre, quantity: cantidad, price: precio }] });
 }
@@ -727,7 +730,38 @@ function actualizarCarrito() {
 
   document.getElementById('total').textContent = 'Total: $' + total.toLocaleString();
   document.getElementById('contador-carrito').textContent = cantidadTotal;
+  actualizarProgresoRegalo(carrito, totalSinRegalo);
   totalGlobal = total;
+}
+
+// ✅ NUEVO: actualiza el cartel + barra de "te faltan $X para tu regalo"
+// dentro del panel del carrito. Se llama desde actualizarCarrito() cada vez
+// que el carrito cambia, así siempre queda al día.
+function actualizarProgresoRegalo(carritoActual, totalSinRegalo) {
+  const bloque = document.getElementById('regalo-progreso-bloque');
+  const texto = document.getElementById('regalo-progreso-texto');
+  const barra = document.getElementById('regalo-progreso-barra');
+  if (!bloque || !texto || !barra) return;
+
+  const carritoVacio = carritoActual.length === 0;
+  const yaTieneRegalo = carritoActual.some(item => item.esRegalo);
+
+  if (carritoVacio || yaTieneRegalo) {
+    bloque.style.display = 'none';
+    return;
+  }
+
+  if (totalSinRegalo >= UMBRAL_REGALO) {
+    bloque.style.display = 'block';
+    texto.textContent = '🎁 ¡Ya podés elegir tu regalo gratis! Lo vas a poder elegir al confirmar tu compra.';
+    barra.style.width = '100%';
+  } else {
+    const faltante = UMBRAL_REGALO - totalSinRegalo;
+    const porcentaje = Math.max(4, Math.min(100, (totalSinRegalo / UMBRAL_REGALO) * 100)); // mínimo 4% para que la barra siempre se note un poco
+    bloque.style.display = 'block';
+    texto.textContent = `Te faltan $${faltante.toLocaleString()} para tu regalo gratis 🎁`;
+    barra.style.width = porcentaje + '%';
+  }
 }
 
 function mostrarPopup(mensaje) {
@@ -852,6 +886,50 @@ function inicializarSwipeGaleria() {
 
 function cerrarModalInfo() {
   document.getElementById('info-modal').style.display = 'none';
+}
+
+// ✅ NUEVO: clona la imagen del producto y la anima "volando" hasta el
+// ícono del carrito, para dar feedback visual satisfactorio al agregar.
+// Al llegar, dispara el "vibrar" del ícono (animarCarrito) para que la
+// llegada se sienta sincronizada con el rebote del carrito.
+function animarVueloAlCarrito(imgEl) {
+  const destino = document.getElementById('carrito-icono');
+  if (!imgEl || !destino) {
+    animarCarrito();
+    return;
+  }
+
+  const origenRect = imgEl.getBoundingClientRect();
+  const destinoRect = destino.getBoundingClientRect();
+
+  const clon = imgEl.cloneNode(true);
+  clon.style.position = 'fixed';
+  clon.style.left = origenRect.left + 'px';
+  clon.style.top = origenRect.top + 'px';
+  clon.style.width = origenRect.width + 'px';
+  clon.style.height = origenRect.height + 'px';
+  clon.style.borderRadius = '10px';
+  clon.style.zIndex = '99998';
+  clon.style.pointerEvents = 'none';
+  clon.style.boxShadow = '0 6px 16px rgba(0,0,0,0.18)';
+  clon.style.transition = 'transform 0.55s cubic-bezier(0.55,0,1,0.45), opacity 0.55s ease';
+  clon.style.willChange = 'transform, opacity';
+  document.body.appendChild(clon);
+
+  // Traslación calculada como diferencia de centros, para poder animar con
+  // transform (más fluido que animar left/top directamente).
+  const dx = (destinoRect.left + destinoRect.width / 2) - (origenRect.left + origenRect.width / 2);
+  const dy = (destinoRect.top + destinoRect.height / 2) - (origenRect.top + origenRect.height / 2);
+
+  requestAnimationFrame(() => {
+    clon.style.transform = `translate(${dx}px, ${dy}px) scale(0.15)`;
+    clon.style.opacity = '0.35';
+  });
+
+  clon.addEventListener('transitionend', () => {
+    clon.remove();
+    animarCarrito();
+  }, { once: true });
 }
 
 function animarCarrito() {
@@ -1534,6 +1612,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     contenedor.appendChild(grupo);
   });
 
+  // ✅ NUEVO: ícono por rubro, para que el menú lateral se escanee más rápido
+  // de un vistazo en el celular. Si el nombre de la categoría no matchea
+  // ninguna palabra clave, usa 🦷 como ícono genérico por defecto.
+  function iconoParaCategoria(categoria) {
+    const c = (categoria || '').toLowerCase();
+    const reglas = [
+      [/color/, '🎨'],
+      [/clamp/, '🗜️'],
+      [/descartable/, '🧤'],
+      [/endodoncia/, '🪡'],
+      [/equipamiento/, '⚙️'],
+      [/instrumental/, '🔧'],
+      [/operatoria/, '🪥'],
+      [/periodoncia/, '🩹'],
+      [/protecci/, '🥽'],
+      [/punta/, '🎯'],
+      [/varios/, '📦'],
+    ];
+    const match = reglas.find(([regex]) => regex.test(c));
+    return match ? match[1] : '🦷';
+  }
+
   // --- Menú de navegación por categorías (desktop + mobile) ---
   const navDesktop = document.getElementById('nav-categorias-desktop');
   const navMobile = document.getElementById('nav-categorias-mobile');
@@ -1541,16 +1641,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (navDesktop && navMobile) {
     categoriasOrdenadas.forEach(categoria => {
       const slug = 'cat-' + slugify(categoria);
+      const icono = iconoParaCategoria(categoria);
 
       const linkDesktop = document.createElement('a');
       linkDesktop.href = '#' + slug;
-      linkDesktop.textContent = categoria;
+      linkDesktop.textContent = icono + ' ' + categoria;
       linkDesktop.dataset.target = slug;
       navDesktop.appendChild(linkDesktop);
 
       const linkMobile = document.createElement('a');
       linkMobile.href = '#' + slug;
-      linkMobile.textContent = categoria;
+      linkMobile.textContent = icono + ' ' + categoria;
       linkMobile.dataset.target = slug;
       navMobile.appendChild(linkMobile);
     });
@@ -1660,8 +1761,6 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
   // cuándo se abría realmente el checkout). Ahora se genera de nuevo cada
   // vez que se abre el checkout, así ya arranca con un número fresco.
   window.numeroPedidoActual = generarNumeroPedido();
-
-  document.getElementById('numero-pedido').innerText = "Pedido #" + window.numeroPedidoActual;
 
   descuentoGlobal = 0;
   document.getElementById('cupon-feedback').textContent = '';

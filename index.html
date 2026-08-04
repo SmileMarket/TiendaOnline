@@ -971,6 +971,12 @@
     <button id="cerrar-carrito">&times;</button>
     <h2>Carrito</h2>
     <div id="carrito-items"></div>
+    <div id="regalo-progreso-bloque" style="display:none; margin:10px 0; padding:10px 12px; background:var(--durazno); border-radius:12px;">
+      <div id="regalo-progreso-texto" style="font-size:0.85rem; font-weight:600; color:var(--durazno-oscuro); margin-bottom:6px;"></div>
+      <div style="width:100%; height:8px; background:rgba(255,255,255,0.6); border-radius:999px; overflow:hidden;">
+        <div id="regalo-progreso-barra" style="height:100%; width:0%; background:var(--rosa-acento); border-radius:999px; transition: width 300ms ease;"></div>
+      </div>
+    </div>
     <div id="total">Total: $0</div>
     <button id="confirmar">Confirmar compra</button>
   </div>
@@ -989,7 +995,6 @@
     <div class="modal-body">
 
       <div id="paso-resumen">
-        <div id="numero-pedido" style="font-weight:600; margin-bottom:10px; color:var(--rosa-oscuro);"></div>
         <div id="resumen-contenido" style="margin-bottom:1rem;"></div>
         <div id="productos-relacionados"></div>
 
@@ -1264,7 +1269,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=40"></script>
+<script src="main.js?v=42"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
