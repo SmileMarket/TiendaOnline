@@ -1649,19 +1649,19 @@ function calcularResumen() {
   document.getElementById('enviar-whatsapp').dataset.mensaje = mensaje;
 }
 
-  const numeroPedido = generarNumeroPedido();
-
-
 document.getElementById('confirmar')?.addEventListener('click', () => {
   if (carrito.length === 0) {
     alert('Tu carrito está vacío.');
     return;
   }
 
-  // 🔥 Generar número de pedido en el momento correcto
-    window.numeroPedidoActual = numeroPedido;
+  // ✅ CORREGIDO: antes esto reutilizaba un número generado una sola vez
+  // cuando cargó la página (quedaba "pegado" a esa fecha/hora, sin importar
+  // cuándo se abría realmente el checkout). Ahora se genera de nuevo cada
+  // vez que se abre el checkout, así ya arranca con un número fresco.
+  window.numeroPedidoActual = generarNumeroPedido();
 
-  document.getElementById('numero-pedido').innerText = "Pedido #" + numeroPedido;
+  document.getElementById('numero-pedido').innerText = "Pedido #" + window.numeroPedidoActual;
 
   descuentoGlobal = 0;
   document.getElementById('cupon-feedback').textContent = '';
@@ -1736,6 +1736,15 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
 
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
     guardarCelularCliente(celularCliente); // ✅ guardamos el celular
+
+    // ✅ CORREGIDO: lo regeneramos de nuevo ACÁ, justo en el instante real de
+    // confirmación (después de todas las validaciones, justo antes de armar
+    // el pedido para mandarlo). Así el número de pedido siempre refleja el
+    // momento real en que se confirmó, no cuándo se abrió el checkout ni
+    // mucho menos cuándo cargó la página. Esto es clave para que dos compras
+    // seguidas en la misma sesión, o dos personas comprando casi a la vez,
+    // nunca terminen con el mismo número.
+    window.numeroPedidoActual = generarNumeroPedido();
 
     // Armamos el mensaje completo igual que antes — ahora solo se usa como
     // respaldo manual si el guardado automático en la planilla falla.
