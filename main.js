@@ -2335,3 +2335,14 @@ function generarNumeroPedido() {
 
   return `${mes}${dia}${hora}${minuto}${segundos}`;
 }
+
+// ✅ NUEVO: registro del Service Worker para la PWA. Si el navegador no lo
+// soporta (o falla por cualquier motivo), la tienda sigue funcionando
+// exactamente igual — esto es puramente aditivo, nunca bloquea nada.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err) => {
+      console.warn('No se pudo registrar el Service Worker (no afecta el uso normal de la tienda):', err);
+    });
+  });
+}
