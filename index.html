@@ -508,6 +508,27 @@
     #barra-progreso-container{ width:80%; max-width:360px; background: var(--rosa-pastel-suave); height:8px; border-radius:999px; overflow:hidden }
     #barra-progreso{ height:100%; width:0%; background: var(--rosa-acento); transition: width 200ms linear }
 
+    /* ✅ NUEVO: muelita bailando + saludo en la pantalla de carga inicial */
+    .splash-diente {
+      font-size:56px;
+      animation: splash-diente-baile 1.1s ease-in-out infinite;
+    }
+    @keyframes splash-diente-baile {
+      0%, 100% { transform: translateY(0) rotate(-12deg); }
+      25%      { transform: translateY(-14px) rotate(10deg); }
+      50%      { transform: translateY(0) rotate(-8deg); }
+      75%      { transform: translateY(-8px) rotate(12deg); }
+    }
+    .splash-mensaje {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--rosa-oscuro);
+      margin-bottom: 2px;
+      text-align: center;
+      max-width: 280px;
+    }
+
     /* ✅ NUEVO: overlay reusable de "espere por favor", para cualquier acción
        que tarde un ratito (confirmar pedido, buscar por celular, etc.) y así
        el cliente vea que la página está "trabajando", no colgada. */
@@ -924,6 +945,8 @@
 <body>
 
   <div id="splash">
+    <div class="splash-diente">🦷</div>
+    <div class="splash-mensaje" id="splash-mensaje"></div>
     <div><strong>Cargando…</strong></div>
     <div id="barra-progreso-container"><div id="barra-progreso"></div></div>
   </div>
@@ -1269,7 +1292,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=43"></script>
+<script src="main.js?v=45"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

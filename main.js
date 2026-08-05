@@ -33,11 +33,30 @@ function cargarCarritoDesdeLocalStorage() {
 
 // --- Splash y progreso ---
 let barraProgresoInterval = null;
+// ✅ NUEVO: frases tiernas/graciosas con temática dental para la pantalla de
+// carga inicial, elegidas al azar cada vez que se entra a la página (así no
+// se siente repetitivo para quien vuelve seguido). Todas neutras en género.
+const MENSAJES_SPLASH = [
+  'Cepillando los últimos detalles... 🪥',
+  'Puliendo tu experiencia ✨',
+  'La muelita se está peinando 💫',
+  'Cargando con mucho cariño 💕',
+  'Preparando sonrisas 😊',
+  'Un segundito, ya casi está el brillo ✨',
+  'Endulzando la espera (sin caries) 🍬🦷',
+  'Ajustando hasta el último tornillito 🔧🦷',
+  'La muelita está calentando para bailar 🕺🦷',
+];
+
 function iniciarSplash() {
   const splash = document.getElementById('splash');
   const barra = document.getElementById('barra-progreso');
+  const mensajeEl = document.getElementById('splash-mensaje');
   if (!splash || !barra) return;
   splash.style.display = 'flex';
+  if (mensajeEl) {
+    mensajeEl.textContent = MENSAJES_SPLASH[Math.floor(Math.random() * MENSAJES_SPLASH.length)];
+  }
   let valor = 5;
   barra.style.width = valor + '%';
   barraProgresoInterval = setInterval(() => {
