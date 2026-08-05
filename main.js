@@ -1615,23 +1615,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ✅ NUEVO: ícono por rubro, para que el menú lateral se escanee más rápido
   // de un vistazo en el celular. Si el nombre de la categoría no matchea
   // ninguna palabra clave, usa 🦷 como ícono genérico por defecto.
+  // ✅ ACTUALIZADO: para los rubros donde no existe ningún emoji que
+  // realmente represente el instrumental (no hay "clamp dental" ni
+  // "explorador dental" en el set de emojis — 🗜️ y 🔧 son herramientas de
+  // taller, no de consultorio), usamos un ícono SVG propio dibujado a mano
+  // en vez de forzar un emoji que confunda. Para el resto, un emoji
+  // razonablemente relacionado sigue siendo suficiente.
+  const ICONO_SVG_CLAMP = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M7 4C5 4 4.5 6 5 8c0.5 2 2 3.3 3.5 3.8"/><path d="M17 4c2 0 2.5 2 2 4c-0.5 2-2 3.3-3.5 3.8"/><path d="M7 4h10"/><path d="M8.5 11.8L7 19c-0.2 1 0.3 1.5 1.2 1.5h1c0.8 0 1.2-0.6 1.1-1.3l-0.3-4.7"/><path d="M15.5 11.8L17 19c0.2 1-0.3 1.5-1.2 1.5h-1c-0.8 0-1.2-0.6-1.1-1.3l0.3-4.7"/><circle cx="8.6" cy="17.5" r="0.6" fill="currentColor" stroke="none"/><circle cx="15.4" cy="17.5" r="0.6" fill="currentColor" stroke="none"/></svg>`;
+  const ICONO_SVG_EXPLORADOR = `<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><line x1="5" y1="19" x2="14" y2="10"/><path d="M14 10c1.5-1.5 2-3 1-4c-1-1-2.5-0.5-4 1"/><circle cx="5" cy="19" r="1.3" fill="currentColor" stroke="none"/></svg>`;
+
   function iconoParaCategoria(categoria) {
     const c = (categoria || '').toLowerCase();
     const reglas = [
+      [/clamp/, ICONO_SVG_CLAMP],       // ✅ ícono propio: antes 🗜️ (morza de carpintero, no tenía nada que ver)
+      [/instrumental/, ICONO_SVG_EXPLORADOR], // ✅ ícono propio: antes 🔧 (llave inglesa)
       [/color/, '🎨'],
-      [/clamp/, '🗜️'],
       [/descartable/, '🧤'],
       [/endodoncia/, '🪡'],
       [/equipamiento/, '⚙️'],
-      [/instrumental/, '🔧'],
       [/operatoria/, '🪥'],
       [/periodoncia/, '🩹'],
       [/protecci/, '🥽'],
-      [/punta/, '🎯'],
+      [/punta/, '💧'],
       [/varios/, '📦'],
     ];
     const match = reglas.find(([regex]) => regex.test(c));
     return match ? match[1] : '🦷';
+  }
+
+  // Chiquito helper para no insertar el nombre de categoría crudo dentro de innerHTML
+  function escaparHTML(texto) {
+    return (texto || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   // --- Menú de navegación por categorías (desktop + mobile) ---
@@ -1642,16 +1660,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     categoriasOrdenadas.forEach(categoria => {
       const slug = 'cat-' + slugify(categoria);
       const icono = iconoParaCategoria(categoria);
+      const etiquetaHTML = icono + ' ' + escaparHTML(categoria);
 
       const linkDesktop = document.createElement('a');
       linkDesktop.href = '#' + slug;
-      linkDesktop.textContent = icono + ' ' + categoria;
+      linkDesktop.innerHTML = etiquetaHTML;
       linkDesktop.dataset.target = slug;
       navDesktop.appendChild(linkDesktop);
 
       const linkMobile = document.createElement('a');
       linkMobile.href = '#' + slug;
-      linkMobile.textContent = icono + ' ' + categoria;
+      linkMobile.innerHTML = etiquetaHTML;
       linkMobile.dataset.target = slug;
       navMobile.appendChild(linkMobile);
     });
