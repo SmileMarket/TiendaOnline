@@ -2336,6 +2336,144 @@ function generarNumeroPedido() {
   return `${mes}${dia}${hora}${minuto}${segundos}`;
 }
 
+// ✅ NUEVO: banner de "instalar la app" (PWA).
+// - En Android/Chrome/Edge: el navegador dispara el evento
+//   "beforeinstallprompt" cuando el sitio cumple los requisitos. Lo
+//   capturamos, evitamos el mini-cartel automático del navegador, y en su
+//   lugar mostramos nuestro propio banner con un botón — al tocarlo,
+//   disparamos el prompt nativo de instalación.
+// - En iPhone/iPad (Safari): Apple directamente NO permite disparar la
+//   instalación por código, así que ahí mostramos instrucciones cortas de
+//   cómo hacerlo a mano (Compartir → Agregar a pantalla de inicio).
+// - Si ya está instalada (corriendo en modo standalone), no mostramos nada.
+// - Si el cliente cierra el banner, no lo volvemos a mostrar en ese
+//   dispositivo (se guarda en localStorage).
+(function () {
+  const CLAVE_DESCARTADO = 'smilemarket_pwa_banner_descartado';
+
+  function yaEstaInstalada() {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true // iOS
+    );
+  }
+
+  function fueDescartado() {
+    try {
+      return localStorage.getItem(CLAVE_DESCARTADO) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function marcarDescartado() {
+    try {
+      localStorage.setItem(CLAVE_DESCARTADO, '1');
+    } catch (e) { /* nada, no es crítico */ }
+  }
+
+  function esIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  function mostrarBanner(textoHTML, mostrarBotonInstalar) {
+    const banner = document.getElementById('pwa-instalar-banner');
+    const texto = document.getElementById('pwa-instalar-texto');
+    const btnInstalar = document.getElementById('pwa-instalar-btn');
+    if (!banner || !texto || !btnInstalar) return;
+
+    texto.innerHTML = textoHTML;
+    btnInstalar.style.display = mostrarBotonInstalar ? 'inline-block' : 'none';
+    banner.style.display = 'flex';
+  }
+
+  function ocultarBanner() {
+    const banner = document.getElementById('pwa-instalar-banner');
+    if (banner) banner.style.display = 'none';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    // ✅ NUEVO: el botón flotante (debajo de Instagram) queda siempre visible
+    // para quien todavía no instaló la app, sin importar si cerró el banner
+    // alguna vez o no. Si ya está instalada (entrando desde el ícono en la
+    // pantalla de inicio), ni el banner ni este botón aparecen.
+    const btnFlotante = document.getElementById('btn-instalar-flotante');
+    if (btnFlotante && !yaEstaInstalada()) {
+      btnFlotante.style.display = 'flex';
+    }
+
+    if (yaEstaInstalada() || fueDescartado()) return;
+
+    document.getElementById('pwa-instalar-cerrar')?.addEventListener('click', () => {
+      ocultarBanner();
+      marcarDescartado();
+    });
+
+    // Caso iPhone/iPad: no hay evento que capturar, mostramos instrucciones directo.
+    if (esIOS()) {
+      mostrarBanner(
+        '📲 <strong>Instalá SmileMarket</strong> en tu pantalla de inicio: tocá el botón Compartir <strong>⬆️</strong> y elegí <strong>"Agregar a pantalla de inicio"</strong>.',
+        false
+      );
+    }
+  });
+
+  // Caso Android/Chrome/Edge: esperamos el evento del navegador.
+  let promptDiferido = null;
+  window.addEventListener('beforeinstallprompt', (evento) => {
+    evento.preventDefault();
+    promptDiferido = evento;
+
+    if (yaEstaInstalada() || fueDescartado()) return;
+
+    mostrarBanner('📲 <strong>Instalá SmileMarket</strong> en tu celular para comprar más rápido, como cualquier otra app.', true);
+  });
+
+  document.addEventListener('click', (ev) => {
+    if (ev.target && ev.target.id === 'pwa-instalar-btn' && promptDiferido) {
+      promptDiferido.prompt();
+      promptDiferido.userChoice.finally(() => {
+        promptDiferido = null;
+        ocultarBanner();
+        marcarDescartado();
+      });
+    }
+
+    // ✅ NUEVO: click en el botón flotante persistente.
+    if (ev.target && ev.target.closest && ev.target.closest('#btn-instalar-flotante')) {
+      ev.preventDefault();
+      if (esIOS()) {
+        mostrarBanner(
+          '📲 <strong>Instalá SmileMarket</strong> en tu pantalla de inicio: tocá el botón Compartir <strong>⬆️</strong> y elegí <strong>"Agregar a pantalla de inicio"</strong>.',
+          false
+        );
+      } else if (promptDiferido) {
+        promptDiferido.prompt();
+        promptDiferido.userChoice.finally(() => {
+          promptDiferido = null;
+          ocultarBanner();
+          marcarDescartado();
+          document.getElementById('btn-instalar-flotante').style.display = 'none';
+        });
+      } else {
+        // El navegador todavía no disparó el evento nativo (o no lo soporta):
+        // mostramos instrucciones manuales como respaldo.
+        mostrarBanner(
+          '📲 Para instalar, buscá <strong>"Instalar app"</strong> o <strong>"Agregar a pantalla de inicio"</strong> en el menú de tu navegador (⋮ o ☰).',
+          false
+        );
+      }
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    ocultarBanner();
+    marcarDescartado();
+    const btnFlotante = document.getElementById('btn-instalar-flotante');
+    if (btnFlotante) btnFlotante.style.display = 'none';
+  });
+})();
+
 // ✅ NUEVO: registro del Service Worker para la PWA. Si el navegador no lo
 // soporta (o falla por cualquier motivo), la tienda sigue funcionando
 // exactamente igual — esto es puramente aditivo, nunca bloquea nada.
