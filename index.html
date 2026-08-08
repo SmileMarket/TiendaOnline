@@ -1073,6 +1073,52 @@
 
   <div id="popup">Producto agregado al carrito</div>
 
+  <div id="tour-modal" class="modal-overlay">
+    <div class="modal-checkout" style="max-width:380px;">
+      <div class="modal-header">
+        <h2>👋 ¿Primera vez por acá?</h2>
+        <button onclick="cerrarTour(true)" class="modal-cerrar">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center; padding:28px 20px;">
+
+        <div id="tour-paso-1" class="tour-paso">
+          <div style="font-size:52px; margin-bottom:14px;">🔍</div>
+          <h3 style="margin:0 0 8px; color:var(--rosa-oscuro);">Buscá o explorá por rubro</h3>
+          <p style="color:var(--texto-secundario); font-size:0.9rem; line-height:1.5; margin:0;">
+            Usá el buscador de arriba, o mirá el menú de categorías para encontrar lo que necesitás por rubro (Endodoncia, Operatoria, Clamps, y más).
+          </p>
+        </div>
+
+        <div id="tour-paso-2" class="tour-paso" style="display:none;">
+          <div style="font-size:52px; margin-bottom:14px;">🛒</div>
+          <h3 style="margin:0 0 8px; color:var(--rosa-oscuro);">Agregá al carrito</h3>
+          <p style="color:var(--texto-secundario); font-size:0.9rem; line-height:1.5; margin:0;">
+            Elegí la cantidad y tocá "Agregar al carrito". Podés seguir sumando productos y ajustarlos cuando quieras antes de confirmar.
+          </p>
+        </div>
+
+        <div id="tour-paso-3" class="tour-paso" style="display:none;">
+          <div style="font-size:52px; margin-bottom:14px;">💬</div>
+          <h3 style="margin:0 0 8px; color:var(--rosa-oscuro);">Coordinamos todo por WhatsApp</h3>
+          <p style="color:var(--texto-secundario); font-size:0.9rem; line-height:1.5; margin:0;">
+            Confirmás el pedido acá, y en breve te contactamos por WhatsApp para coordinar el pago y la entrega. ¡Así de simple!
+          </p>
+        </div>
+
+        <div style="display:flex; justify-content:center; gap:6px; margin-top:20px;">
+          <span class="tour-dot" data-paso="1" style="width:8px; height:8px; border-radius:50%; background:var(--rosa-acento); transition:all 200ms;"></span>
+          <span class="tour-dot" data-paso="2" style="width:8px; height:8px; border-radius:50%; background:var(--borde); transition:all 200ms;"></span>
+          <span class="tour-dot" data-paso="3" style="width:8px; height:8px; border-radius:50%; background:var(--borde); transition:all 200ms;"></span>
+        </div>
+      </div>
+
+      <div style="padding:14px 16px; border-top:1px solid var(--borde); display:flex; gap:10px;">
+        <button onclick="cerrarTour(true)" class="boton boton-gris" style="flex:0 0 auto;">Saltar</button>
+        <button id="tour-btn-siguiente" onclick="avanzarTour()" class="boton" style="flex:1; background:var(--rosa-acento); color:#fff;">Siguiente →</button>
+      </div>
+    </div>
+  </div>
+
   <div id="pwa-instalar-banner">
     <div id="pwa-instalar-texto"></div>
     <div id="pwa-instalar-botones">
@@ -1369,7 +1415,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=48"></script>
+<script src="main.js?v=50"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');

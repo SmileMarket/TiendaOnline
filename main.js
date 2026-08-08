@@ -2349,7 +2349,7 @@ function generarNumeroPedido() {
 // - Si el cliente cierra el banner, no lo volvemos a mostrar en ese
 //   dispositivo (se guarda en localStorage).
 (function () {
-  const CLAVE_DESCARTADO = 'smilemarket_pwa_banner_descartado';
+  const CLAVE_DESCARTADO = 'smilemarket_pwa_banner_descartado_v2';
 
   function yaEstaInstalada() {
     return (
@@ -2471,6 +2471,72 @@ function generarNumeroPedido() {
     marcarDescartado();
     const btnFlotante = document.getElementById('btn-instalar-flotante');
     if (btnFlotante) btnFlotante.style.display = 'none';
+  });
+})();
+
+// ✅ NUEVO: tour de bienvenida de 3 pantallas, solo para quien entra por
+// primera vez (se guarda en localStorage para no volver a mostrarlo nunca
+// más en ese dispositivo, salvo que borren los datos del navegador).
+(function () {
+  const CLAVE_TOUR_VISTO = 'smilemarket_tour_visto_v2';
+  let pasoActual = 1;
+  const TOTAL_PASOS = 3;
+
+  function yaVioElTour() {
+    try {
+      return localStorage.getItem(CLAVE_TOUR_VISTO) === '1';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function marcarTourVisto() {
+    try {
+      localStorage.setItem(CLAVE_TOUR_VISTO, '1');
+    } catch (e) { /* no es crítico */ }
+  }
+
+  function mostrarPasoTour(numero) {
+    for (let i = 1; i <= TOTAL_PASOS; i++) {
+      const paso = document.getElementById('tour-paso-' + i);
+      if (paso) paso.style.display = i === numero ? 'block' : 'none';
+    }
+    document.querySelectorAll('.tour-dot').forEach((dot) => {
+      const esActivo = Number(dot.dataset.paso) === numero;
+      dot.style.background = esActivo ? 'var(--rosa-acento)' : 'var(--borde)';
+      dot.style.width = esActivo ? '20px' : '8px';
+      dot.style.borderRadius = '999px';
+    });
+    const btn = document.getElementById('tour-btn-siguiente');
+    if (btn) btn.textContent = numero === TOTAL_PASOS ? '¡Empezar! 🎉' : 'Siguiente →';
+  }
+
+  window.avanzarTour = function () {
+    if (pasoActual < TOTAL_PASOS) {
+      pasoActual++;
+      mostrarPasoTour(pasoActual);
+    } else {
+      cerrarTour();
+    }
+  };
+
+  window.cerrarTour = function () {
+    const modal = document.getElementById('tour-modal');
+    if (modal) modal.style.display = 'none';
+    marcarTourVisto();
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (yaVioElTour()) return;
+    // Esperamos a que termine el splash de carga para no superponer animaciones.
+    setTimeout(() => {
+      const modal = document.getElementById('tour-modal');
+      if (modal) {
+        pasoActual = 1;
+        mostrarPasoTour(1);
+        modal.style.display = 'flex';
+      }
+    }, 900);
   });
 })();
 
