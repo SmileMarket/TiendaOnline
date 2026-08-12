@@ -1132,11 +1132,17 @@ function guardarPedidoEnPlanilla(datosPedido) {
   }
 
   // Le ponemos un límite de tiempo: si la conexión está "colgada" (ni falla ni responde),
-  // no dejamos al cliente esperando para siempre — a los 10s lo damos por fallido.
-  // Ojo: esto NO demora los pedidos normales — en cuanto llega la respuesta (típicamente
-  // en menos de 1 segundo con buena conexión), seguimos al toque sin esperar el límite.
+  // no dejamos al cliente esperando para siempre. Ojo: esto NO demora los pedidos
+  // normales — en cuanto llega la respuesta (típicamente en menos de 1 segundo con
+  // buena conexión), seguimos al toque sin esperar el límite.
+  // ✅ AUMENTADO: antes eran 10s, pero Apps Script a veces tarda más de eso en
+  // responder (redirecciones internas, el proyecto ocupado con otras
+  // ejecuciones, etc.) aunque el pedido se termine guardando bien igual — eso
+  // generaba avisos de "sin conexión" que en realidad eran falsos positivos.
+  // Con la traba de idempotencia que agregamos en doPost.gs, además, ya no
+  // hay riesgo de duplicar el pedido aunque el navegador tarde en confirmar.
   const controlador = new AbortController();
-  const timeoutId = setTimeout(() => controlador.abort(), 10000);
+  const timeoutId = setTimeout(() => controlador.abort('timeout'), 25000);
 
   return fetch(URL_PEDIDOS_WEB, {
     method: 'POST',
@@ -1431,7 +1437,8 @@ function mostrarPasoConfirmacionError(mensajeCompleto, motivo) {
   document.getElementById('footer-paso-regalo').style.display = 'none';
   document.getElementById('footer-paso-confirmacion').style.display = 'flex';
 
-  const esSinConexion = motivo === 'sin-conexion' || motivo === 'timeout';
+  const esTimeout = motivo === 'timeout';
+  const esSinConexion = motivo === 'sin-conexion' || esTimeout;
 
   document.getElementById('titulo-modal-resumen').textContent = esSinConexion ? 'Sin conexión a internet' : 'Hubo un problema';
 
@@ -1441,9 +1448,18 @@ function mostrarPasoConfirmacionError(mensajeCompleto, motivo) {
     tituloError.textContent = esSinConexion ? '📶 Parece que no tenés conexión' : 'Tuvimos un problema para registrar tu pedido';
   }
   if (textoError) {
-    textoError.textContent = esSinConexion
-      ? 'Tu carrito sigue guardado, no se perdió nada. Probá confirmar de nuevo cuando tengas señal, o mandanos el pedido por WhatsApp:'
-      : 'No te preocupes, tu carrito sigue guardado. Para asegurarnos de recibirlo igual, mandanoslo por WhatsApp:';
+    // ✅ NUEVO: el caso "timeout" es ambiguo — el pedido puede haberse guardado
+    // igual del lado del servidor aunque el navegador se haya cansado de
+    // esperar. Por eso, antes de mandar por WhatsApp (que podría duplicar el
+    // pedido si en realidad sí se guardó), lo mandamos primero a revisar
+    // "Mis pedidos" con su celular para confirmar si ya está o no.
+    if (esTimeout) {
+      textoError.textContent = 'Tu carrito sigue guardado, no se perdió nada. Esto puede pasar por una conexión lenta, y a veces el pedido igual se guarda del lado nuestro. Antes de reenviarlo, revisá "Mis pedidos" con tu celular — si no aparece, mandanoslo por WhatsApp:';
+    } else if (esSinConexion) {
+      textoError.textContent = 'Tu carrito sigue guardado, no se perdió nada. Probá confirmar de nuevo cuando tengas señal, o mandanos el pedido por WhatsApp:';
+    } else {
+      textoError.textContent = 'No te preocupes, tu carrito sigue guardado. Para asegurarnos de recibirlo igual, mandanoslo por WhatsApp:';
+    }
   }
 
   const totalWrapper = document.querySelector('.checkout-total');
@@ -1799,8 +1815,10 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
   // cuándo se abría realmente el checkout). Ahora se genera de nuevo cada
   // vez que se abre el checkout, así ya arranca con un número fresco.
   window.numeroPedidoActual = generarNumeroPedido();
+  window.yaIntentadoEnvioPedido = false; // ✅ nuevo checkout = nuevo intento, permite generar número fresco
 
   descuentoGlobal = 0;
+  window.celularReferidorValido = null;
   document.getElementById('cupon-feedback').textContent = '';
   document.getElementById('resumen-modal').style.display = 'flex';
 
@@ -1815,7 +1833,7 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
 });
 
 
-  document.getElementById('aplicar-cupon')?.addEventListener('click', () => {
+  document.getElementById('aplicar-cupon')?.addEventListener('click', async () => {
     const inputCupon = document.getElementById('cupon');
     const feedback = document.getElementById('cupon-feedback');
     const codigoIngresado = inputCupon?.value.trim().toUpperCase();
@@ -1829,18 +1847,96 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
     const cuponValido = cupones.find(c => c.codigo === codigoIngresado);
     if (cuponValido) {
       descuentoGlobal = cuponValido.descuento;
+      window.celularReferidorValido = null; // no es un código de referido
       feedback.textContent = `Cupón aplicado: ${descuentoGlobal}% de descuento`;
       feedback.style.color = 'green';
-    } else {
-      descuentoGlobal = 0;
-      feedback.textContent = 'Cupón no válido';
+      calcularResumen();
+      mostrarProductosRelacionados();
+      return;
+    }
+
+    // ✅ NUEVO: si no matcheó como cupón normal, puede ser un código de
+    // referido (el celular de otra clienta que ya compró antes). Se valida
+    // llamando al mismo endpoint que ya usamos para "Mis pedidos".
+    const soloDigitos = codigoIngresado.replace(/\D/g, '');
+    if (soloDigitos.length >= 10) {
+      await intentarAplicarReferido(soloDigitos, feedback);
+      return;
+    }
+
+    descuentoGlobal = 0;
+    window.celularReferidorValido = null;
+    feedback.textContent = 'Cupón no válido';
+    feedback.style.color = 'red';
+    calcularResumen();
+    mostrarProductosRelacionados();
+  });
+
+  // ✅ NUEVO: programa de referidos. Reglas para que sea válido:
+  //  1) el celular ingresado tiene que pertenecer a alguien que YA compró antes
+  //  2) no puede ser el mismo celular de quien está comprando ahora
+  //  3) quien compra tiene que ser realmente nueva/o (0 pedidos previos)
+  async function intentarAplicarReferido(celularReferidorIngresado, feedback) {
+    const celularCompradorInput = document.getElementById('celular-cliente');
+    const celularComprador = (celularCompradorInput?.value || '').replace(/\D/g, '');
+
+    if (!celularComprador || celularComprador.length < 10) {
+      feedback.textContent = 'Completá tu celular arriba antes de usar un código de referido';
       feedback.style.color = 'red';
+      return;
+    }
+
+    if (celularComprador.slice(-10) === celularReferidorIngresado.slice(-10)) {
+      feedback.textContent = 'No podés usar tu propio celular como código de referido';
+      feedback.style.color = 'red';
+      descuentoGlobal = 0;
+      window.celularReferidorValido = null;
+      calcularResumen();
+      mostrarProductosRelacionados();
+      return;
+    }
+
+    feedback.textContent = 'Verificando código...';
+    feedback.style.color = 'inherit';
+
+    const [respuestaReferidor, respuestaComprador] = await Promise.all([
+      consultarPedidosPorCelular(celularReferidorIngresado),
+      consultarPedidosPorCelular(celularComprador),
+    ]);
+
+    if (respuestaReferidor === null || respuestaComprador === null) {
+      feedback.textContent = 'No pudimos verificar el código ahora (revisá tu conexión)';
+      feedback.style.color = 'red';
+      descuentoGlobal = 0;
+      window.celularReferidorValido = null;
+      calcularResumen();
+      mostrarProductosRelacionados();
+      return;
+    }
+
+    const referidorTieneHistorial = (respuestaReferidor.pedidos || []).length > 0;
+    const compradorEsNuevo = (respuestaComprador.pedidos || []).length === 0;
+
+    if (referidorTieneHistorial && compradorEsNuevo) {
+      descuentoGlobal = 5; // acordado: 5% para el referido en su primera compra
+      window.celularReferidorValido = celularReferidorIngresado.slice(-10);
+      feedback.textContent = '¡Código de referido válido! 5% de descuento en tu primera compra 🎉';
+      feedback.style.color = 'green';
+    } else if (!referidorTieneHistorial) {
+      feedback.textContent = 'Ese celular no corresponde a ninguna clienta con compras anteriores';
+      feedback.style.color = 'red';
+      descuentoGlobal = 0;
+      window.celularReferidorValido = null;
+    } else {
+      feedback.textContent = 'Este descuento es solo para tu primera compra';
+      feedback.style.color = 'red';
+      descuentoGlobal = 0;
+      window.celularReferidorValido = null;
     }
 
     calcularResumen();
-document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLocaleString();
     mostrarProductosRelacionados();
-  });
+  }
 
   document.getElementById('enviar-whatsapp')?.addEventListener('click', async () => {
     const nombreCliente = document.getElementById('nombre-cliente')?.value.trim();
@@ -1874,14 +1970,20 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
     guardarNombreCliente(nombreCliente); // ✅ guardamos el nombre
     guardarCelularCliente(celularCliente); // ✅ guardamos el celular
 
-    // ✅ CORREGIDO: lo regeneramos de nuevo ACÁ, justo en el instante real de
-    // confirmación (después de todas las validaciones, justo antes de armar
-    // el pedido para mandarlo). Así el número de pedido siempre refleja el
-    // momento real en que se confirmó, no cuándo se abrió el checkout ni
-    // mucho menos cuándo cargó la página. Esto es clave para que dos compras
-    // seguidas en la misma sesión, o dos personas comprando casi a la vez,
-    // nunca terminen con el mismo número.
-    window.numeroPedidoActual = generarNumeroPedido();
+    // ✅ CORREGIDO: antes esto se regeneraba en CADA click de "Confirmar
+    // pedido", incluso en un reintento después de un error de timeout — eso
+    // hacía que si el primer intento en realidad SÍ se había guardado del
+    // lado del servidor (pero el navegador se cansó de esperar y avisó error
+    // igual), el reintento generara un número totalmente nuevo, y terminara
+    // duplicando el pedido en la planilla. Ahora solo se genera una vez por
+    // intento de compra: el primer click arma el número "real" del momento
+    // de confirmar, y si hay que reintentar (mismo checkout, sin cerrar el
+    // modal), se reusa el mismo — así el backend puede reconocerlo como
+    // duplicado si el primer intento ya había llegado.
+    if (!window.yaIntentadoEnvioPedido) {
+      window.numeroPedidoActual = generarNumeroPedido();
+      window.yaIntentadoEnvioPedido = true;
+    }
 
     // Armamos el mensaje completo igual que antes — ahora solo se usa como
     // respaldo manual si el guardado automático en la planilla falla.
@@ -1927,7 +2029,11 @@ document.getElementById('checkout-total').textContent = '$' + totalGlobal.toLoca
       cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
       descuento: descuentoGlobal,
       total: total,
-      formaPago: formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo'
+      formaPago: formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo',
+      // ✅ NUEVO: si se validó un código de referido, lo mandamos aparte del
+      // campo "cupón" (que puede quedar vacío o con otro texto), para que el
+      // backend pueda registrar el referido en su propia hoja.
+      celularReferidor: window.celularReferidorValido || ''
     });
 
     if (btnConfirmar) { btnConfirmar.disabled = false; btnConfirmar.textContent = textoOriginalBoton; }
