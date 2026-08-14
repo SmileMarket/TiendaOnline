@@ -7,8 +7,6 @@ const UMBRAL_REGALO = 100000;
 
 const carrito = [];
 let productos = [];
-let cupones = [];
-let cuponAplicado = null;
 let totalGlobal = 0;
 let descuentoGlobal = 0;
 
@@ -124,22 +122,11 @@ async function cargarProductosDesdeGoogleSheet() {
   });
 }
 
-async function cargarCuponesDesdeGoogleSheet() {
-  const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=713979488&single=true&output=csv';
-  const response = await fetch(urlCSV);
-  const texto = await response.text();
-  const lineas = texto.split('\n').filter(l => l.trim() !== '');
-  const headers = lineas[0].split(',').map(h => h.trim().toLowerCase());
-
-  cupones = lineas.slice(1).map(linea => {
-    const columnas = linea.split(',').map(c => c.trim());
-    const fila = Object.fromEntries(headers.map((h, i) => [h, columnas[i] || '']));
-    return {
-      codigo: fila.codigo?.toUpperCase() || '',
-      descuento: parseFloat(fila.descuento) || 0
-    };
-  });
-}
+// ❌ SACADO: cargarCuponesDesdeGoogleSheet() — se eliminó el sistema de
+// cupones normales (códigos genéricos tipo "VERANO10"). Ahora el único
+// mecanismo de descuento es el programa de referidos por celular, que ya
+// se revalida del lado del servidor, así queda todo concentrado en un
+// solo camino, más fácil de blindar contra abusos.
 
 // =====================================================
 // FAVORITOS
@@ -1521,7 +1508,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   cargarCarritoDesdeLocalStorage();
 
   await cargarProductosDesdeGoogleSheet();
-  await cargarCuponesDesdeGoogleSheet();
 
   const resultadoSyncCarrito = sincronizarPreciosCarrito();
 
@@ -1836,28 +1822,17 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
   document.getElementById('aplicar-cupon')?.addEventListener('click', async () => {
     const inputCupon = document.getElementById('cupon');
     const feedback = document.getElementById('cupon-feedback');
-    const codigoIngresado = inputCupon?.value.trim().toUpperCase();
+    const codigoIngresado = inputCupon?.value.trim();
 
     if (!codigoIngresado) {
-      feedback.textContent = 'Ingresá un código';
+      feedback.textContent = 'Ingresá el celular de quien te recomendó SmileMarket';
       feedback.style.color = 'red';
       return;
     }
 
-    const cuponValido = cupones.find(c => c.codigo === codigoIngresado);
-    if (cuponValido) {
-      descuentoGlobal = cuponValido.descuento;
-      window.celularReferidorValido = null; // no es un código de referido
-      feedback.textContent = `Cupón aplicado: ${descuentoGlobal}% de descuento`;
-      feedback.style.color = 'green';
-      calcularResumen();
-      mostrarProductosRelacionados();
-      return;
-    }
-
-    // ✅ NUEVO: si no matcheó como cupón normal, puede ser un código de
-    // referido (el celular de otra clienta que ya compró antes). Se valida
-    // llamando al mismo endpoint que ya usamos para "Mis pedidos".
+    // ❌ SACADO: el sistema de cupones normales (códigos genéricos tipo
+    // "VERANO10") se eliminó. El único descuento disponible ahora es el de
+    // referidos: el celular de alguien que ya compró antes en SmileMarket.
     const soloDigitos = codigoIngresado.replace(/\D/g, '');
     if (soloDigitos.length >= 10) {
       await intentarAplicarReferido(soloDigitos, feedback);
@@ -1866,7 +1841,7 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
 
     descuentoGlobal = 0;
     window.celularReferidorValido = null;
-    feedback.textContent = 'Cupón no válido';
+    feedback.textContent = 'Ingresá un número de celular válido (el de quien te recomendó)';
     feedback.style.color = 'red';
     calcularResumen();
     mostrarProductosRelacionados();
@@ -2035,7 +2010,7 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
       cliente: nombreCliente,
       celular: celularCliente,
       carrito: carritoParaPlanilla,
-      cupon: document.getElementById('cupon')?.value.trim().toUpperCase() || '',
+      cupon: document.getElementById('cupon')?.value.trim() || '',
       descuento: descuentoGlobal,
       total: total,
       formaPago: formaPagoSeleccionada === 'transferencia' ? 'Transferencia' : 'Efectivo',
