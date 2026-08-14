@@ -1914,7 +1914,16 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
       return;
     }
 
-    const referidorTieneHistorial = (respuestaReferidor.pedidos || []).length > 0;
+    // ✅ NUEVO: un pedido ANULADO no cuenta como "ya compró" para poder ser
+    // referidor — evita que alguien cargue un pedido, lo cancele, y aun así
+    // quede habilitado para referir a otras personas sin haber comprado
+    // realmente nunca. (Para "compradorEsNuevo" SÍ dejamos que un pedido
+    // anulado cuente como historial — si no, alguien podría cancelar su
+    // pedido a propósito para "volver a ser nueva/o" y reusar el descuento
+    // las veces que quiera. Esto además queda blindado del lado del
+    // servidor en doPost.gs, así que aunque alguien intente esquivar este
+    // chequeo del frontend, no consigue nada igual.)
+    const referidorTieneHistorial = (respuestaReferidor.pedidos || []).some(p => p.estado !== 'anulado');
     const compradorEsNuevo = (respuestaComprador.pedidos || []).length === 0;
 
     if (referidorTieneHistorial && compradorEsNuevo) {
