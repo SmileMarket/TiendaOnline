@@ -280,8 +280,11 @@ function toggleFavorito(boton, nombre) {
   }
 }
 
-// --- Arma una tarjeta de producto igual a la del catálogo, para usar dentro del modal de favoritos ---
-function crearTarjetaFavorito(producto) {
+// --- Arma una tarjeta de producto igual a la del catálogo (imagen, precio,
+// controles de cantidad y botón "Agregar al carrito" funcionando exactamente
+// igual que en la grilla principal). Reusada por Favoritos y por el popup
+// de Ofertas, para no duplicar esta lógica en cada lugar. ---
+function crearTarjetaProducto(producto) {
   const div = document.createElement('div');
   div.className = 'producto';
   div.dataset.nombre = producto.nombre;
@@ -334,7 +337,7 @@ function abrirFavoritosModal() {
   } else {
     vacio.style.display = 'none';
     productosFavoritos.forEach(producto => {
-      contenedor.appendChild(crearTarjetaFavorito(producto));
+      contenedor.appendChild(crearTarjetaProducto(producto));
     });
   }
 
@@ -2655,6 +2658,62 @@ function generarNumeroPedido() {
   });
 })();
 
+// ✅ NUEVO: popup automático de "Ofertas por tiempo limitado". Si hay algún
+// producto en oferta vigente cuando alguien entra a la página, se le
+// muestra un pop-up con todos esos productos, y puede agregarlos al
+// carrito directo desde ahí (misma tarjeta, mismo botón, mismo comportamiento
+// que en el catálogo normal — no es una versión "light").
+//
+// Se muestra como máximo UNA VEZ POR DÍA por dispositivo (no en cada
+// recarga de página), para generar el impulso de compra sin volverse
+// molesto para alguien que entra varias veces seguidas el mismo día. Si
+// querés que se muestre en CADA visita en vez de una vez por día, cambiá
+// la función yaVioPopupOfertasHoy() para que siempre devuelva false.
+function claveFechaHoyOfertas() {
+  const hoy = new Date();
+  return hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
+}
+
+function yaVioPopupOfertasHoy() {
+  try {
+    return localStorage.getItem('smilemarket_ofertas_popup_fecha') === claveFechaHoyOfertas();
+  } catch (e) {
+    return false;
+  }
+}
+
+function marcarPopupOfertasVistoHoy() {
+  try {
+    localStorage.setItem('smilemarket_ofertas_popup_fecha', claveFechaHoyOfertas());
+  } catch (e) { /* no es crítico */ }
+}
+
+function abrirPopupOfertasSiHay() {
+  if (yaVioPopupOfertasHoy()) return;
+
+  const enOferta = productos.filter(p => productoEnOferta(p) && p.stock > 0);
+  if (enOferta.length === 0) return;
+
+  const contenedor = document.getElementById('ofertas-modal-lista');
+  const modal = document.getElementById('ofertas-modal');
+  if (!contenedor || !modal) return;
+
+  contenedor.innerHTML = '';
+  enOferta.forEach(producto => {
+    contenedor.appendChild(crearTarjetaProducto(producto));
+  });
+
+  modal.style.display = 'flex';
+  marcarPopupOfertasVistoHoy();
+  trackEvento('ver_popup_ofertas', { cantidad_productos: enOferta.length });
+}
+
+function cerrarOfertasModal() {
+  const modal = document.getElementById('ofertas-modal');
+  if (modal) modal.style.display = 'none';
+}
+window.cerrarOfertasModal = cerrarOfertasModal;
+
 // ✅ NUEVO: tour de bienvenida de 3 pantallas, solo para quien entra por
 // primera vez (se guarda en localStorage para no volver a mostrarlo nunca
 // más en ese dispositivo, salvo que borren los datos del navegador).
@@ -2705,10 +2764,19 @@ function generarNumeroPedido() {
     const modal = document.getElementById('tour-modal');
     if (modal) modal.style.display = 'none';
     marcarTourVisto();
+    // ✅ NUEVO: si hay ofertas activas, se muestran justo después de cerrar
+    // el tour (nunca al mismo tiempo, para no superponer dos modales).
+    setTimeout(abrirPopupOfertasSiHay, 400);
   };
 
   document.addEventListener('DOMContentLoaded', () => {
-    if (yaVioElTour()) return;
+    if (yaVioElTour()) {
+      // Ya vio el tour antes: no hay tour que mostrar, así que el popup de
+      // ofertas se muestra directo en el mismo momento en que se habría
+      // mostrado el tour.
+      setTimeout(abrirPopupOfertasSiHay, 900);
+      return;
+    }
     // Esperamos a que termine el splash de carga para no superponer animaciones.
     setTimeout(() => {
       const modal = document.getElementById('tour-modal');

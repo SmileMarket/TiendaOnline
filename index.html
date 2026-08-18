@@ -1332,6 +1332,25 @@
     </div>
   </div>
 
+  <!-- ✅ NUEVO: popup automático de ofertas por tiempo limitado. Se abre
+       solo (ver main.js) cuando hay productos en oferta vigente. Las
+       tarjetas de acá adentro son las mismas que las del catálogo — se
+       puede agregar al carrito directo, sin salir del popup. -->
+  <div id="ofertas-modal" class="modal-overlay">
+    <div class="modal-checkout" style="max-width:640px;">
+      <div class="modal-header" style="background: linear-gradient(90deg, #FCEFD8, var(--rosa-pastel-suave));">
+        <h2>🔥 Ofertas por tiempo limitado</h2>
+        <button onclick="cerrarOfertasModal()" class="modal-cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 14px; font-size:0.88rem; color:var(--texto-secundario); text-align:center;">
+          Estos precios valen solo por tiempo limitado — agregalos ahora antes de que se acaben.
+        </p>
+        <div id="ofertas-modal-lista" class="productos" style="justify-content:flex-start;"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="historial-pedidos-modal" class="modal-overlay">
     <div class="modal-checkout" style="max-width:480px;">
       <div class="modal-header">
@@ -1438,7 +1457,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=56"></script>
+<script src="main.js?v=57"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
