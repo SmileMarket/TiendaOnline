@@ -1607,6 +1607,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   finalizarSplash();
 
+  // ✅ CORREGIDO: antes esto se disparaba con un timer fijo de 900ms desde
+  // un lugar separado (el bloque del tour), sin esperar a que los
+  // productos terminaran de cargar — si la planilla tardaba más que eso en
+  // responder, el popup corría antes de tener datos y nunca encontraba
+  // ninguna oferta. Ahora se dispara ACÁ, justo después de que "productos"
+  // ya está lleno de verdad, así siempre tiene la info disponible.
+  //
+  // ✅ ACTUALIZADO: ahora se muestra SIEMPRE que haya ofertas activas, en
+  // cada entrada a la página (no una vez por día). Si en algún momento
+  // querés volver a limitarlo (por ejemplo, una vez por día para que no
+  // resulte pesado), es un cambio chico y avisame.
+  if (yaVioElTourGlobal()) {
+    // Ya conoce el sitio: no hay tour de bienvenida de por medio, así que
+    // el popup de ofertas se muestra directo.
+    setTimeout(abrirPopupOfertasSiHay, 700);
+  }
+  // Si todavía no vio el tour, no hacemos nada acá — el propio tour, al
+  // cerrarse, se encarga de mostrar el popup de ofertas justo después
+  // (ver más abajo, dentro del bloque del tour).
+
   mostrarSaludo(); // ✅ saludo en header
 
   inicializarSwipeGaleria();
@@ -2664,33 +2684,21 @@ function generarNumeroPedido() {
 // carrito directo desde ahí (misma tarjeta, mismo botón, mismo comportamiento
 // que en el catálogo normal — no es una versión "light").
 //
-// Se muestra como máximo UNA VEZ POR DÍA por dispositivo (no en cada
-// recarga de página), para generar el impulso de compra sin volverse
-// molesto para alguien que entra varias veces seguidas el mismo día. Si
-// querés que se muestre en CADA visita en vez de una vez por día, cambiá
-// la función yaVioPopupOfertasHoy() para que siempre devuelva false.
-function claveFechaHoyOfertas() {
-  const hoy = new Date();
-  return hoy.getFullYear() + '-' + String(hoy.getMonth() + 1).padStart(2, '0') + '-' + String(hoy.getDate()).padStart(2, '0');
-}
-
-function yaVioPopupOfertasHoy() {
+// ✅ A PROPÓSITO se muestra en CADA entrada a la página (no una sola vez),
+// mientras haya ofertas activas — así, aunque alguien no compre la primera
+// vez que lo ve, se lo vuelve a encontrar la próxima visita. Esto es
+// intencional: se busca que la repetición ayude a decidir la compra, no
+// que sea "una sola oportunidad y listo". Funciona igual en computadora,
+// celular o la app instalada (PWA) — es la misma página en los tres casos.
+function yaVioElTourGlobal() {
   try {
-    return localStorage.getItem('smilemarket_ofertas_popup_fecha') === claveFechaHoyOfertas();
+    return localStorage.getItem('smilemarket_tour_visto_v2') === '1';
   } catch (e) {
     return false;
   }
 }
 
-function marcarPopupOfertasVistoHoy() {
-  try {
-    localStorage.setItem('smilemarket_ofertas_popup_fecha', claveFechaHoyOfertas());
-  } catch (e) { /* no es crítico */ }
-}
-
 function abrirPopupOfertasSiHay() {
-  if (yaVioPopupOfertasHoy()) return;
-
   const enOferta = productos.filter(p => productoEnOferta(p) && p.stock > 0);
   if (enOferta.length === 0) return;
 
@@ -2704,7 +2712,6 @@ function abrirPopupOfertasSiHay() {
   });
 
   modal.style.display = 'flex';
-  marcarPopupOfertasVistoHoy();
   trackEvento('ver_popup_ofertas', { cantidad_productos: enOferta.length });
 }
 
@@ -2771,10 +2778,10 @@ window.cerrarOfertasModal = cerrarOfertasModal;
 
   document.addEventListener('DOMContentLoaded', () => {
     if (yaVioElTour()) {
-      // Ya vio el tour antes: no hay tour que mostrar, así que el popup de
-      // ofertas se muestra directo en el mismo momento en que se habría
-      // mostrado el tour.
-      setTimeout(abrirPopupOfertasSiHay, 900);
+      // Ya vio el tour antes: no hay nada que hacer acá. El popup de
+      // ofertas para quien ya conoce el sitio se dispara desde el handler
+      // principal (más arriba en el archivo), justo después de que los
+      // productos terminan de cargar — así nunca corre "en vacío".
       return;
     }
     // Esperamos a que termine el splash de carga para no superponer animaciones.
