@@ -117,9 +117,85 @@ async function cargarProductosDesdeGoogleSheet() {
       // ese producto aparezca como opción de regalo en compras que superen el
       // monto mínimo (ver UMBRAL_REGALO más abajo). Lo ideal es tener 2-3
       // marcados a la vez, para no saturar la pantalla de elección.
-      esRegalo: producto.esregalo === 'TRUE'
+      // ✅ NUEVO: sistema de ofertas por tiempo limitado. En la planilla de
+      // productos agregá 2 columnas nuevas:
+      //   - "precioOferta": el precio con descuento (dejar vacío o en 0 si
+      //     el producto no está en oferta).
+      //   - "ofertaHasta": fecha (y opcionalmente hora) hasta la que vale la
+      //     oferta, formato "dd/mm/aaaa" o "dd/mm/aaaa hh:mm" (ej: "20/08/2026"
+      //     o "20/08/2026 23:59"). Si la dejás vacía, la oferta NO vence sola
+      //     — queda activa hasta que vos borres el precioOferta a mano.
+      precioOferta: parseFloat(producto.preciooferta) || 0,
+      ofertaHasta: producto.ofertahasta || ''
     };
   });
+}
+
+// ✅ NUEVO: convierte el texto de la columna "ofertaHasta" (dd/mm/aaaa o
+// dd/mm/aaaa hh:mm) en una fecha real de JS. Devuelve null si el texto está
+// vacío o mal escrito (en ese caso, la oferta se trata como "sin vencimiento").
+function parsearFechaOferta(texto) {
+  if (!texto || !texto.trim()) return null;
+  const partes = texto.trim().split(' ');
+  const [d, m, y] = (partes[0] || '').split('/').map(Number);
+  if (!d || !m || !y) return null;
+  let hh = 23, mm = 59;
+  if (partes[1]) {
+    const [h2, m2] = partes[1].split(':').map(Number);
+    if (!isNaN(h2)) hh = h2;
+    if (!isNaN(m2)) mm = m2;
+  }
+  const fecha = new Date(y, m - 1, d, hh, mm, 0);
+  return isNaN(fecha.getTime()) ? null : fecha;
+}
+
+// ✅ NUEVO: dice si un producto está EN OFERTA en este momento — precio de
+// oferta cargado, menor al precio normal, y (si tiene fecha límite) que esa
+// fecha todavía no pasó.
+function productoEnOferta(producto) {
+  if (!producto || !producto.precioOferta || producto.precioOferta <= 0) return false;
+  if (producto.precioOferta >= producto.precio) return false;
+  if (producto.ofertaHasta) {
+    const fechaLimite = parsearFechaOferta(producto.ofertaHasta);
+    if (fechaLimite && new Date() > fechaLimite) return false;
+  }
+  return true;
+}
+
+// ✅ NUEVO: precio que realmente se cobra — el de oferta si está vigente,
+// si no el de siempre. Usar SIEMPRE esta función (no producto.precio a
+// secas) en cualquier lugar donde se agregue algo al carrito o se calculen
+// totales, para que la oferta se aplique de verdad y no solo se vea linda.
+function precioFinal(producto) {
+  return productoEnOferta(producto) ? producto.precioOferta : producto.precio;
+}
+
+// ✅ NUEVO: porcentaje de descuento redondeado, para la cinta roja ("-25%").
+function porcentajeOferta(producto) {
+  return Math.round((1 - producto.precioOferta / producto.precio) * 100);
+}
+
+// ✅ NUEVO: arma el bloque de precio para una tarjeta de producto — si está
+// en oferta, muestra el precio original tachado + el nuevo resaltado; si
+// no, el precio normal de siempre. Se usa en las 3 grillas (catálogo, Top
+// 10, favoritos) para no repetir la lógica en cada una por separado.
+function precioHTML(producto) {
+  if (productoEnOferta(producto)) {
+    return `<p class="precio precio-oferta-wrap">
+      <span class="precio-tachado">$ ${producto.precio.toLocaleString("es-AR")},00</span>
+      <span class="precio-nuevo">$ ${producto.precioOferta.toLocaleString("es-AR")},00</span>
+    </p>`;
+  }
+  return `<p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>`;
+}
+
+// ✅ NUEVO: la cinta diagonal roja con el % de descuento, para poner dentro
+// del contenedor de la imagen del producto (igual que el aviso de "SIN
+// STOCK"). Devuelve string vacío si el producto no está en oferta.
+function cintaOfertaHTML(producto) {
+  if (!productoEnOferta(producto)) return '';
+  if (producto.stock <= 0) return ''; // no tiene sentido mostrar oferta de algo sin stock
+  return `<div class="cinta-oferta"><span>-${porcentajeOferta(producto)}%</span></div>`;
 }
 
 // ❌ SACADO: cargarCuponesDesdeGoogleSheet() — se eliminó el sistema de
@@ -209,7 +285,7 @@ function crearTarjetaFavorito(producto) {
   const div = document.createElement('div');
   div.className = 'producto';
   div.dataset.nombre = producto.nombre;
-  div.dataset.precio = producto.precio;
+  div.dataset.precio = precioFinal(producto);
   div.dataset.descripcion = producto.descripcion;
   div.dataset.categoria = producto.categoria;
 
@@ -218,6 +294,7 @@ function crearTarjetaFavorito(producto) {
   const imagenHTML = producto.imagen ? `
     <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
       <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:140px; object-fit:contain; background:white;" />
+      ${cintaOfertaHTML(producto)}
       ${favoritoBtnHTML(producto.nombre)}
       ${compartirBtnHTML(producto.nombre, producto.precio)}
       ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
@@ -227,7 +304,7 @@ function crearTarjetaFavorito(producto) {
     ${imagenHTML}
     <h3>${producto.nombre}</h3>
     <p class="categoria-texto">${producto.categoria}</p>
-    <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+    ${precioHTML(producto)}
     <div class="control-cantidad">
       <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
       <input class="cantidad-input" type="number" value="1" min="1" readonly />
@@ -572,7 +649,7 @@ function aplicarRepeticionDePedido(items) {
       // varias veces no va acumulando cantidades de más.
       existente.cantidad = cantidadFinal;
     } else {
-      carrito.push({ nombre: producto.nombre, precio: producto.precio, cantidad: cantidadFinal });
+      carrito.push({ nombre: producto.nombre, precio: precioFinal(producto), cantidad: cantidadFinal });
     }
     agregados++;
   });
@@ -614,6 +691,13 @@ function sincronizarPreciosCarrito() {
 
   for (let i = carrito.length - 1; i >= 0; i--) {
     const item = carrito[i];
+
+    // ✅ CORREGIDO (bug preexistente, no relacionado a las ofertas): los
+    // ítems de regalo tienen un nombre con emoji ("🎁 ... (regalo)") que
+    // nunca matchea con productos.find() de abajo, así que sin este chequeo
+    // se borraban solos del carrito la próxima vez que se sincronizaba.
+    if (item.esRegalo) continue;
+
     const productoActual = productos.find(p => p.nombre === item.nombre);
 
     if (!productoActual) {
@@ -623,8 +707,12 @@ function sincronizarPreciosCarrito() {
       continue;
     }
 
-    if (productoActual.precio !== item.precio) {
-      item.precio = productoActual.precio;
+    // ✅ NUEVO: si el producto está en oferta, el carrito tiene que reflejar
+    // el precio de oferta (no el de siempre) — y al revés, si la oferta ya
+    // venció desde que se agregó al carrito, vuelve sola al precio normal.
+    const precioVigente = precioFinal(productoActual);
+    if (precioVigente !== item.precio) {
+      item.precio = precioVigente;
       huboCambios = true;
     }
 
@@ -1207,7 +1295,7 @@ function renderizarTopVentas() {
     const div = document.createElement('div');
     div.className = 'producto producto-top';
     div.dataset.nombre = producto.nombre;
-    div.dataset.precio = producto.precio;
+    div.dataset.precio = precioFinal(producto);
     div.dataset.descripcion = producto.descripcion;
     div.dataset.categoria = producto.categoria;
 
@@ -1216,6 +1304,7 @@ function renderizarTopVentas() {
     const imagenHTML = producto.imagen ? `
       <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
         <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:130px; object-fit:contain; background:white;" />
+        ${cintaOfertaHTML(producto)}
         ${favoritoBtnHTML(producto.nombre)}
         ${compartirBtnHTML(producto.nombre, producto.precio)}
         ${producto.stock <= 0 ? '<div class="sin-stock-overlay">SIN STOCK</div>' : ''}
@@ -1225,7 +1314,7 @@ function renderizarTopVentas() {
       <div class="ranking-badge">#${index + 1}</div>
       ${imagenHTML}
       <h3>${producto.nombre}</h3>
-      <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+      ${precioHTML(producto)}
       <div class="control-cantidad">
         <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
         <input class="cantidad-input" type="number" value="1" min="1" readonly />
@@ -1586,7 +1675,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const div = document.createElement('div');
       div.className = 'producto';
       div.dataset.nombre = producto.nombre;
-      div.dataset.precio = producto.precio;
+      div.dataset.precio = precioFinal(producto);
       div.dataset.descripcion = producto.descripcion;
       div.dataset.categoria = producto.categoria;
 
@@ -1604,6 +1693,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const imagenHTML = producto.imagen ? `
         <div class="producto-imagen-container" data-nombre="${producto.nombre}" data-descripcion="${producto.descripcion || 'Sin descripción disponible'}" data-galeria='${JSON.stringify(galeria)}' onclick="abrirGaleria(this)">
           <img loading="lazy" src="${producto.imagen}" alt="${producto.nombre}" style="width:100%; height:160px; object-fit:contain; background:white;" />
+          ${cintaOfertaHTML(producto)}
           ${favoritoBtnHTML(producto.nombre)}
           ${compartirBtnHTML(producto.nombre, producto.precio)}
           ${producto.stock <= 0
@@ -1616,7 +1706,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <h3>${producto.nombre}</h3>
         ${etiquetasHTML}
         <p class="categoria-texto">${producto.categoria}</p>
-        <p class="precio">$ ${producto.precio.toLocaleString("es-AR")},00</p>
+        ${precioHTML(producto)}
         <div class="control-cantidad">
           <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
           <input class="cantidad-input" type="number" value="1" min="1" readonly />
@@ -2183,8 +2273,8 @@ function mostrarProductosRelacionados() {
         <div class="relacionado-item">
           <img src="${p.imagen || 'https://via.placeholder.com/80'}">
           <div style="font-size:0.75rem">${p.nombre}</div>
-          <div style="font-weight:bold;font-size:0.8rem">$${p.precio.toLocaleString()}</div>
-          <button onclick="agregarRelacionado('${p.nombre}', ${p.precio})">
+          <div style="font-weight:bold;font-size:0.8rem">${productoEnOferta(p) ? `<span style="text-decoration:line-through;font-weight:400;color:var(--texto-secundario);">$${p.precio.toLocaleString()}</span> $${p.precioOferta.toLocaleString()}` : '$' + p.precio.toLocaleString()}</div>
+          <button onclick="agregarRelacionado('${p.nombre}', ${precioFinal(p)})">
             Agregar
           </button>
         </div>
@@ -2328,16 +2418,17 @@ function renderizarListaCatedra() {
     const div = document.createElement('div');
 
     if (item.tipo === 'match') {
-      total += item.producto.precio * item.cantidad;
+      const precioItem = precioFinal(item.producto);
+      total += precioItem * item.cantidad;
       div.className = 'lista-item';
       div.innerHTML = `
-        <div class="lista-item-nombre">${item.producto.nombre}</div>
+        <div class="lista-item-nombre">${item.producto.nombre}${productoEnOferta(item.producto) ? ' 🏷️' : ''}</div>
         <div class="lista-item-controles">
           <button type="button" onclick="cambiarCantidadListaCatedra(${item.id}, -1)">−</button>
           <span class="lista-item-cantidad">${item.cantidad}</span>
           <button type="button" onclick="cambiarCantidadListaCatedra(${item.id}, 1)">+</button>
         </div>
-        <div class="lista-item-precio">$${(item.producto.precio * item.cantidad).toLocaleString()}</div>
+        <div class="lista-item-precio">$${(precioItem * item.cantidad).toLocaleString()}</div>
         <button type="button" class="lista-item-quitar" onclick="quitarDeListaCatedra(${item.id})" title="Quitar">&times;</button>
       `;
     } else {
@@ -2400,7 +2491,7 @@ function agregarListaCatedraAlCarrito() {
     if (existente) {
       existente.cantidad += item.cantidad;
     } else {
-      carrito.push({ nombre: item.producto.nombre, precio: item.producto.precio, cantidad: item.cantidad });
+      carrito.push({ nombre: item.producto.nombre, precio: precioFinal(item.producto), cantidad: item.cantidad });
     }
   });
 

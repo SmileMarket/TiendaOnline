@@ -308,7 +308,7 @@
     }
     .boton:hover { background: var(--rosa-acento-hover); }
 
-    .producto-imagen-container { position: relative; width: 100%; }
+    .producto-imagen-container { position: relative; width: 100%; overflow: hidden; border-radius: 10px; }
     .info-overlay {
       position: absolute; bottom: 8px; right: 8px;
       background: var(--rosa-acento); color: white;
@@ -317,6 +317,29 @@
     .sin-stock-overlay {
       background: #E24B4A; color: white; padding: 4px 10px; border-radius: 999px;
       position: absolute; top: 10px; left: 10px; font-size: 0.75rem; font-weight: 600; z-index: 3;
+    }
+    /* ✅ NUEVO: cinta diagonal roja para productos en oferta por tiempo
+       limitado. Va en la esquina superior izquierda de la imagen, igual
+       que el aviso de "SIN STOCK" pero rotada. */
+    .cinta-oferta {
+      position: absolute; top: 14px; left: -38px; width: 150px;
+      transform: rotate(-40deg); transform-origin: center;
+      background: #E4392F; color: white; text-align: center;
+      font-weight: 700; font-size: 0.75rem; padding: 4px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 4;
+      font-family: 'Work Sans', sans-serif; letter-spacing: 0.5px;
+    }
+    /* ✅ NUEVO: precio original tachado + precio de oferta resaltado */
+    .precio-oferta-wrap {
+      display: flex; align-items: baseline; justify-content: center;
+      gap: 8px; flex-wrap: wrap;
+    }
+    .precio-tachado {
+      color: var(--texto-secundario); text-decoration: line-through;
+      font-size: 0.9rem; font-weight: 500;
+    }
+    .precio-nuevo {
+      color: #E4392F; font-weight: 700; font-size: 1.15rem;
     }
     .favorito-btn {
       position: absolute;
@@ -1415,7 +1438,7 @@ Kit de cirugía E" style="width:100%; padding:10px; border:1px solid var(--borde
 
   <div id="ir-arriba" title="Volver arriba">⬆</div>
 
-<script src="main.js?v=55"></script>
+<script src="main.js?v=56"></script>
 
   <script>
     const irArriba = document.getElementById('ir-arriba');
