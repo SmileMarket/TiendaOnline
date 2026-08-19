@@ -2769,25 +2769,46 @@ function iniciarFuegosArtificiales() {
     });
   }
 
-  function explotar(x, y, color) {
-    const cantidad = 34;
-    for (let i = 0; i < cantidad; i++) {
-      const angulo = (Math.PI * 2 * i) / cantidad;
-      const velocidad = Math.random() * 3.3 + 1.4;
-      particulas.push({
-        x, y,
-        vx: Math.cos(angulo) * velocidad,
-        vy: Math.sin(angulo) * velocidad,
-        color,
-        vida: 1
-      });
-    }
+  // ✅ MEJORADO: explosión en "flor" — varios anillos concéntricos (en vez
+  // de uno solo), con más partículas, más grandes, y un pequeño destello
+  // central blanco brillante. El leve "jitter" en el ángulo de cada
+  // partícula hace que no se vea un círculo perfecto y geométrico, sino
+  // más orgánico, como los pétalos de una flor real.
+  function explotar(x, y, colorBase) {
+    const anillos = [
+      { cantidad: 14, velocidad: 1.6, tam: 4.6 },
+      { cantidad: 20, velocidad: 3.0, tam: 3.6 },
+      { cantidad: 26, velocidad: 4.6, tam: 2.6 }
+    ];
+
+    anillos.forEach(anillo => {
+      // Cada anillo puede tener su propio color (dentro de la paleta), para
+      // que la flor tenga un poco de degradé en vez de un solo color plano.
+      const color = Math.random() < 0.65 ? colorBase : COLORES[Math.floor(Math.random() * COLORES.length)];
+      for (let i = 0; i < anillo.cantidad; i++) {
+        const anguloBase = (Math.PI * 2 * i) / anillo.cantidad;
+        const angulo = anguloBase + (Math.random() - 0.5) * 0.3;
+        const velocidad = anillo.velocidad + Math.random() * 0.5;
+        particulas.push({
+          x, y,
+          vx: Math.cos(angulo) * velocidad,
+          vy: Math.sin(angulo) * velocidad,
+          color,
+          tam: anillo.tam,
+          vida: 1
+        });
+      }
+    });
+
+    // Destello central: un puntito blanco brillante que se apaga rápido,
+    // simulando el flash de luz del momento exacto de la explosión.
+    particulas.push({ x, y, vx: 0, vy: 0, color: '#FFFFFF', tam: 9, vida: 1, esDestello: true });
   }
 
   function loop(t) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (t - ultimoLanzamiento > 450) {
+    if (t - ultimoLanzamiento > 600) {
       lanzarCohete();
       ultimoLanzamiento = t;
     }
@@ -2798,9 +2819,12 @@ function iniciarFuegosArtificiales() {
       c.y += c.vy;
       c.vy += 0.05;
       ctx.beginPath();
-      ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2);
+      ctx.arc(c.x, c.y, 3, 0, Math.PI * 2);
       ctx.fillStyle = c.color;
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = c.color;
       ctx.fill();
+      ctx.shadowBlur = 0;
       if (c.vy >= 0 || c.y <= c.objetivoY) {
         explotar(c.x, c.y, c.color);
         cohetes.splice(i, 1);
@@ -2811,14 +2835,20 @@ function iniciarFuegosArtificiales() {
       const p = particulas[i];
       p.x += p.vx;
       p.y += p.vy;
-      p.vy += 0.05;
-      p.vida -= 0.018;
+      p.vy += 0.045;
+      // El destello central se apaga mucho más rápido que las chispas normales.
+      p.vida -= p.esDestello ? 0.09 : 0.013;
       if (p.vida <= 0) { particulas.splice(i, 1); continue; }
+
+      const tamActual = p.esDestello ? p.tam * p.vida : p.tam;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, Math.max(tamActual, 0.5), 0, Math.PI * 2);
       ctx.fillStyle = p.color;
+      ctx.shadowBlur = 12;
+      ctx.shadowColor = p.color;
       ctx.globalAlpha = Math.max(p.vida, 0);
       ctx.fill();
+      ctx.shadowBlur = 0;
       ctx.globalAlpha = 1;
     }
 
