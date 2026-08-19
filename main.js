@@ -2712,14 +2712,137 @@ function abrirPopupOfertasSiHay() {
   });
 
   modal.style.display = 'flex';
+  iniciarFuegosArtificiales();
   trackEvento('ver_popup_ofertas', { cantidad_productos: enOferta.length });
 }
 
 function cerrarOfertasModal() {
   const modal = document.getElementById('ofertas-modal');
   if (modal) modal.style.display = 'none';
+  detenerFuegosArtificiales();
 }
 window.cerrarOfertasModal = cerrarOfertasModal;
+
+// ✅ NUEVO: fuegos artificiales de fondo para el popup de ofertas — se
+// prenden solo mientras el popup está abierto. Se apagan solos a los 6
+// segundos (da el golpe de efecto visual al abrirse, sin quedar
+// consumiendo batería/CPU todo el rato que alguien se quede mirando el
+// catálogo con el popup abierto) y también se apagan al instante si lo
+// cierran antes. Es dibujo a mano en canvas, sin librerías externas.
+let fuegosFrameId = null;
+let fuegosApagadoId = null;
+
+function iniciarFuegosArtificiales() {
+  const canvas = document.getElementById('ofertas-fuegos');
+  if (!canvas || !canvas.getContext) return;
+  const ctx = canvas.getContext('2d');
+
+  function ajustarTamano() {
+    // ✅ Usamos document.documentElement.clientWidth/Height como primera
+    // opción (más confiable en algunos navegadores/embebidos que
+    // window.innerWidth, sobre todo si hay barras de herramientas o
+    // teclados en pantalla en el celular), con window.innerWidth como
+    // respaldo si por algún motivo el primero no está disponible.
+    canvas.width = document.documentElement.clientWidth || window.innerWidth || 0;
+    canvas.height = document.documentElement.clientHeight || window.innerHeight || 0;
+  }
+  ajustarTamano();
+
+  const COLORES = ['#E8749E', '#F6C9DE', '#FCEFD8', '#BFE8DC', '#FFD166', '#FF6B6B'];
+  let cohetes = [];
+  let particulas = [];
+  let ultimoLanzamiento = 0;
+
+  // Los cohetes salen desde las franjas de los costados (izquierda/derecha),
+  // no desde el centro — así el efecto rodea el popup en vez de taparlo.
+  function lanzarCohete() {
+    const desdeIzquierda = Math.random() < 0.5;
+    const x = desdeIzquierda
+      ? Math.random() * canvas.width * 0.24
+      : canvas.width - Math.random() * canvas.width * 0.24;
+    cohetes.push({
+      x, y: canvas.height,
+      vx: (Math.random() - 0.5) * 1.2,
+      vy: -(Math.random() * 3 + 7),
+      color: COLORES[Math.floor(Math.random() * COLORES.length)],
+      objetivoY: canvas.height * (0.2 + Math.random() * 0.35)
+    });
+  }
+
+  function explotar(x, y, color) {
+    const cantidad = 34;
+    for (let i = 0; i < cantidad; i++) {
+      const angulo = (Math.PI * 2 * i) / cantidad;
+      const velocidad = Math.random() * 3.3 + 1.4;
+      particulas.push({
+        x, y,
+        vx: Math.cos(angulo) * velocidad,
+        vy: Math.sin(angulo) * velocidad,
+        color,
+        vida: 1
+      });
+    }
+  }
+
+  function loop(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (t - ultimoLanzamiento > 450) {
+      lanzarCohete();
+      ultimoLanzamiento = t;
+    }
+
+    for (let i = cohetes.length - 1; i >= 0; i--) {
+      const c = cohetes[i];
+      c.x += c.vx;
+      c.y += c.vy;
+      c.vy += 0.05;
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = c.color;
+      ctx.fill();
+      if (c.vy >= 0 || c.y <= c.objetivoY) {
+        explotar(c.x, c.y, c.color);
+        cohetes.splice(i, 1);
+      }
+    }
+
+    for (let i = particulas.length - 1; i >= 0; i--) {
+      const p = particulas[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.05;
+      p.vida -= 0.018;
+      if (p.vida <= 0) { particulas.splice(i, 1); continue; }
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = Math.max(p.vida, 0);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    fuegosFrameId = requestAnimationFrame(loop);
+  }
+
+  fuegosFrameId = requestAnimationFrame(loop);
+  fuegosApagadoId = setTimeout(detenerFuegosArtificiales, 6000);
+}
+
+function detenerFuegosArtificiales() {
+  if (fuegosFrameId) {
+    cancelAnimationFrame(fuegosFrameId);
+    fuegosFrameId = null;
+  }
+  if (fuegosApagadoId) {
+    clearTimeout(fuegosApagadoId);
+    fuegosApagadoId = null;
+  }
+  const canvas = document.getElementById('ofertas-fuegos');
+  if (canvas && canvas.getContext) {
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+  }
+}
 
 // ✅ NUEVO: tour de bienvenida de 3 pantallas, solo para quien entra por
 // primera vez (se guarda en localStorage para no volver a mostrarlo nunca
