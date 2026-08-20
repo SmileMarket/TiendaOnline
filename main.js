@@ -96,15 +96,71 @@ function ocultarCargando() {
   if (overlay) overlay.style.display = 'none';
 }
 
+// ✅ NUEVO: parser de una línea CSV que respeta comillas — a diferencia de
+// un simple texto.split(','), esto entiende que un valor como "11.680,00"
+// (envuelto en comillas porque tiene una coma adentro) es UN SOLO campo, no
+// dos. Sin esto, cualquier valor que Google Sheets exporte entre comillas
+// (pasa seguido con números que vienen de fórmulas, o con textos que tienen
+// comas) corre de lugar todas las columnas siguientes de esa fila.
+function parsearLineaCSV(linea) {
+  const resultado = [];
+  let actual = '';
+  let dentroDeComillas = false;
+  for (let i = 0; i < linea.length; i++) {
+    const char = linea[i];
+    if (dentroDeComillas) {
+      if (char === '"') {
+        if (linea[i + 1] === '"') { // comilla escapada ("" dentro de un campo con comillas)
+          actual += '"';
+          i++;
+        } else {
+          dentroDeComillas = false;
+        }
+      } else {
+        actual += char;
+      }
+    } else if (char === '"') {
+      dentroDeComillas = true;
+    } else if (char === ',') {
+      resultado.push(actual);
+      actual = '';
+    } else {
+      actual += char;
+    }
+  }
+  resultado.push(actual);
+  return resultado.map(c => c.trim());
+}
+
+// ✅ NUEVO: convierte a número tanto "11680" (formato plano) como
+// "11.680,00" (formato con punto de miles y coma decimal, que es lo que a
+// veces exporta Sheets para valores que vienen de una fórmula). Sin esto,
+// parseFloat("11.680,00") da 11.68 en vez de 11680 — un precio devastadoramente
+// mal calculado, no un error visible, así que es importante blindarlo bien.
+function parsearNumeroSheet(texto) {
+  if (texto === null || texto === undefined) return 0;
+  let s = texto.toString().trim();
+  if (!s) return 0;
+  if (s.includes(',') && s.includes('.')) {
+    // Formato argentino con miles: "11.680,00" -> "11680.00"
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (s.includes(',') && !s.includes('.')) {
+    // Solo coma, sin punto: probablemente decimal argentino: "11680,00" -> "11680.00"
+    s = s.replace(',', '.');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
 async function cargarProductosDesdeGoogleSheet() {
   const urlCSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=1670706691&single=true&output=csv';
   const response = await fetch(urlCSV);
   const texto = await response.text();
   const lineas = texto.split('\n').filter(l => l.trim() !== '');
-  const headers = lineas[0].split(',').map(h => h.trim());
+  const headers = parsearLineaCSV(lineas[0]).map(h => h.trim());
 
   productos = lineas.slice(1).map(linea => {
-    const columnas = linea.split(',').map(c => c.trim());
+    const columnas = parsearLineaCSV(linea);
     const producto = Object.fromEntries(headers.map((h, i) => [h.toLowerCase(), columnas[i] || '']));
     return {
       nombre: producto.nombre || 'Sin nombre',
@@ -131,7 +187,11 @@ async function cargarProductosDesdeGoogleSheet() {
       //     oferta, formato "dd/mm/aaaa" o "dd/mm/aaaa hh:mm" (ej: "20/08/2026"
       //     o "20/08/2026 23:59"). Si la dejás vacía, la oferta NO vence sola
       //     — queda activa hasta que vos borres el precioOferta a mano.
-      precioOferta: parseFloat(producto.preciooferta) || 0,
+      // ✅ CORREGIDO: ahora usa parsearNumeroSheet() en vez de parseFloat()
+      // directo, para poder interpretar bien un valor como "11.680,00" que
+      // llega formateado con punto de miles y coma decimal (típico cuando
+      // el valor viene de una fórmula en vez de tipeado a mano).
+      precioOferta: parsearNumeroSheet(producto.preciooferta),
       ofertaHasta: producto.ofertahasta || '',
       // ✅ NUEVO: columna "relacionados" — lista de nombres de productos que
       // se compran junto con este, separados por "|" (tienen que coincidir
