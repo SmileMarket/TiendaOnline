@@ -5,6 +5,12 @@ const URL_PEDIDOS_WEB = "https://script.google.com/macros/s/AKfycbwZufXHX4nwp0y0
 // Cambiá este número cuando quieras ajustar el umbral.
 const UMBRAL_REGALO = 100000;
 
+// ✅ NUEVO: a partir de qué cantidad de stock se considera "bajo" y se le
+// muestra al cliente el aviso de "¡Últimas X unidades!" (mismo principio de
+// urgencia que las ofertas por tiempo limitado). Se aplica a cualquier
+// producto con stock mayor a 0 y menor o igual a este número.
+const UMBRAL_STOCK_BAJO = 3;
+
 const carrito = [];
 let productos = [];
 let totalGlobal = 0;
@@ -126,17 +132,60 @@ async function cargarProductosDesdeGoogleSheet() {
       //     o "20/08/2026 23:59"). Si la dejás vacía, la oferta NO vence sola
       //     — queda activa hasta que vos borres el precioOferta a mano.
       precioOferta: parseFloat(producto.preciooferta) || 0,
-      ofertaHasta: producto.ofertahasta || ''
+      ofertaHasta: producto.ofertahasta || '',
+      // ✅ NUEVO: columna "relacionados" — lista de nombres de productos que
+      // se compran junto con este, separados por "|" (tienen que coincidir
+      // EXACTO con el nombre en la columna "nombre" de esos productos). Se
+      // usa en el checkout para sugerir "también te puede interesar" con
+      // combinaciones reales en vez de solo "misma categoría". Si la dejás
+      // vacía para un producto, ese producto simplemente no aporta
+      // sugerencias propias (el sistema sigue funcionando igual para el
+      // resto, y cae de nuevo a "misma categoría" si hace falta completar).
+      relacionados: producto.relacionados
+        ? producto.relacionados.split('|').map(s => s.trim()).filter(Boolean)
+        : []
     };
   });
 }
 
-// ✅ NUEVO: convierte el texto de la columna "ofertaHasta" (dd/mm/aaaa o
-// dd/mm/aaaa hh:mm) en una fecha real de JS. Devuelve null si el texto está
-// vacío o mal escrito (en ese caso, la oferta se trata como "sin vencimiento").
-function parsearFechaOferta(texto) {
-  if (!texto || !texto.trim()) return null;
-  const partes = texto.trim().split(' ');
+// ✅ NUEVO: convierte el valor de la columna "ofertaHasta" en una fecha real
+// de JS. Acepta tanto texto "dd/mm/aaaa" (o "dd/mm/aaaa hh:mm") como el
+// "número de serie" que a veces devuelve una fórmula (IMPORTRANGE/BUSCARV)
+// en vez de una fecha con formato de texto — esto es común cuando la fecha
+// viaja a través de fórmulas entre hojas y pierde el formato de fecha por
+// el camino. Devuelve null si el valor está vacío o no se pudo interpretar
+// de ninguna de las dos formas (en ese caso, la oferta se trata como "sin
+// vencimiento", nunca como "vencida por error").
+function parsearFechaOferta(valor) {
+  if (valor === null || valor === undefined) return null;
+  const texto = valor.toString().trim();
+  if (!texto) return null;
+
+  // Caso 1: llegó como número de serie de fecha de Google Sheets (cuenta
+  // los días desde el 30/12/1899). Pasa seguido cuando la fecha viene de
+  // una fórmula como BUSCARV/IMPORTRANGE en vez de estar escrita a mano.
+  if (/^\d+([.,]\d+)?$/.test(texto)) {
+    const serial = parseFloat(texto.replace(',', '.'));
+    // Rango razonable para no confundir esto con un precio cargado por
+    // error en la columna equivocada (serial ~25569 = año 2000, ~80000 = año 2119)
+    if (serial > 20000 && serial < 80000) {
+      const fecha = new Date(1899, 11, 30);
+      fecha.setDate(fecha.getDate() + Math.floor(serial));
+      // Si el número no tenía parte decimal (osea, sin hora incluida),
+      // asumimos fin del día — igual que con las fechas en texto.
+      if (Number.isInteger(serial)) {
+        fecha.setHours(23, 59, 0, 0);
+      } else {
+        const fraccionDia = serial - Math.floor(serial);
+        const minutosTotales = Math.round(fraccionDia * 24 * 60);
+        fecha.setHours(Math.floor(minutosTotales / 60), minutosTotales % 60, 0, 0);
+      }
+      return isNaN(fecha.getTime()) ? null : fecha;
+    }
+  }
+
+  // Caso 2: texto normal "dd/mm/aaaa" o "dd/mm/aaaa hh:mm"
+  const partes = texto.split(' ');
   const [d, m, y] = (partes[0] || '').split('/').map(Number);
   if (!d || !m || !y) return null;
   let hh = 23, mm = 59;
@@ -196,6 +245,18 @@ function cintaOfertaHTML(producto) {
   if (!productoEnOferta(producto)) return '';
   if (producto.stock <= 0) return ''; // no tiene sentido mostrar oferta de algo sin stock
   return `<div class="cinta-oferta"><span>-${porcentajeOferta(producto)}%</span></div>`;
+}
+
+// ✅ NUEVO: aviso de "¡Últimas X unidades!" para productos con poco stock —
+// mismo principio de urgencia que ya usamos en las ofertas por tiempo
+// limitado. Va debajo del precio, como una línea de texto (no como cinta),
+// para no pelearse visualmente con la cinta de oferta si un producto tuviera
+// las dos cosas a la vez.
+function stockBajoHTML(producto) {
+  if (producto.stock > 0 && producto.stock <= UMBRAL_STOCK_BAJO) {
+    return `<p class="stock-bajo-aviso">⚠️ ¡Últimas ${producto.stock} unidades!</p>`;
+  }
+  return '';
 }
 
 // ❌ SACADO: cargarCuponesDesdeGoogleSheet() — se eliminó el sistema de
@@ -308,6 +369,7 @@ function crearTarjetaProducto(producto) {
     <h3>${producto.nombre}</h3>
     <p class="categoria-texto">${producto.categoria}</p>
     ${precioHTML(producto)}
+    ${stockBajoHTML(producto)}
     <div class="control-cantidad">
       <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
       <input class="cantidad-input" type="number" value="1" min="1" readonly />
@@ -1318,6 +1380,7 @@ function renderizarTopVentas() {
       ${imagenHTML}
       <h3>${producto.nombre}</h3>
       ${precioHTML(producto)}
+    ${stockBajoHTML(producto)}
       <div class="control-cantidad">
         <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
         <input class="cantidad-input" type="number" value="1" min="1" readonly />
@@ -1730,6 +1793,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         ${etiquetasHTML}
         <p class="categoria-texto">${producto.categoria}</p>
         ${precioHTML(producto)}
+    ${stockBajoHTML(producto)}
         <div class="control-cantidad">
           <button class="menos" onclick="cambiarCantidad(this, -1)" ${producto.stock <= 0 ? 'disabled' : ''}>−</button>
           <input class="cantidad-input" type="number" value="1" min="1" readonly />
@@ -2265,6 +2329,12 @@ setInterval(guardarCarritoEnLocalStorage, 3000);
 // PRODUCTOS RELACIONADOS
 // -------------------------------
 
+// ✅ ACTUALIZADO: ahora prioriza sugerencias REALES cargadas a mano en la
+// columna "relacionados" de cada producto del carrito (lo que de verdad se
+// compra junto, según vos conocés tu propio negocio). Si con eso no se
+// llega a 4 sugerencias, se completa con productos de la misma categoría
+// (comportamiento de antes), para que la sección nunca quede vacía por
+// simplemente no haber cargado "relacionados" todavía en la planilla.
 function mostrarProductosRelacionados() {
 
   const contenedor = document.getElementById("productos-relacionados");
@@ -2274,17 +2344,44 @@ function mostrarProductosRelacionados() {
 
   if (carrito.length === 0) return;
 
-  const categoriasCarrito = carrito.map(item => {
-    const prod = productos.find(p => p.nombre === item.nombre);
-    return prod?.categoria;
+  const productosEnCarrito = carrito
+    .map(item => productos.find(p => p.nombre === item.nombre))
+    .filter(Boolean);
+
+  const nombresEnCarrito = new Set(productosEnCarrito.map(p => p.nombre));
+
+  // 1) Sugerencias reales: unimos los "relacionados" de cada producto que
+  // ya está en el carrito, sin repetir y sin sugerir algo que ya agregaron.
+  const nombresSugeridos = [];
+  productosEnCarrito.forEach(p => {
+    (p.relacionados || []).forEach(nombreRel => {
+      if (!nombresEnCarrito.has(nombreRel) && !nombresSugeridos.includes(nombreRel)) {
+        nombresSugeridos.push(nombreRel);
+      }
+    });
   });
 
-  const categoriasUnicas = [...new Set(categoriasCarrito)];
+  let relacionados = nombresSugeridos
+    .map(nombre => productos.find(p => p.nombre === nombre))
+    .filter(Boolean)
+    .filter(p => p.stock > 0)
+    .slice(0, 4);
 
-  const relacionados = productos
-    .filter(p => categoriasUnicas.includes(p.categoria))
-    .filter(p => !carrito.some(c => c.nombre === p.nombre))
-    .slice(0,4);
+  // 2) Respaldo: si con las sugerencias reales no llegamos a 4, completamos
+  // con productos de la misma categoría (igual que funcionaba antes).
+  if (relacionados.length < 4) {
+    const categoriasCarrito = productosEnCarrito.map(p => p.categoria);
+    const categoriasUnicas = [...new Set(categoriasCarrito)];
+    const yaElegidos = new Set(relacionados.map(p => p.nombre));
+
+    const respaldo = productos
+      .filter(p => categoriasUnicas.includes(p.categoria))
+      .filter(p => !nombresEnCarrito.has(p.nombre))
+      .filter(p => !yaElegidos.has(p.nombre))
+      .filter(p => p.stock > 0);
+
+    relacionados = relacionados.concat(respaldo).slice(0, 4);
+  }
 
   if (relacionados.length === 0) return;
 
