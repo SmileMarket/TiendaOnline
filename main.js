@@ -3,7 +3,7 @@ const URL_PEDIDOS_WEB = "https://script.google.com/macros/s/AKfycbwZufXHX4nwp0y0
 // ✅ NUEVO: monto mínimo de compra (en pesos, sobre el total con descuento ya
 // aplicado) a partir del cual se le ofrece un regalo gratis al cliente.
 // Cambiá este número cuando quieras ajustar el umbral.
-const UMBRAL_REGALO = 100000;
+const UMBRAL_REGALO = 200000;
 
 // ✅ NUEVO: a partir de qué cantidad de stock se considera "bajo" y se le
 // muestra al cliente el aviso de "¡Últimas X unidades!" (mismo principio de
