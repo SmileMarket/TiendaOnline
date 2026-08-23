@@ -3,7 +3,7 @@ const URL_PEDIDOS_WEB = "https://script.google.com/macros/s/AKfycbwZufXHX4nwp0y0
 // ✅ NUEVO: monto mínimo de compra (en pesos, sobre el total con descuento ya
 // aplicado) a partir del cual se le ofrece un regalo gratis al cliente.
 // Cambiá este número cuando quieras ajustar el umbral.
-const UMBRAL_REGALO = 200000;
+const UMBRAL_REGALO = 100000;
 
 // ✅ NUEVO: a partir de qué cantidad de stock se considera "bajo" y se le
 // muestra al cliente el aviso de "¡Últimas X unidades!" (mismo principio de
@@ -965,7 +965,10 @@ function actualizarProgresoRegalo(carritoActual, totalSinRegalo) {
   const carritoVacio = carritoActual.length === 0;
   const yaTieneRegalo = carritoActual.some(item => item.esRegalo);
 
-  if (carritoVacio || yaTieneRegalo) {
+  // ✅ NUEVO: si no hay ningún producto cargado como regalo en la planilla
+  // (esregalo=TRUE con stock), ocultamos la barra directamente — no tiene
+  // sentido mostrar "te faltan $X para tu regalo" si no hay ningún regalo.
+  if (carritoVacio || yaTieneRegalo || !hayRegalosDisponibles()) {
     bloque.style.display = 'none';
     return;
   }
@@ -1521,6 +1524,12 @@ function mostrarPasoRegalo() {
   resetScrollModal();
 }
 
+// ✅ NUEVO: chequea si hay al menos un producto cargado como regalo
+// (columna "esregalo" en la planilla) y con stock disponible.
+function hayRegalosDisponibles() {
+  return productos.some(p => p.esRegalo && p.stock > 0);
+}
+
 function renderOpcionesRegalo() {
   const contenedor = document.getElementById('regalo-opciones');
   if (!contenedor) return;
@@ -1529,7 +1538,13 @@ function renderOpcionesRegalo() {
   const opciones = productos.filter(p => p.esRegalo && p.stock > 0);
 
   if (opciones.length === 0) {
-    contenedor.innerHTML = '<p style="text-align:center; color:var(--texto-secundario); font-size:0.9rem;">No hay regalos disponibles en este momento, pero tu pedido sigue siendo válido igual.</p>';
+    // ✅ NUEVO: red de seguridad — si por algún motivo se llega a esta
+    // pantalla sin regalos cargados, dejamos un botón para poder seguir
+    // con la compra en vez de quedar trabado.
+    contenedor.innerHTML = `
+      <p style="text-align:center; color:var(--texto-secundario); font-size:0.9rem; margin-bottom:14px;">No hay regalos disponibles en este momento, pero tu pedido sigue siendo válido igual.</p>
+      <button type="button" class="boton boton-secundario" onclick="mostrarPasoPago()">Continuar sin regalo</button>
+    `;
     return;
   }
 
@@ -2310,14 +2325,16 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
     }
 
     // ✅ NUEVO: si el total (sin contar el regalo, que es $0) supera el
-    // umbral y todavía no eligió ningún regalo, mostramos el paso intermedio
-    // en vez de ir directo a "Forma de pago".
+    // umbral, todavía no eligió ningún regalo, Y hay al menos un regalo
+    // cargado en la planilla (esregalo=TRUE con stock), mostramos el paso
+    // intermedio. Si no hay regalos disponibles, ni se muestra el paso —
+    // se va directo a "Forma de pago" para no trabar la compra.
     const yaTieneRegalo = carrito.some(item => item.esRegalo);
     const totalSinRegalo = carrito
       .filter(item => !item.esRegalo)
       .reduce((acc, item) => acc + (Number(item.precio) * Number(item.cantidad)), 0);
 
-    if (!yaTieneRegalo && totalSinRegalo >= UMBRAL_REGALO) {
+    if (!yaTieneRegalo && totalSinRegalo >= UMBRAL_REGALO && hayRegalosDisponibles()) {
       mostrarPasoRegalo();
       return;
     }
