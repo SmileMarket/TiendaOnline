@@ -175,6 +175,11 @@ async function cargarProductosDesdeGoogleSheet() {
       nuevo: producto.nuevo === 'TRUE',
       masvendido: producto.masvendido === 'TRUE',
       recomendado: producto.recomendado === 'TRUE',
+      // 🐛 CORREGIDO: faltaba esta línea — nunca se estaba leyendo la
+      // columna "esregalo" de la planilla hacia el producto cargado en el
+      // sitio, por eso el sistema de regalos no detectaba ningún TRUE
+      // (ni tipeado a mano ni traído por fórmula/IMPORTRANGE).
+      esRegalo: (producto.esregalo || '').toString().trim().toUpperCase() === 'TRUE',
       // ✅ NUEVO: marcá "TRUE" en la columna "esregalo" de la planilla para que
       // ese producto aparezca como opción de regalo en compras que superen el
       // monto mínimo (ver UMBRAL_REGALO más abajo). Lo ideal es tener 2-3
