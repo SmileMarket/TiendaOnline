@@ -1620,9 +1620,9 @@ function abrirEscalonesRegaloModal() {
       const alcanzado = totalActual >= monto;
       const items = grupos[monto];
       const itemsHtml = items.map(p => `
-        <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
-          <img src="${p.imagen}" alt="${p.nombre}" style="width:44px; height:44px; object-fit:cover; border-radius:8px; ${alcanzado ? '' : 'filter:grayscale(60%); opacity:0.75;'}">
-          <div style="flex:1; font-size:0.85rem; ${alcanzado ? 'font-weight:600;' : 'color:var(--texto-secundario);'}">${p.nombre}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:5px 0;">
+          <div style="font-size:0.85rem; ${alcanzado ? 'font-weight:600;' : 'color:var(--texto-secundario);'}">${p.nombre}</div>
+          <div style="font-size:0.78rem; white-space:nowrap; color:${alcanzado ? 'var(--rosa-oscuro)' : 'var(--texto-secundario)'};">Valor: $${p.precio.toLocaleString()}</div>
         </div>
       `).join('');
       return `
