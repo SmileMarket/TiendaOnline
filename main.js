@@ -1592,6 +1592,61 @@ function escalonMaximo() {
   return montos.length ? Math.max(...montos) : 0;
 }
 
+// 🎁 NUEVO: modal "Regalos por monto de compra" — le muestra al cliente,
+// de antemano, todos los escalones configurados y qué producto(s) se
+// desbloquean en cada uno, marcando cuáles ya alcanzó con lo que lleva en
+// el carrito. Así puede decidir sumar algo más a propósito para llegar a
+// un escalón que le interese, en vez de enterarse recién al pagar.
+function abrirEscalonesRegaloModal() {
+  const modal = document.getElementById('escalones-regalo-modal');
+  const contenedor = document.getElementById('escalones-regalo-lista');
+  if (!modal || !contenedor) return;
+
+  const totalActual = totalCarritoSinRegalo();
+
+  // Agrupamos los productos con escalón por su monto, y ordenamos de menor
+  // a mayor monto.
+  const grupos = {};
+  productosConEscalon().forEach(p => {
+    if (!grupos[p.montoRegalo]) grupos[p.montoRegalo] = [];
+    grupos[p.montoRegalo].push(p);
+  });
+  const montosOrdenados = Object.keys(grupos).map(Number).sort((a, b) => a - b);
+
+  if (montosOrdenados.length === 0) {
+    contenedor.innerHTML = '<p style="text-align:center; color:var(--texto-secundario); font-size:0.9rem;">Todavía no hay regalos cargados.</p>';
+  } else {
+    contenedor.innerHTML = montosOrdenados.map(monto => {
+      const alcanzado = totalActual >= monto;
+      const items = grupos[monto];
+      const itemsHtml = items.map(p => `
+        <div style="display:flex; align-items:center; gap:10px; padding:6px 0;">
+          <img src="${p.imagen}" alt="${p.nombre}" style="width:44px; height:44px; object-fit:cover; border-radius:8px; ${alcanzado ? '' : 'filter:grayscale(60%); opacity:0.75;'}">
+          <div style="flex:1; font-size:0.85rem; ${alcanzado ? 'font-weight:600;' : 'color:var(--texto-secundario);'}">${p.nombre}</div>
+        </div>
+      `).join('');
+      return `
+        <div style="border:1px solid ${alcanzado ? 'var(--rosa-acento)' : 'var(--borde)'}; border-radius:12px; padding:12px 14px; background:${alcanzado ? 'var(--durazno)' : 'transparent'};">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <div style="font-weight:700; font-size:0.9rem; color:${alcanzado ? 'var(--durazno-oscuro)' : 'var(--texto)'};">A partir de $${monto.toLocaleString()}</div>
+            ${alcanzado ? '<span style="font-size:0.75rem; font-weight:700; color:var(--rosa-oscuro);">✔ Desbloqueado</span>' : ''}
+          </div>
+          ${itemsHtml}
+        </div>
+      `;
+    }).join('');
+  }
+
+  modal.style.display = 'flex';
+}
+window.abrirEscalonesRegaloModal = abrirEscalonesRegaloModal;
+
+function cerrarEscalonesRegaloModal() {
+  const modal = document.getElementById('escalones-regalo-modal');
+  if (modal) modal.style.display = 'none';
+}
+window.cerrarEscalonesRegaloModal = cerrarEscalonesRegaloModal;
+
 function renderOpcionesRegalo() {
   const contenedor = document.getElementById('regalo-opciones');
   if (!contenedor) return;
