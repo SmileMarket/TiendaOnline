@@ -1,9 +1,10 @@
 const URL_PEDIDOS_WEB = "https://script.google.com/macros/s/AKfycbwZufXHX4nwp0y0T1yhGjL3NKoDZtfCCBZ2bU8vBz9I2DC84WPaUEWtTHjLo3nX_815/exec";
 
-// ✅ NUEVO: monto mínimo de compra (en pesos, sobre el total con descuento ya
-// aplicado) a partir del cual se le ofrece un regalo gratis al cliente.
-// Cambiá este número cuando quieras ajustar el umbral.
-const UMBRAL_REGALO = 100000;
+// 🎁 ACTUALIZADO: el sistema de regalos ahora es "escalonado" — cada
+// producto de la planilla trae su propio monto mínimo en la columna
+// "montoRegalo" (reemplaza a la vieja columna "esregalo"), así que ya no
+// hace falta un único umbral fijo acá. Ver la explicación completa junto a
+// donde se lee esa columna, más abajo en este archivo.
 
 // ✅ NUEVO: a partir de qué cantidad de stock se considera "bajo" y se le
 // muestra al cliente el aviso de "¡Últimas X unidades!" (mismo principio de
@@ -175,15 +176,21 @@ async function cargarProductosDesdeGoogleSheet() {
       nuevo: producto.nuevo === 'TRUE',
       masvendido: producto.masvendido === 'TRUE',
       recomendado: producto.recomendado === 'TRUE',
-      // 🐛 CORREGIDO: faltaba esta línea — nunca se estaba leyendo la
-      // columna "esregalo" de la planilla hacia el producto cargado en el
-      // sitio, por eso el sistema de regalos no detectaba ningún TRUE
-      // (ni tipeado a mano ni traído por fórmula/IMPORTRANGE).
-      esRegalo: (producto.esregalo || '').toString().trim().toUpperCase() === 'TRUE',
-      // ✅ NUEVO: marcá "TRUE" en la columna "esregalo" de la planilla para que
-      // ese producto aparezca como opción de regalo en compras que superen el
-      // monto mínimo (ver UMBRAL_REGALO más abajo). Lo ideal es tener 2-3
-      // marcados a la vez, para no saturar la pantalla de elección.
+      // 🎁 ACTUALIZADO: sistema de regalos escalonado. En la planilla,
+      // la columna "montoRegalo" reemplaza a la vieja "esregalo". Ahora en
+      // vez de TRUE/FALSE, cada producto que quieras que sea opción de
+      // regalo lleva el monto de compra (en pesos) a partir del cual se
+      // habilita. Por ejemplo: "Endo Z" con montoRegalo=50000 se ofrece a
+      // partir de $50.000; "Kit de cirugía E" con montoRegalo=150000 recién
+      // se ofrece a partir de $150.000. Dejalo vacío o en 0 en los
+      // productos que nunca deban ser regalo. Podés repetir el mismo monto
+      // en varios productos para que el cliente elija entre varias opciones
+      // en ese escalón. A medida que el cliente supera más escalones, se
+      // van sumando más opciones para elegir (pero siempre elige 1 sola).
+      // Usa parsearNumeroSheet() por si el valor llega formateado con
+      // puntos/comas desde una fórmula (BUSCARV/IMPORTRANGE), igual que
+      // "precioOferta".
+      montoRegalo: parsearNumeroSheet(producto.montoregalo),
       // ✅ NUEVO: sistema de ofertas por tiempo limitado. En la planilla de
       // productos agregá 2 columnas nuevas:
       //   - "precioOferta": el precio con descuento (dejar vacío o en 0 si
@@ -904,22 +911,27 @@ function eliminarDelCarrito(index) {
 }
 
 function actualizarCarrito() {
-  // ✅ NUEVO: si hay un regalo elegido pero el resto del carrito (sin contar
-  // el regalo, que siempre vale $0) ya no llega al monto mínimo, se lo
-  // sacamos automáticamente y avisamos con un popup. Esto corre acá porque
-  // actualizarCarrito() se llama SIEMPRE que el carrito cambia (agregar,
-  // sacar, cambiar cantidad), así que es un único lugar centralizado.
-  const totalSinRegalo = carrito
-    .filter(item => !item.esRegalo)
-    .reduce((acc, item) => acc + (Number(item.precio) * Number(item.cantidad)), 0);
+  // 🎁 ACTUALIZADO: si hay un regalo elegido pero el resto del carrito (sin
+  // contar el regalo, que siempre vale $0) ya no llega al escalón propio de
+  // ESE regalo puntual, se lo sacamos automáticamente y avisamos con un
+  // popup. Esto corre acá porque actualizarCarrito() se llama SIEMPRE que
+  // el carrito cambia (agregar, sacar, cambiar cantidad), así que es un
+  // único lugar centralizado.
+  const totalSinRegalo = totalCarritoSinRegalo();
 
-  const teniaRegalo = carrito.some(item => item.esRegalo);
-  if (teniaRegalo && totalSinRegalo < UMBRAL_REGALO) {
-    for (let i = carrito.length - 1; i >= 0; i--) {
-      if (carrito[i].esRegalo) carrito.splice(i, 1);
+  const itemRegalo = carrito.find(item => item.esRegalo);
+  if (itemRegalo) {
+    const productoRegalo = productos.find(p => p.nombre === itemRegalo.nombreOriginal);
+    // Si no encontramos el producto (o ya no tiene escalón) usamos 0 como
+    // umbral, así que directamente se saca por las dudas.
+    const umbralDeEsteRegalo = productoRegalo ? productoRegalo.montoRegalo : 0;
+    if (totalSinRegalo < umbralDeEsteRegalo) {
+      for (let i = carrito.length - 1; i >= 0; i--) {
+        if (carrito[i].esRegalo) carrito.splice(i, 1);
+      }
+      guardarCarritoEnLocalStorage();
+      mostrarPopup('Se quitó tu regalo 🎁 porque el pedido bajó del monto mínimo');
     }
-    guardarCarritoEnLocalStorage();
-    mostrarPopup('Se quitó tu regalo 🎁 porque el pedido bajó del monto mínimo');
   }
 
   const carritoItems = document.getElementById('carrito-items');
@@ -970,23 +982,32 @@ function actualizarProgresoRegalo(carritoActual, totalSinRegalo) {
   const carritoVacio = carritoActual.length === 0;
   const yaTieneRegalo = carritoActual.some(item => item.esRegalo);
 
-  // ✅ NUEVO: si no hay ningún producto cargado como regalo en la planilla
-  // (esregalo=TRUE con stock), ocultamos la barra directamente — no tiene
-  // sentido mostrar "te faltan $X para tu regalo" si no hay ningún regalo.
-  if (carritoVacio || yaTieneRegalo || !hayRegalosDisponibles()) {
+  // 🎁 ACTUALIZADO: si no hay ningún escalón configurado en la planilla
+  // (columna "montoRegalo"), ocultamos la barra directamente.
+  if (carritoVacio || yaTieneRegalo || productosConEscalon().length === 0) {
     bloque.style.display = 'none';
     return;
   }
 
-  if (totalSinRegalo >= UMBRAL_REGALO) {
+  const desbloqueados = regalosDesbloqueados(totalSinRegalo).length;
+  const proximo = proximoEscalon(totalSinRegalo);
+  const maximo = escalonMaximo();
+
+  if (proximo === null) {
+    // Ya alcanzó el escalón más alto configurado: no hay más para desbloquear.
     bloque.style.display = 'block';
-    texto.textContent = '🎁 ¡Ya podés elegir tu regalo gratis! Lo vas a poder elegir al confirmar tu compra.';
+    texto.textContent = `🎁 ¡Desbloqueaste todas las opciones de regalo! Vas a poder elegir 1 al confirmar tu compra.`;
     barra.style.width = '100%';
   } else {
-    const faltante = UMBRAL_REGALO - totalSinRegalo;
-    const porcentaje = Math.max(4, Math.min(100, (totalSinRegalo / UMBRAL_REGALO) * 100)); // mínimo 4% para que la barra siempre se note un poco
+    const faltante = proximo - totalSinRegalo;
+    // Barra "de conjunto": el porcentaje refleja el avance sobre toda la
+    // escalera (desde $0 hasta el escalón más alto configurado), no solo
+    // sobre el próximo escalón — así se nota el progreso acumulado.
+    const porcentaje = Math.max(4, Math.min(100, (totalSinRegalo / maximo) * 100));
     bloque.style.display = 'block';
-    texto.textContent = `Te faltan $${faltante.toLocaleString()} para tu regalo gratis 🎁`;
+    texto.textContent = desbloqueados > 0
+      ? `🎁 Ya tenés ${desbloqueados} ${desbloqueados === 1 ? 'opción' : 'opciones'} de regalo para elegir. Te faltan $${faltante.toLocaleString()} para sumar más opciones.`
+      : `Te faltan $${faltante.toLocaleString()} para tu primer regalo gratis 🎁`;
     barra.style.width = porcentaje + '%';
   }
 }
@@ -1507,8 +1528,9 @@ function mostrarPasoResumen() {
   resetScrollModal();
 }
 
-// ✅ NUEVO: pantalla intermedia "Elegí tu regalo", solo se muestra cuando el
-// total del carrito supera UMBRAL_REGALO y todavía no eligió ninguno.
+// 🎁 ACTUALIZADO: pantalla intermedia "Elegí tu regalo", solo se muestra
+// cuando el carrito ya desbloqueó al menos un escalón (montoRegalo) y
+// todavía no eligió ningún regalo.
 function mostrarPasoRegalo() {
   document.getElementById('paso-resumen').style.display = 'none';
   document.getElementById('paso-pago').style.display = 'none';
@@ -1529,10 +1551,45 @@ function mostrarPasoRegalo() {
   resetScrollModal();
 }
 
-// ✅ NUEVO: chequea si hay al menos un producto cargado como regalo
-// (columna "esregalo" en la planilla) y con stock disponible.
-function hayRegalosDisponibles() {
-  return productos.some(p => p.esRegalo && p.stock > 0);
+// 🎁 ACTUALIZADO: helpers del sistema de regalos escalonado.
+
+// Todos los productos que tienen un escalón configurado en la planilla
+// (montoRegalo > 0), tengan o no stock. Sirve para saber si existe algún
+// escalón cargado en absoluto.
+function productosConEscalon() {
+  return productos.filter(p => p.montoRegalo > 0);
+}
+
+// Suma sin contar los ítems de regalo ya elegidos (esos valen $0).
+function totalCarritoSinRegalo(carritoParam) {
+  const c = carritoParam || carrito;
+  return c
+    .filter(item => !item.esRegalo)
+    .reduce((acc, item) => acc + (Number(item.precio) * Number(item.cantidad)), 0);
+}
+
+// Pool ACUMULADO de opciones de regalo: todos los productos cuyo escalón ya
+// fue alcanzado por el total de la compra (sin importar de qué escalón sean
+// — el cliente elige 1 sola entre todas las opciones ya desbloqueadas).
+function regalosDesbloqueados(total) {
+  return productosConEscalon().filter(p => p.montoRegalo <= total && p.stock > 0);
+}
+
+// El próximo escalón (el más cercano) que todavía no se alcanzó. Devuelve
+// null si ya se alcanzó el escalón más alto configurado (o si no hay
+// ningún escalón configurado).
+function proximoEscalon(total) {
+  const pendientes = productosConEscalon()
+    .map(p => p.montoRegalo)
+    .filter(monto => monto > total);
+  return pendientes.length ? Math.min(...pendientes) : null;
+}
+
+// El escalón más alto configurado en toda la planilla, para poder mostrar
+// una barra de progreso "de conjunto" a lo largo de toda la escalera.
+function escalonMaximo() {
+  const montos = productosConEscalon().map(p => p.montoRegalo);
+  return montos.length ? Math.max(...montos) : 0;
 }
 
 function renderOpcionesRegalo() {
@@ -1540,7 +1597,8 @@ function renderOpcionesRegalo() {
   if (!contenedor) return;
   contenedor.innerHTML = '';
 
-  const opciones = productos.filter(p => p.esRegalo && p.stock > 0);
+  const total = totalCarritoSinRegalo();
+  const opciones = regalosDesbloqueados(total);
 
   if (opciones.length === 0) {
     // ✅ NUEVO: red de seguridad — si por algún motivo se llega a esta
@@ -2329,17 +2387,14 @@ document.getElementById('confirmar')?.addEventListener('click', () => {
       return;
     }
 
-    // ✅ NUEVO: si el total (sin contar el regalo, que es $0) supera el
-    // umbral, todavía no eligió ningún regalo, Y hay al menos un regalo
-    // cargado en la planilla (esregalo=TRUE con stock), mostramos el paso
-    // intermedio. Si no hay regalos disponibles, ni se muestra el paso —
-    // se va directo a "Forma de pago" para no trabar la compra.
+    // 🎁 ACTUALIZADO: mostramos el paso intermedio si todavía no eligió
+    // ningún regalo Y ya desbloqueó al menos una opción (de cualquier
+    // escalón acumulado). Si no desbloqueó ninguna, se va directo a "Forma
+    // de pago" para no trabar la compra.
     const yaTieneRegalo = carrito.some(item => item.esRegalo);
-    const totalSinRegalo = carrito
-      .filter(item => !item.esRegalo)
-      .reduce((acc, item) => acc + (Number(item.precio) * Number(item.cantidad)), 0);
+    const totalSinRegalo = totalCarritoSinRegalo();
 
-    if (!yaTieneRegalo && totalSinRegalo >= UMBRAL_REGALO && hayRegalosDisponibles()) {
+    if (!yaTieneRegalo && regalosDesbloqueados(totalSinRegalo).length > 0) {
       mostrarPasoRegalo();
       return;
     }
