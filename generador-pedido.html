@@ -264,7 +264,25 @@ const URL_TIENDA = 'https://smilemarket.github.io/TiendaOnline/';
 // Mismo criterio que UMBRAL_STOCK_BAJO en main.js — que el aviso acá diga lo
 // mismo que ya ve el cliente en la tienda.
 const UMBRAL_STOCK_BAJO = 3;
-const MAX_FRECUENTES = 8;
+
+// ⚠️ IMPORTANTE: esta lista NO sale de ninguna columna de la planilla — es
+// una copia exacta de la constante TOP_VENTAS que está en main.js (el
+// Top 10 real de la tienda tampoco sale de la planilla, sale de esta misma
+// lista escrita a mano). Si en algún momento le pedís a Claude que cambie
+// el Top 10 del sitio, avisale que también hay que actualizar esta copia
+// acá para que seas coherente en las dos partes.
+const TOP_VENTAS = [
+  'Kit de cirugía E',
+  'Pinza Wynman',
+  'Sin aletas',
+  'B4 B',
+  'Llave para Ajuste de Puntas',
+  'Punta P1',
+  'B4 A',
+  'Punta SB1',
+  'Kit espatulas + casette',
+  'Con aletas'
+];
 
 let productos = [];
 let pedido = []; // { nombre, precio, cantidad, stock }
@@ -341,8 +359,7 @@ async function cargarProductos() {
       return {
         nombre: p.nombre || 'Sin nombre',
         precio,
-        stock: parseInt(p.stock) || 0,
-        masvendido: p.masvendido === 'TRUE'
+        stock: parseInt(p.stock) || 0
       };
     }).filter(p => p.nombre !== 'Sin nombre');
 
@@ -356,7 +373,16 @@ async function cargarProductos() {
 function renderizarFrecuentes() {
   const wrap = document.getElementById('frecuentes-wrap');
   const lista = document.getElementById('frecuentes-lista');
-  const masVendidos = productos.filter(p => p.masvendido).slice(0, MAX_FRECUENTES);
+
+  const masVendidos = [];
+  TOP_VENTAS.forEach(nombreBuscado => {
+    const buscado = nombreBuscado.trim().toLowerCase();
+    let producto = productos.find(p => (p.nombre || '').trim().toLowerCase() === buscado);
+    if (!producto) {
+      producto = productos.find(p => (p.nombre || '').toLowerCase().includes(buscado));
+    }
+    if (producto) masVendidos.push(producto);
+  });
 
   if (masVendidos.length === 0) {
     wrap.style.display = 'none';
