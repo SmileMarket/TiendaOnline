@@ -108,6 +108,29 @@
   .sugerencia-nombre { font-size: 0.92rem; }
   .sugerencia-precio { font-size: 0.85rem; font-weight: 600; color: var(--rosa-acento-hover); white-space: nowrap; }
   .sin-stock { color: var(--texto-secundario); font-size: 0.75rem; }
+  .stock-bajo { color: var(--durazno-oscuro); font-size: 0.75rem; font-weight: 600; }
+
+  #frecuentes-wrap { margin-top: 14px; }
+  #frecuentes-titulo { font-size: 0.78rem; font-weight: 600; color: var(--texto-secundario); margin-bottom: 8px; }
+  #frecuentes-lista { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip-frecuente {
+    background: var(--rosa-pastel-suave);
+    border: 1px solid var(--rosa-pastel);
+    color: var(--rosa-oscuro);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .chip-frecuente:hover { background: var(--rosa-pastel); }
+  .chip-frecuente.sin-stock-chip { opacity: 0.55; }
+
+  .item-pedido.stock-bajo-item { border-color: var(--durazno-oscuro); }
+  .aviso-stock-item { font-size: 0.72rem; color: var(--durazno-oscuro); font-weight: 600; margin-top: 2px; }
+
+  .boton-whatsapp { background: #25D366; color: white; }
+  .boton-whatsapp:hover { background: #1EBE5A; }
 
   #lista-pedido { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
   .item-pedido {
@@ -201,6 +224,10 @@
       <div id="sugerencias"></div>
     </div>
     <div id="estado-carga">Cargando productos...</div>
+    <div id="frecuentes-wrap" style="display:none;">
+      <div id="frecuentes-titulo">⭐ Más pedidos — un toque para agregar</div>
+      <div id="frecuentes-lista"></div>
+    </div>
   </div>
 
   <div class="tarjeta">
@@ -221,6 +248,7 @@
       <div id="vista-previa-msj">Agregá al menos un producto para generar el mensaje.</div>
     </div>
 
+    <button class="boton boton-whatsapp" id="btn-abrir-whatsapp" disabled>💬 Abrir WhatsApp con el mensaje cargado</button>
     <button class="boton boton-principal" id="btn-copiar-mensaje" disabled>📋 Copiar mensaje para WhatsApp</button>
     <button class="boton boton-secundario" id="btn-copiar-link" disabled>🔗 Copiar solo el link</button>
     <button class="boton boton-gris" id="btn-vaciar">🗑️ Vaciar y empezar de nuevo</button>
@@ -233,9 +261,23 @@
 <script>
 const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=1670706691&single=true&output=csv';
 const URL_TIENDA = 'https://smilemarket.github.io/TiendaOnline/';
+// Mismo criterio que UMBRAL_STOCK_BAJO en main.js — que el aviso acá diga lo
+// mismo que ya ve el cliente en la tienda.
+const UMBRAL_STOCK_BAJO = 3;
+const MAX_FRECUENTES = 8;
 
 let productos = [];
 let pedido = []; // { nombre, precio, cantidad, stock }
+
+// Texto corto de aviso de stock para un producto, o '' si no aplica.
+function avisoStock(producto) {
+  if (producto.stock <= 0) return '(sin stock)';
+  if (producto.stock <= UMBRAL_STOCK_BAJO) return `(quedan ${producto.stock})`;
+  return '';
+}
+function claseAvisoStock(producto) {
+  return producto.stock <= 0 ? 'sin-stock' : (producto.stock <= UMBRAL_STOCK_BAJO ? 'stock-bajo' : '');
+}
 
 // --- Parseo de CSV robusto (igual criterio que en la tienda: respeta
 // comillas para no romper columnas cuando un valor viene de una fórmula) ---
@@ -299,14 +341,42 @@ async function cargarProductos() {
       return {
         nombre: p.nombre || 'Sin nombre',
         precio,
-        stock: parseInt(p.stock) || 0
+        stock: parseInt(p.stock) || 0,
+        masvendido: p.masvendido === 'TRUE'
       };
     }).filter(p => p.nombre !== 'Sin nombre');
 
     document.getElementById('estado-carga').style.display = 'none';
+    renderizarFrecuentes();
   } catch (e) {
     document.getElementById('estado-carga').textContent = 'No se pudo cargar el catálogo. Revisá tu conexión y recargá la página.';
   }
+}
+
+function renderizarFrecuentes() {
+  const wrap = document.getElementById('frecuentes-wrap');
+  const lista = document.getElementById('frecuentes-lista');
+  const masVendidos = productos.filter(p => p.masvendido).slice(0, MAX_FRECUENTES);
+
+  if (masVendidos.length === 0) {
+    wrap.style.display = 'none';
+    return;
+  }
+
+  lista.innerHTML = masVendidos.map(p => `
+    <button type="button" class="chip-frecuente ${p.stock <= 0 ? 'sin-stock-chip' : ''}" data-indice="${productos.indexOf(p)}">
+      ${p.nombre}${avisoStock(p) ? ` · ${avisoStock(p)}` : ''}
+    </button>
+  `).join('');
+
+  lista.querySelectorAll('.chip-frecuente').forEach(el => {
+    el.addEventListener('click', () => {
+      const producto = productos[parseInt(el.dataset.indice)];
+      agregarProductoAlPedido(producto);
+    });
+  });
+
+  wrap.style.display = 'block';
 }
 
 // --- Buscador con sugerencias ---
@@ -329,7 +399,7 @@ inputBuscador.addEventListener('input', () => {
 
   cajaSugerencias.innerHTML = resultados.map((p, i) => `
     <div class="sugerencia-item" data-indice="${productos.indexOf(p)}">
-      <span class="sugerencia-nombre">${p.nombre}${p.stock <= 0 ? ' <span class="sin-stock">(sin stock)</span>' : ''}</span>
+      <span class="sugerencia-nombre">${p.nombre}${avisoStock(p) ? ` <span class="${claseAvisoStock(p)}">${avisoStock(p)}</span>` : ''}</span>
       <span class="sugerencia-precio">$${p.precio.toLocaleString()}</span>
     </div>
   `).join('');
@@ -382,7 +452,7 @@ function renderizarPedido() {
   } else {
     contenedor.innerHTML = pedido.map(item => `
       <div class="item-pedido">
-        <div class="nombre">${item.nombre}<br><span class="precio-unit">$${item.precio.toLocaleString()} c/u</span></div>
+        <div class="nombre">${item.nombre}<br><span class="precio-unit">$${item.precio.toLocaleString()} c/u</span>${item.stock <= UMBRAL_STOCK_BAJO ? `<br><span class="aviso-stock-item">${item.stock <= 0 ? '⚠️ Sin stock' : `⚠️ Quedan ${item.stock}`}</span>` : ''}</div>
         <div class="cantidad-control">
           <button onclick="cambiarCantidad('${item.nombre.replace(/'/g, "\\'")}', -1)">−</button>
           <span>${item.cantidad}</span>
@@ -415,6 +485,7 @@ function generarMensajeWhatsapp() {
 
 function actualizarMensajeYBotones() {
   const hayItems = pedido.length > 0;
+  document.getElementById('btn-abrir-whatsapp').disabled = !hayItems;
   document.getElementById('btn-copiar-mensaje').disabled = !hayItems;
   document.getElementById('btn-copiar-link').disabled = !hayItems;
   document.getElementById('vista-previa-msj').textContent = hayItems
@@ -446,6 +517,14 @@ async function copiarTexto(texto) {
     return true;
   }
 }
+
+document.getElementById('btn-abrir-whatsapp').addEventListener('click', () => {
+  const mensaje = generarMensajeWhatsapp();
+  // wa.me sin número: abre el selector de contactos (celular) o WhatsApp Web
+  // (compu) con el mensaje ya cargado, para que la vendedora elija a quién
+  // mandárselo — nunca lo manda sola.
+  window.open('https://wa.me/?text=' + encodeURIComponent(mensaje), '_blank');
+});
 
 document.getElementById('btn-copiar-mensaje').addEventListener('click', async () => {
   await copiarTexto(generarMensajeWhatsapp());
