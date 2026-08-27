@@ -881,6 +881,60 @@ function trackEvento(nombre, params) {
   } catch (e) { /* nunca dejamos que un error de analytics rompa la compra */ }
 }
 
+// 🔗 NUEVO: lee el parámetro ?pedido=... de la URL (si existe) y agrega esos
+// productos al carrito automáticamente. Formato del parámetro (lo arma solo
+// el generador-pedido.html, la vendedora nunca lo escribe a mano):
+//   ?pedido=Nombre%20producto:2,Otro%20producto:1
+// — nombres de producto separados por coma, cada uno con ":cantidad".
+// Matchea el nombre de forma flexible (sin importar tildes/mayúsculas) para
+// que ande incluso si el nombre se escribió con alguna diferencia menor.
+function precargarCarritoDesdeLink() {
+  const params = new URLSearchParams(window.location.search);
+  const pedido = params.get('pedido');
+  if (!pedido) return;
+
+  let itemsAgregados = 0;
+
+  pedido.split(',').forEach(par => {
+    const idxDosPuntos = par.lastIndexOf(':');
+    if (idxDosPuntos === -1) return;
+
+    const nombreParam = decodeURIComponent(par.slice(0, idxDosPuntos)).trim();
+    const cantidad = Math.max(1, parseInt(par.slice(idxDosPuntos + 1)) || 1);
+
+    const producto = productos.find(p => normalizarTexto(p.nombre) === normalizarTexto(nombreParam));
+    if (!producto) return; // si no lo encuentra, simplemente lo salteamos
+
+    const cantidadFinal = producto.stock > 0 ? Math.min(cantidad, producto.stock) : cantidad;
+    const precio = precioFinal(producto);
+
+    const existente = carrito.find(item => item.nombre === producto.nombre);
+    if (existente) {
+      existente.cantidad += cantidadFinal;
+    } else {
+      carrito.push({ nombre: producto.nombre, precio, cantidad: cantidadFinal });
+    }
+    itemsAgregados++;
+  });
+
+  if (itemsAgregados > 0) {
+    guardarCarritoEnLocalStorage();
+    actualizarCarrito();
+    // Abrimos el carrito solo (sin el popup de "agregado ✅" genérico) y
+    // avisamos con un mensaje más cálido, ya que este pedido vino de una
+    // charla previa por WhatsApp/Instagram, no de que el cliente lo armó
+    // clickeando él mismo.
+    const carritoPanel = document.getElementById('carrito');
+    if (carritoPanel) carritoPanel.classList.add('mostrar');
+    mostrarPopup('¡Ya te dejamos tu pedido armado! 🎉 Revisalo y confirmalo cuando quieras.');
+  }
+
+  // Limpiamos el parámetro de la URL para que si el cliente recarga la
+  // página no se le vuelva a sumar el mismo pedido de nuevo.
+  const urlLimpia = window.location.origin + window.location.pathname;
+  window.history.replaceState({}, document.title, urlLimpia);
+}
+
 function agregarAlCarrito(boton) {
   const producto = boton.closest('.producto');
   const nombre = producto.dataset.nombre;
@@ -1858,6 +1912,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarProductosDesdeGoogleSheet();
 
   const resultadoSyncCarrito = sincronizarPreciosCarrito();
+
+  // 🔗 NUEVO: "link con el pedido armado" — pensado para cuando la
+  // vendedora ya charló el pedido por WhatsApp/Instagram y quiere pasarle
+  // al cliente un link que abre la web con esos productos ya cargados en
+  // el carrito, listos para confirmar (sin que el cliente tenga que
+  // buscarlos de nuevo). El link lo genera la propia vendedora desde una
+  // paginita aparte (ver generador-pedido.html) — acá solo lo leemos.
+  precargarCarritoDesdeLink();
 
   renderizarTopVentas();
 
