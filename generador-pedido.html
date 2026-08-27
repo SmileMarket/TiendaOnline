@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>SmileMarket — Armar link de pedido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=Work+Sans:wght@400;500;600&display=swap" />
+<style>
+  :root {
+    --rosa-pastel: #F6C9DE;
+    --rosa-pastel-suave: #FBE3EF;
+    --rosa-acento: #E8749E;
+    --rosa-acento-hover: #D65C88;
+    --rosa-oscuro: #7A2E52;
+    --menta: #BFE8DC;
+    --menta-oscuro: #1F6F5C;
+    --durazno: #FCEFD8;
+    --durazno-oscuro: #8A5A0B;
+    --fondo: #FAF7F8;
+    --superficie: #FFFFFF;
+    --borde: #ECE3E8;
+    --texto: #3A3247;
+    --texto-secundario: #8A8092;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Work Sans', sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(90deg, var(--rosa-pastel), var(--rosa-pastel-suave));
+    padding: 18px 16px;
+    text-align: center;
+  }
+  header h1 {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.25rem;
+    margin: 0 0 4px;
+    color: var(--rosa-oscuro);
+  }
+  header p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--texto-secundario);
+  }
+  main {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 18px 16px;
+  }
+  .tarjeta {
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--texto);
+  }
+  input[type="text"], input[type="tel"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    font-size: 1rem;
+    font-family: 'Work Sans', sans-serif;
+    color: var(--texto);
+  }
+  input[type="text"]:focus, input[type="tel"]:focus {
+    outline: none;
+    border-color: var(--rosa-acento);
+  }
+  .buscador-wrap { position: relative; }
+  #sugerencias {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--superficie);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    display: none;
+  }
+  .sugerencia-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--borde);
+  }
+  .sugerencia-item:last-child { border-bottom: none; }
+  .sugerencia-item:hover, .sugerencia-item.resaltada { background: var(--rosa-pastel-suave); }
+  .sugerencia-nombre { font-size: 0.92rem; }
+  .sugerencia-precio { font-size: 0.85rem; font-weight: 600; color: var(--rosa-acento-hover); white-space: nowrap; }
+  .sin-stock { color: var(--texto-secundario); font-size: 0.75rem; }
+
+  #lista-pedido { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .item-pedido {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 8px 10px;
+  }
+  .item-pedido .nombre { flex: 1; font-size: 0.9rem; }
+  .item-pedido .precio-unit { font-size: 0.75rem; color: var(--texto-secundario); }
+  .cantidad-control { display: flex; align-items: center; gap: 6px; }
+  .cantidad-control button {
+    width: 26px; height: 26px;
+    border: 1px solid var(--borde);
+    background: var(--superficie);
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    color: var(--texto);
+  }
+  .cantidad-control span { min-width: 18px; text-align: center; font-weight: 600; font-size: 0.9rem; }
+  .btn-quitar {
+    background: none; border: none; color: var(--texto-secundario);
+    font-size: 1.1rem; cursor: pointer; padding: 2px 6px;
+  }
+  .btn-quitar:hover { color: var(--rosa-acento-hover); }
+
+  .vacio-aviso { text-align:center; color: var(--texto-secundario); font-size: 0.88rem; padding: 10px 0; }
+
+  #total-pedido {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--borde);
+    font-weight: 700; font-size: 1.05rem; color: var(--rosa-oscuro);
+  }
+
+  .boton {
+    display: block; width: 100%;
+    padding: 13px 16px; margin-top: 10px;
+    border: none; border-radius: 10px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; text-align: center;
+    text-decoration: none;
+  }
+  .boton-principal { background: var(--rosa-acento); color: white; }
+  .boton-principal:hover { background: var(--rosa-acento-hover); }
+  .boton-secundario { background: var(--menta); color: var(--menta-oscuro); }
+  .boton-secundario:hover { background: #a9dccb; }
+  .boton-gris { background: var(--fondo); color: var(--texto-secundario); border: 1px solid var(--borde); }
+  .boton:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #vista-previa-msj {
+    white-space: pre-wrap;
+    font-size: 0.85rem;
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 10px;
+    color: var(--texto);
+  }
+
+  #toast {
+    position: fixed;
+    bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--rosa-oscuro); color: white;
+    padding: 10px 18px; border-radius: 999px;
+    font-size: 0.85rem; font-weight: 600;
+    display: none; z-index: 50;
+  }
+
+  #estado-carga { text-align: center; color: var(--texto-secundario); font-size: 0.9rem; padding: 20px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🦷 Armar link de pedido</h1>
+  <p>Herramienta interna — buscá los productos, poné la cantidad, y copiá el mensaje listo para mandar</p>
+</header>
+
+<main>
+
+  <div class="tarjeta">
+    <label for="buscador">Buscar producto</label>
+    <div class="buscador-wrap">
+      <input type="text" id="buscador" placeholder="Escribí el nombre del producto..." autocomplete="off" />
+      <div id="sugerencias"></div>
+    </div>
+    <div id="estado-carga">Cargando productos...</div>
+  </div>
+
+  <div class="tarjeta">
+    <label style="margin-bottom:10px;">Pedido armado</label>
+    <div id="lista-pedido"><div class="vacio-aviso">Todavía no agregaste ningún producto.</div></div>
+    <div id="total-pedido" style="display:none;">
+      <span>Total</span>
+      <span id="total-monto">$0</span>
+    </div>
+  </div>
+
+  <div class="tarjeta">
+    <label for="nombre-cliente">Nombre del cliente (opcional, para el saludo del mensaje)</label>
+    <input type="text" id="nombre-cliente" placeholder="Ej: Male" />
+
+    <div style="margin-top:14px;">
+      <label>Mensaje listo para WhatsApp</label>
+      <div id="vista-previa-msj">Agregá al menos un producto para generar el mensaje.</div>
+    </div>
+
+    <button class="boton boton-principal" id="btn-copiar-mensaje" disabled>📋 Copiar mensaje para WhatsApp</button>
+    <button class="boton boton-secundario" id="btn-copiar-link" disabled>🔗 Copiar solo el link</button>
+    <button class="boton boton-gris" id="btn-vaciar">🗑️ Vaciar y empezar de nuevo</button>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSm_x_4hR7AM7cghSD1NWOTzf1q8-o3QMhGqQOENtSBRtF0mIkiWPohv3hhbDhuzYGa459Tn3HQXKOL/pub?gid=1670706691&single=true&output=csv';
+const URL_TIENDA = 'https://smilemarket.github.io/TiendaOnline/';
+
+let productos = [];
+let pedido = []; // { nombre, precio, cantidad, stock }
+
+// --- Parseo de CSV robusto (igual criterio que en la tienda: respeta
+// comillas para no romper columnas cuando un valor viene de una fórmula) ---
+function parsearLineaCSV(linea) {
+  const resultado = [];
+  let actual = '';
+  let dentroComillas = false;
+  for (let i = 0; i < linea.length; i++) {
+    const c = linea[i];
+    if (c === '"') {
+      if (dentroComillas && linea[i + 1] === '"') { actual += '"'; i++; }
+      else { dentroComillas = !dentroComillas; }
+    } else if (c === ',' && !dentroComillas) {
+      resultado.push(actual); actual = '';
+    } else {
+      actual += c;
+    }
+  }
+  resultado.push(actual);
+  return resultado.map(c => c.trim());
+}
+
+function normalizarTexto(texto) {
+  return (texto || '')
+    .toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function parsearNumeroSheet(texto) {
+  if (texto === null || texto === undefined) return 0;
+  let s = texto.toString().trim();
+  if (!s) return 0;
+  if (s.includes(',') && s.includes('.')) {
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (s.includes(',') && !s.includes('.')) {
+    s = s.replace(',', '.');
+  }
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+
+async function cargarProductos() {
+  try {
+    const respuesta = await fetch(URL_CSV);
+    const texto = await respuesta.text();
+    const lineas = texto.split('\n').filter(l => l.trim() !== '');
+    const headers = parsearLineaCSV(lineas[0]).map(h => h.trim().toLowerCase());
+
+    productos = lineas.slice(1).map(linea => {
+      const columnas = parsearLineaCSV(linea);
+      const p = Object.fromEntries(headers.map((h, i) => [h, columnas[i] || '']));
+      const precioNormal = parseFloat(p.precio) || 0;
+      const precioOferta = parsearNumeroSheet(p.preciooferta);
+      // Si tiene precio de oferta cargado (>0) y es menor al normal, usamos
+      // ese como precio vigente — coincide con la lógica de la tienda.
+      const precio = (precioOferta > 0 && precioOferta < precioNormal) ? precioOferta : precioNormal;
+      return {
+        nombre: p.nombre || 'Sin nombre',
+        precio,
+        stock: parseInt(p.stock) || 0
+      };
+    }).filter(p => p.nombre !== 'Sin nombre');
+
+    document.getElementById('estado-carga').style.display = 'none';
+  } catch (e) {
+    document.getElementById('estado-carga').textContent = 'No se pudo cargar el catálogo. Revisá tu conexión y recargá la página.';
+  }
+}
+
+// --- Buscador con sugerencias ---
+const inputBuscador = document.getElementById('buscador');
+const cajaSugerencias = document.getElementById('sugerencias');
+
+inputBuscador.addEventListener('input', () => {
+  const texto = normalizarTexto(inputBuscador.value);
+  if (!texto) { cajaSugerencias.style.display = 'none'; return; }
+
+  const resultados = productos
+    .filter(p => normalizarTexto(p.nombre).includes(texto))
+    .slice(0, 8);
+
+  if (resultados.length === 0) {
+    cajaSugerencias.innerHTML = '<div class="sugerencia-item"><span class="sugerencia-nombre">No se encontró ningún producto con ese nombre</span></div>';
+    cajaSugerencias.style.display = 'block';
+    return;
+  }
+
+  cajaSugerencias.innerHTML = resultados.map((p, i) => `
+    <div class="sugerencia-item" data-indice="${productos.indexOf(p)}">
+      <span class="sugerencia-nombre">${p.nombre}${p.stock <= 0 ? ' <span class="sin-stock">(sin stock)</span>' : ''}</span>
+      <span class="sugerencia-precio">$${p.precio.toLocaleString()}</span>
+    </div>
+  `).join('');
+  cajaSugerencias.style.display = 'block';
+
+  cajaSugerencias.querySelectorAll('.sugerencia-item[data-indice]').forEach(el => {
+    el.addEventListener('click', () => {
+      const producto = productos[parseInt(el.dataset.indice)];
+      agregarProductoAlPedido(producto);
+      inputBuscador.value = '';
+      cajaSugerencias.style.display = 'none';
+      inputBuscador.focus();
+    });
+  });
+});
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.buscador-wrap')) cajaSugerencias.style.display = 'none';
+});
+
+function agregarProductoAlPedido(producto) {
+  const existente = pedido.find(item => item.nombre === producto.nombre);
+  if (existente) {
+    existente.cantidad += 1;
+  } else {
+    pedido.push({ nombre: producto.nombre, precio: producto.precio, cantidad: 1, stock: producto.stock });
+  }
+  renderizarPedido();
+}
+
+function cambiarCantidad(nombre, delta) {
+  const item = pedido.find(i => i.nombre === nombre);
+  if (!item) return;
+  item.cantidad = Math.max(1, item.cantidad + delta);
+  renderizarPedido();
+}
+
+function quitarDelPedido(nombre) {
+  pedido = pedido.filter(i => i.nombre !== nombre);
+  renderizarPedido();
+}
+
+function renderizarPedido() {
+  const contenedor = document.getElementById('lista-pedido');
+  const totalWrap = document.getElementById('total-pedido');
+
+  if (pedido.length === 0) {
+    contenedor.innerHTML = '<div class="vacio-aviso">Todavía no agregaste ningún producto.</div>';
+    totalWrap.style.display = 'none';
+  } else {
+    contenedor.innerHTML = pedido.map(item => `
+      <div class="item-pedido">
+        <div class="nombre">${item.nombre}<br><span class="precio-unit">$${item.precio.toLocaleString()} c/u</span></div>
+        <div class="cantidad-control">
+          <button onclick="cambiarCantidad('${item.nombre.replace(/'/g, "\\'")}', -1)">−</button>
+          <span>${item.cantidad}</span>
+          <button onclick="cambiarCantidad('${item.nombre.replace(/'/g, "\\'")}', 1)">+</button>
+        </div>
+        <button class="btn-quitar" onclick="quitarDelPedido('${item.nombre.replace(/'/g, "\\'")}')" title="Quitar">✕</button>
+      </div>
+    `).join('');
+
+    const total = pedido.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+    document.getElementById('total-monto').textContent = '$' + total.toLocaleString();
+    totalWrap.style.display = 'flex';
+  }
+
+  actualizarMensajeYBotones();
+}
+
+function generarLink() {
+  const partes = pedido.map(item => `${encodeURIComponent(item.nombre)}:${item.cantidad}`);
+  return URL_TIENDA + '?pedido=' + partes.join(',');
+}
+
+function generarMensajeWhatsapp() {
+  const nombreCliente = document.getElementById('nombre-cliente').value.trim();
+  const saludo = nombreCliente ? `¡Hola ${nombreCliente}! 😊` : '¡Hola! 😊';
+  const listaTexto = pedido.map(item => `• ${item.nombre} x${item.cantidad}`).join('\n');
+  const total = pedido.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
+  return `${saludo} Te dejo armado tu pedido en SmileMarket, así lo confirmás fácil desde el link 👇\n\n${listaTexto}\n\nTotal: $${total.toLocaleString()}\n\n${generarLink()}`;
+}
+
+function actualizarMensajeYBotones() {
+  const hayItems = pedido.length > 0;
+  document.getElementById('btn-copiar-mensaje').disabled = !hayItems;
+  document.getElementById('btn-copiar-link').disabled = !hayItems;
+  document.getElementById('vista-previa-msj').textContent = hayItems
+    ? generarMensajeWhatsapp()
+    : 'Agregá al menos un producto para generar el mensaje.';
+}
+
+document.getElementById('nombre-cliente').addEventListener('input', actualizarMensajeYBotones);
+
+function mostrarToast(texto) {
+  const toast = document.getElementById('toast');
+  toast.textContent = texto;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 1800);
+}
+
+async function copiarTexto(texto) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    return true;
+  } catch (e) {
+    // Alternativa por si el navegador bloquea el clipboard API (ej. http sin https)
+    const area = document.createElement('textarea');
+    area.value = texto;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    document.body.removeChild(area);
+    return true;
+  }
+}
+
+document.getElementById('btn-copiar-mensaje').addEventListener('click', async () => {
+  await copiarTexto(generarMensajeWhatsapp());
+  mostrarToast('¡Mensaje copiado! Pegalo en WhatsApp 📋');
+});
+
+document.getElementById('btn-copiar-link').addEventListener('click', async () => {
+  await copiarTexto(generarLink());
+  mostrarToast('¡Link copiado! 🔗');
+});
+
+document.getElementById('btn-vaciar').addEventListener('click', () => {
+  pedido = [];
+  document.getElementById('nombre-cliente').value = '';
+  renderizarPedido();
+});
+
+cargarProductos();
+</script>
+
+</body>
+</html>
